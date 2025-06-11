@@ -1,0 +1,12 @@
+Package: FastPCA
+Title: Leverage Pytorch to calculate single vector decomposition
+Version: 0.0.0.9000
+Authors@R: 
+    person("Alex", "Soupir", , "Alex.Soupir@moffitt.org", role = c("aut", "cre"))
+Description: What the package does (one paragraph).
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Imports: 
+    reticulate
