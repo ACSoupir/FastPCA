@@ -43,3 +43,11 @@ system.time({
 User - 1.754
 System - 1.845
 Elapsed - 0.648
+
+## Outputs
+
+Outputs are singular values. To convert to scores in R, multiply the left singular values by the 
+
+```
+torch_pc_scores = get_pc_scores(out_svd)
+```
