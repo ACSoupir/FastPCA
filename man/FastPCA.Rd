@@ -4,7 +4,7 @@
 \alias{FastPCA}
 \title{Perform Randomized SVD with PyTorch backend}
 \usage{
-FastPCA(input_r_matrix, k, p = 10, q_iter = 2)
+FastPCA(input_r_matrix, k, p = 10, q_iter = 2, exact = FALSE)
 }
 \arguments{
 \item{input_r_matrix}{A numeric R matrix. It's assumed that rows are observations
@@ -16,6 +16,8 @@ transpose this for the PyTorch SVD based on the original Python script's logic.}
 \item{p}{Integer. Oversampling parameter (default: 10).}
 
 \item{q_iter}{Integer. Number of power iterations (default: 2).}
+
+\item{exact}{Boolean. Whether to compute the exact matrix or not.}
 }
 \value{
 A list containing:

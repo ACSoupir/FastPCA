@@ -9,6 +9,7 @@
 #' @param k Integer. The number of singular values/vectors to compute.
 #' @param p Integer. Oversampling parameter (default: 10).
 #' @param q_iter Integer. Number of power iterations (default: 2).
+#' @param exact Boolean. Whether to compute the exact matrix or not.
 #'
 #' @return A list containing:
 #'   \item{U}{The left singular vectors (R matrix). Dimensions: Features x k.}
@@ -33,7 +34,7 @@
 #'   # Perform Randomized SVD
 #'   svd_results <- FastPCA::FastPCA(test_data, k = 5)
 #' }
-FastPCA <- function(input_r_matrix, k, p = 10, q_iter = 2) {
+FastPCA <- function(input_r_matrix, k = 100, p = 10, q_iter = 2, exact = FALSE) {
   #make sure input is actualy matrix
   if (!is.matrix(input_r_matrix) || !is.numeric(input_r_matrix)) {
     stop("Input must be a numeric R matrix.")
@@ -62,23 +63,40 @@ FastPCA <- function(input_r_matrix, k, p = 10, q_iter = 2) {
                  "\nIs the package installed correctly?"))
     }
     .globals$svd_python_module <- reticulate::py_run_file(script_path)
+
+    script_path <- get_exact_svd_script_path()
+    if (!file.exists(script_path)) {
+      stop(paste("Python SVD script not found at:", script_path,
+                 "\nIs the package installed correctly?"))
+    }
+    .globals$exact_svd_python_module <- reticulate::py_run_file(script_path)
     message(paste("Python SVD script '", basename(script_path), "' loaded.", sep=""))
   }
 
   # Call the Python function.
   #reticulate automatically converts input_r_matrix (R matrix) to a NumPy array.
-  py_results <- .globals$svd_python_module$randomized_svd_py(
-    input_r_matrix,
-    k = k,
-    p = p,
-    q_iter = q_iter
-  )
+  if(!exact){
+    py_results <- .globals$svd_python_module$randomized_svd_py(
+      input_r_matrix,
+      k = k,
+      p = p,
+      q_iter = q_iter
+    )
 
-  # py_results is a list (U_np, S_np, Vh_np) from Python.
-  # reticulate automatically converts NumPy arrays back to R matrices/vectors.
-  U_r <- py_results[[1]][,1:k]  # (Features x k)
-  S_r <- py_results[[2]][1:k]  # (k,) vector
-  Vh_r <- py_results[[3]][1:k,] # (Samples x k)
+    # py_results is a list (U_np, S_np, Vh_np) from Python.
+    # reticulate automatically converts NumPy arrays back to R matrices/vectors.
+    U_r <- py_results[[1]][,1:k]  # (Features x k)
+    S_r <- py_results[[2]][1:k]  # (k,) vector
+    Vh_r <- py_results[[3]][1:k,] # (Samples x k)
+  } else {
+    py_results <- .globals$exact_svd_python_module$exact_svd_py(
+      input_r_matrix
+    )
+
+    U_r <- py_results[[1]]  # (Features x k)
+    S_r <- py_results[[2]]  # (k,) vector
+    Vh_r <- py_results[[3]] # (Samples x k)
+  }
 
   message("Received SVD results from Python. Returning as R objects.")
 
