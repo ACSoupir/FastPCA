@@ -1,0 +1,12 @@
+citHeader("To cite the FastPCA R package in publications, please use:")
+
+bibentry(
+  "Manual",
+  title = "FastPCA: Leveraging Pytorch for single vector decomposition",
+  author = person("Alex", "Soupir", role = c("aut", "cre")),
+  year = "2025",
+  note = "R package version 0.0.1.0000. URL: https://github.com/ACSoupir/FastPCA",
+  url = "https://github.com/ACSoupir/FastPCA"
+)
+
+citFooter("Please also cite R and any papers describing methods implemented in FastPCA as appropriate.")
