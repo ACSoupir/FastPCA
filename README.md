@@ -24,10 +24,6 @@ Using a matrix that contains 98,647 pixels with 2,925 MALDI peaks, I have run th
 
 Memory does appear to be greater when using FastPCA over PCAone (profiled with [`profmem`](https://cran.r-project.org/web/packages/profmem/)):
 
-|   | PCAone Alg1 | PCAone Alg2 | FastPCA Randomized (mine) | FastPCA Exact (mine) |
-|----|----|----|----|----|
-| Memory (MB) | 81.26 | 81.26 | 171.05 | 4753.69 |
-
 |                           | Memory (MB) |
 |---------------------------|-------------|
 | PCAone Alg1               | 81.26       |
