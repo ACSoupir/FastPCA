@@ -90,7 +90,7 @@ setup_py_env <- function(method = c("conda", "virtualenv"),
     if(cuda){
       #trying to install in environment
       if(method == "conda"){
-        trycatch({
+        tryCatch({
           reticulate::conda_install("FastPCA", packages = "cudatoolkit", channel = "anaconda")
         }, error = function(e){
           warning(paste("Error installing pythong packages:", e$message,
