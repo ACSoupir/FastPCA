@@ -34,8 +34,11 @@ def randomized_svd_py(A_np: np.ndarray, k: int, p: int = 10, q_iter: int = 2):
     Omega = torch.randn((n, k + p), device = device, dtype = dtype)
     #subspace identification with optional power iterations for accuracy
     Y = A @ Omega
-    for _ in range(q_iter):
-        Y = A @ (A.T @ Y)
+    # for _ in range(q_iter):
+    #     Y = A @ (A.T @ Y)
+    for i in range(q_iter):
+        Q, _ = torch.linalg.qr(A.T @ Y) # Project onto row space and get stable basis
+        Y, _ = torch.linalg.qr(A @ Q)
     #orthonormalize the subspace to get a stable basis Q
     Q, _ = torch.linalg.qr(Y)
     #project A onto the smaller subspace
