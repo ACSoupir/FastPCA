@@ -77,21 +77,21 @@ FastPCA <- function(input_r_matrix, k, p = 10, q_iter = 2) {
   # py_results is a list (U_np, S_np, Vh_np) from Python.
   # reticulate automatically converts NumPy arrays back to R matrices/vectors.
   U_r <- py_results[[1]][,1:k]  # (Features x k)
-  S_r <- py_results[[2]]  # (k,) vector
+  S_r <- py_results[[2]][1:k]  # (k,) vector
   Vh_r <- py_results[[3]][1:k,] # (Samples x k)
 
   message("Received SVD results from Python. Returning as R objects.")
 
   # Optionally, set row/column names if you want to preserve them
   # U matrix columns are typically principal components
-  colnames(U_r) <- paste0("PC", 1:k)
+  colnames(U_r) <- paste0("PC", 1:ncol(U_r))
   # U matrix rows correspond to features
   if (!is.null(colnames(input_r_matrix))) {
     rownames(U_r) <- colnames(input_r_matrix)
   }
 
   # Vh matrix columns are also principal components
-  rownames(Vh_r) <- paste0("PC", 1:k)
+  rownames(Vh_r) <- paste0("PC", 1:nrow(Vh_r))
   # Vh matrix rows correspond to samples
   if (!is.null(rownames(input_r_matrix))) {
     rownames(Vh_r) <- rownames(input_r_matrix)
