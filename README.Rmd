@@ -1,0 +1,199 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# FastPCA
+
+<!-- badges: start -->
+<!-- badges: end -->
+
+The goal of FastPCA is to speed up calculations of singular value decomposition (SVD) by leveraging the large about of work that has gone into python libraries, specifically PyTorch, for matrix operations. FastPCA offers similar performance to other highly optimized SVD methods in R (see below) while being an order of magnitude faster.
+
+## Installation
+
+You can install the development version of FastPCA from [GitHub](https://github.com/) with:
+
+``` r
+# install.packages("devtools")
+devtools::install_github("ACSoupir/FastPCA")
+```
+
+After installation, need to perform setup by either creating a conda environment with (py)torch and numpy installed, or by running `FastPCA::setup_py_env()` which will attempt to create an environment and install the necessary packages.
+
+## Benchmarking against PCAone
+
+```{r finding_files, echo = FALSE}
+library(magrittr)
+files = list.files("docs/benchmark_script/outputs", pattern = "rds", full.names = TRUE)
+runs = files %>% gsub(".*\\/", "", .) %>% gsub("_mem..*|_res..*|_time..*", "", .) %>% unique() %>% setNames(.,.)
+grouped_files = lapply(runs, function(x) grep(x, files, value = TRUE))
+
+#lets organize the meethod order
+runs_ordered = c(grep("fastpca", runs, value = TRUE, invert = TRUE),
+                 grep("fastpca", runs, value = TRUE)[c(2,3,1)]) %>%
+  gsub("\\_", " ", .)
+runs_ordered = runs_ordered %>% 
+  stringr::str_to_title() %>%
+  gsub("pca", "PCA", ., ignore.case = TRUE) %>%
+  gsub("cpu", "\\(CPU\\)", ., ignore.case = TRUE) %>%
+  gsub("gpu", "\\(GPU\\)", ., ignore.case = TRUE) %>%
+  setNames(., names(runs_ordered))
+```
+
+
+```{r importing, echo = FALSE}
+grouped_dat = lapply(grouped_files, function(x){
+  res = readRDS(grep("res.rds", x, value = TRUE))
+  time = readRDS(grep("time.rds", x, value = TRUE))
+  mem = readRDS(grep("mem.rds", x, value = TRUE))
+  return(list(res = res,
+              time = time,
+              mem = mem))
+})
+```
+
+Using a matrix that contains 98,647 pixels with 2,925 MALDI peaks, I have run the [`PCAone`](https://cran.r-project.org/web/packages/pcaone/index.html) package with both of their algorithms. For each of the methods, I calculated 100 dimensions from the data using 10 oversampling dimensions as well as 10 power iterations. The speed difference was:
+
+```{r table_time, echo = FALSE, align = "center"}
+lapply(grouped_dat, function(d) t(data.frame(d$time))) %>% 
+    do.call(rbind, .) %>% 
+    data.frame() %>% 
+    dplyr::mutate(groups = names(grouped_dat)) %>%
+    dplyr::rename("User Time (s)" = 1, "System Time (s)" = 2, "Elapsed Time (s)" = 3) %>%
+    tibble::rownames_to_column("drop") %>%
+    dplyr::full_join(tibble::enframe(runs_ordered, name = "groups", value = "Metric"),
+                     by = dplyr::join_by("groups")) %>%
+    dplyr::arrange(match(Metric, runs_ordered)) %>%
+    tibble::column_to_rownames("Metric") %>%
+    dplyr::select(dplyr::contains("Time"))%>%
+    dplyr::mutate(`Elapsed Time (s)` = paste0("**", round(`Elapsed Time (s)`, 3), "**")) %>%
+    knitr::kable(escape = FALSE)
+```
+
+Memory does appear to be greater when using FastPCA over PCAone (profiled with [`profmem`](https://cran.r-project.org/web/packages/profmem/)):
+
+```{r table_memory, echo = FALSE, align = "center"}
+lapply(grouped_dat, function(d) utils:::format.object_size(sum(d$mem$bytes), "auto")) %>% 
+  do.call(rbind, .) %>%
+  data.frame(Memory = .) %>%
+  tibble::rownames_to_column("groups") %>%
+  dplyr::full_join(tibble::enframe(runs_ordered, name = "groups", value = "Metric"),
+                   by = dplyr::join_by("groups")) %>%
+  dplyr::arrange(match(Metric, runs_ordered)) %>% 
+  tibble::column_to_rownames("Metric") %>%
+  dplyr::select(-groups) %>%
+    knitr::kable(escape = FALSE)
+```
+
+### Results
+
+First exploring the eigenvalues calculated by all methods, on the high end they are all very similar as expected. FastPCA uses essentially the same method as PCAone uses for `'alg1'` so its logical that PCAone with `'alg1'` produces results much more siilar to FastPCA. Interestingly, FastPCA without random projection and power iterations produces results more similar to `'alg1'` and FastPCA's Randomized method. 
+
+```{r eigenvalue_against, echo = FALSE, fig.width=8, fig.height=8, dpi=300, out.width="75%", fig.align="center"}
+library(ggplot2)
+eigenvalues = lapply(grep("gpu", runs, value = TRUE, invert = TRUE), function(x){
+    if("S" %in% names(grouped_dat[[x]]$res)){
+        grouped_dat[[x]]$res$S
+    } else {
+        grouped_dat[[x]]$res$d
+    }
+}) %>%
+    as.data.frame() %>%
+    dplyr::select(!!names(grep("gpu", runs_ordered, value = TRUE, invert = TRUE, ignore.case = TRUE))) %>%
+    dplyr::mutate(Dimension = paste0("PC", 1:dplyr::n()),
+                  .before = 1) %>%
+  tidyr::pivot_longer(-Dimension, names_to = "method", values_to = "Eigenvalues")
+combos = expand.grid(`m2` = unique(eigenvalues$method),
+                     `m1` = unique(eigenvalues$method)) %>%
+  data.frame() %>%
+  dplyr::filter(m2 != m1)
+
+eigenvalues2 = eigenvalues %>%
+  dplyr::rename("m1" = "method", "e1" = "Eigenvalues") %>%
+  dplyr::full_join(combos, by = c("m1" = "m1"),
+                   relationship = "many-to-many") %>%
+  dplyr::full_join(eigenvalues %>%
+                     dplyr::rename("m2" = "method", "e2" = "Eigenvalues"),
+                   relationship = "many-to-many",
+                   by = dplyr::join_by(Dimension, m2)) %>%
+  dplyr::mutate(`Method 1` = runs_ordered[m1],
+                `Method 2` = runs_ordered[m2],
+                `Method 1` = factor(`Method 1`, levels = unique(runs_ordered)),
+                `Method 2` = factor(`Method 2`, levels = unique(runs_ordered)))
+
+eigenvalues2 %>%
+  ggplot() +
+  geom_abline(slope = 1, intercept = 0, color = "red") +
+  geom_point(aes(x = e1, y = e2), shape = 20, alpha = 0.4, stroke = NA, size = 5) +
+  facet_grid(`Method 1` ~ `Method 2`) +
+  scale_y_log10() +
+  scale_x_log10() +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
+  coord_equal()
+```
+
+The 
+
+```{r eigenvalues_differ, echo = FALSE}
+eigenvalues2 %>%
+    dplyr::select(Dimension, `Method 1`, e1) %>%
+    dplyr::distinct() %>%
+    tidyr::pivot_wider(names_from = "Method 1", values_from = "e1")
+```
+
+
+## Example
+
+``` r
+library(FastPCA)
+
+setup_py_env(method = "conda", envname = "FastPCA", cuda = FALSE)
+
+start_dat = readRDS("smalley_maldi_clustering_for_alex_2025-06-06/27213_all_regions-nonorm_norm_filtered.rds")
+dim(start_dat)
+#2343 x 98647
+
+processed_dat = FastPCA::prep_matrix(as.matrix(start_dat),
+                                     log2 = TRUE, 
+                                     transpose = TRUE,
+                                     scale = TRUE)
+dim(processed_dat)
+#98647 x 2343
+
+out_svd = FastPCA(processed_dat, 
+                  k = 50,
+                  p = 10,
+                  q_iter = 2)
+system.time({
+  out_svd = FastPCA(processed_dat, 
+                    k = 50,
+                    p = 10,
+                    q_iter = 2)
+})
+```
+
+Execution times:
+
+-   User - 1.754
+-   System - 1.845
+-   Elapsed - 0.648
+
+## Outputs
+
+Outputs are singular values. To convert to scores in R, multiply the left singular values by the
+
+``` r
+torch_pc_scores = get_pc_scores(out_svd)
+```

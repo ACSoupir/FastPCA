@@ -1,40 +1,76 @@
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
 # FastPCA
 
-Install with
+<!-- badges: start -->
 
-```         
+<!-- badges: end -->
+
+The goal of FastPCA is to speed up calculations of singular value
+decomposition (SVD) by leveraging the large about of work that has gone
+into python libraries, specifically PyTorch, for matrix operations.
+FastPCA offers similar performance to other highly optimized SVD methods
+in R (see below) while being an order of magnitude faster.
+
+## Installation
+
+You can install the development version of FastPCA from
+[GitHub](https://github.com/) with:
+
+``` r
+# install.packages("devtools")
 devtools::install_github("ACSoupir/FastPCA")
 ```
 
-Requires reticulate. Recommend having conda installed for environment isolation.
-
-After installing, need to setup with `FastPCA::setup_py_env()`
+After installation, need to perform setup by either creating a conda
+environment with (py)torch and numpy installed, or by running
+`FastPCA::setup_py_env()` which will attempt to create an environment
+and install the necessary packages.
 
 ## Benchmarking against PCAone
 
-Using a matrix that contains 98,647 pixels with 2,925 MALDI peaks, I have run the [`PCAone`](https://cran.r-project.org/web/packages/pcaone/index.html) package with both of their algorithms. For each of the methods, I calculated 100 dimensions from the data using 10 oversampling dimensions as well as 10 power iterations. The speed difference was:
+Using a matrix that contains 98,647 pixels with 2,925 MALDI peaks, I
+have run the
+[`PCAone`](https://cran.r-project.org/web/packages/pcaone/index.html)
+package with both of their algorithms. For each of the methods, I
+calculated 100 dimensions from the data using 10 oversampling dimensions
+as well as 10 power iterations. The speed difference was:
 
-|   | User Time (s) | System Time (s) | **Elapsed Time (s)** |
-|----|----|----|----|
-| PCAone Alg1 | 44.805 | 0.574 | **45.556** |
-| PCAone Alg2 | 48.518 | 0.743 | **49.446** |
-| FastPCA Randomized | 20.881 | 5.612 | **6.272** |
-| FastPCA Exact | 79.694 | 11.564 | **35.819** |
-| FastPCA Randomized (cuda) | 0.799 | 0.638 | **0.939** |
+|                          | User Time (s) | System Time (s) | Elapsed Time (s) |
+|:-------------------------|--------------:|----------------:|:-----------------|
+| PCAone Alg1              |        44.805 |           0.574 | **45.556**       |
+| PCAone Alg2              |        48.518 |           0.743 | **49.446**       |
+| FastPCA Randomized (CPU) |        19.898 |           5.227 | **5.306**        |
+| FastPCA Randomized (GPU) |         0.799 |           0.638 | **0.939**        |
+| FastPCA Exact (CPU)      |        79.694 |          11.564 | **35.819**       |
 
-Memory does appear to be greater when using FastPCA over PCAone (profiled with [`profmem`](https://cran.r-project.org/web/packages/profmem/)):
+Memory does appear to be greater when using FastPCA over PCAone
+(profiled with
+[`profmem`](https://cran.r-project.org/web/packages/profmem/)):
 
-|                           | Memory (MB) |
-|---------------------------|-------------|
-| PCAone Alg1               | 81.26       |
-| PCAone Alg2               | 81.26       |
-| FastPCA Randomized        | 171.05      |
-| FastPCA Exact             | 4753.69     |
-| FastPCA Randomized (cuda) | 171.06      |
+|                          | Memory   |
+|:-------------------------|:---------|
+| PCAone Alg1              | 77.5 Mb  |
+| PCAone Alg2              | 77.5 Mb  |
+| FastPCA Randomized (CPU) | 163.1 Mb |
+| FastPCA Randomized (GPU) | 163.1 Mb |
+| FastPCA Exact (CPU)      | 4.4 Gb   |
+
+### Results
+
+First exploring the eigenvalues calculated by all methods, on the high
+end they are all very similar as expected. FastPCA uses essentially the
+same method as PCAone uses for `'alg1'` so its logical that PCAone with
+`'alg1'` produces results much more siilar to FastPCA. Interestingly,
+FastPCA without random projection and power iterations produces results
+more similar to `'alg1'` and FastPCA’s Randomized method.
+
+<img src="man/figures/README-eigenvalue_against-1.png" width="75%" style="display: block; margin: auto;" />
 
 ## Example
 
-```         
+``` r
 library(FastPCA)
 
 setup_py_env(method = "conda", envname = "FastPCA", cuda = FALSE)
@@ -64,14 +100,15 @@ system.time({
 
 Execution times:
 
--   User - 1.754
--   System - 1.845
--   Elapsed - 0.648
+- User - 1.754
+- System - 1.845
+- Elapsed - 0.648
 
 ## Outputs
 
-Outputs are singular values. To convert to scores in R, multiply the left singular values by the
+Outputs are singular values. To convert to scores in R, multiply the
+left singular values by the
 
-```         
+``` r
 torch_pc_scores = get_pc_scores(out_svd)
 ```

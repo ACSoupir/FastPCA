@@ -2,3 +2,6 @@
 .Rhistory
 .RData
 .Ruserdata
+*_mem.rds
+*_res.rds
+*_time.rds
