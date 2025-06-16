@@ -77,7 +77,7 @@ full output of `FastPCA`’s exact.
 <img src="man/figures/README-eigenvalue_against-1.png" width="75%" style="display: block; margin: auto;" />
 
 The values start to deviate after ~50 dimensions between `PCAone`’s
-`'alg1'` compared to `FastPCA` and `irlba`.
+`'alg2'` compared to `FastPCA` and `irlba`.
 
 | Dimension | Irlba | PCAone Alg1 | PCAone Alg2 | FastPCA Randomized (CPU) | FastPCA Exact (CPU) |
 |:---|---:|---:|---:|---:|---:|
