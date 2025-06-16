@@ -144,7 +144,7 @@ eigenvalues2 %>%
   coord_equal()
 ```
 
-The values start to deviate after ~50 dimensions between `PCAone`'s `'alg1'` compared to `FastPCA` and `irlba`.
+The values start to deviate after ~50 dimensions between `PCAone`'s `'alg2'` compared to `FastPCA` and `irlba`.
 
 ```{r eigenvalues_differ, echo = FALSE}
 eigenvalues3 = eigenvalues2 %>%
