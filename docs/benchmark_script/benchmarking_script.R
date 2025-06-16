@@ -2,6 +2,7 @@ source("docs/benchmark_script/0.1.project_functions.R")
 library(pcaone)
 library(Matrix)
 library(magrittr)
+library(irlba)
 FastPCA::setup_py_env()
 devtools::load_all()
 
@@ -40,6 +41,7 @@ saveRDS(pcaone_alg2_res, "docs/benchmark_script/outputs/pcaone_alg2_res.rds")
 saveRDS(pcaone_alg2_time, "docs/benchmark_script/outputs/pcaone_alg2_time.rds")
 saveRDS(pcaone_alg2_mem, "docs/benchmark_script/outputs/pcaone_alg2_mem.rds")
 
+#fastPCA
 fastpca_time = system.time({
   fastpca_res = FastPCA(scaled_mat, k = k, p = oversampling, q_iter = power_iterations)
 })
@@ -58,3 +60,12 @@ fastpca_exact_res$S = fastpca_exact_res$S[1:100]
 saveRDS(fastpca_exact_res, "docs/benchmark_script/outputs/fastpca_exact_cpu_res.rds")
 saveRDS(fastpca_exact_time, "docs/benchmark_script/outputs/fastpca_exact_cpu_time.rds")
 saveRDS(fastpca_exact_mem, "docs/benchmark_script/outputs/fastpca_exact_cpu_mem.rds")
+
+#common irlba
+irlba_time = system.time({
+  irlba_res = irlba(scaled_mat, nv = 100, work = 200) #work = nv + additional subspace
+})
+irlba_mem = profmem::profmem(irlba(scaled_mat, nv = 100, work = 200))
+saveRDS(irlba_res, "docs/benchmark_script/outputs/irlba_res.rds")
+saveRDS(irlba_time, "docs/benchmark_script/outputs/irlba_time.rds")
+saveRDS(irlba_mem, "docs/benchmark_script/outputs/irlba_mem.rds")

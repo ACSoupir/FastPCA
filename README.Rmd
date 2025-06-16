@@ -18,7 +18,7 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of FastPCA is to speed up calculations of singular value decomposition (SVD) by leveraging the large about of work that has gone into python libraries, specifically PyTorch, for matrix operations. FastPCA offers similar performance to other highly optimized SVD methods in R (see below) while being an order of magnitude faster.
+The goal of `FastPCA` is to speed up calculations of singular value decomposition (SVD) by leveraging the large about of work that has gone into python libraries, specifically PyTorch, for matrix operations. `FastPCA` offers similar performance to other highly optimized SVD methods in R (see below) while being an order of magnitude faster.
 
 ## Installation
 
@@ -63,7 +63,7 @@ grouped_dat = lapply(grouped_files, function(x){
 })
 ```
 
-Using a matrix that contains 98,647 pixels with 2,925 MALDI peaks, I have run the [`PCAone`](https://cran.r-project.org/web/packages/pcaone/index.html) package with both of their algorithms. For each of the methods, I calculated 100 dimensions from the data using 10 oversampling dimensions as well as 10 power iterations. The speed difference was:
+Using a matrix that contains 98,647 pixels with 2,925 MALDI peaks, I have run the [`PCAone`](https://cran.r-project.org/web/packages/pcaone/index.html) package with both of their algorithms. For each of the methods, I calculated 100 dimensions from the data using 10 oversampling dimensions as well as 10 power iterations. Additionally, I tested the commonly used [`irlba`](https://cran.r-project.org/web/packages/irlba/index.html) pacakge using `work=200` for a similar 200 dims in `FastPCA` and `PCAone`. The speed difference was:
 
 ```{r table_time, echo = FALSE, align = "center"}
 lapply(grouped_dat, function(d) t(data.frame(d$time))) %>% 
@@ -81,7 +81,7 @@ lapply(grouped_dat, function(d) t(data.frame(d$time))) %>%
     knitr::kable(escape = FALSE)
 ```
 
-Memory does appear to be greater when using FastPCA over PCAone (profiled with [`profmem`](https://cran.r-project.org/web/packages/profmem/)):
+Memory does appear to be greater when using `FastPCA` over `PCAone`, but `irlba` also has higher memory usage than both when estimating top dimensions (except with `FastPCA` estimating all dimensions; profiled with [`profmem`](https://cran.r-project.org/web/packages/profmem/)):
 
 ```{r table_memory, echo = FALSE, align = "center"}
 lapply(grouped_dat, function(d) utils:::format.object_size(sum(d$mem$bytes), "auto")) %>% 
@@ -98,9 +98,9 @@ lapply(grouped_dat, function(d) utils:::format.object_size(sum(d$mem$bytes), "au
 
 ### Results
 
-First exploring the eigenvalues calculated by all methods, on the high end they are all very similar as expected. FastPCA uses essentially the same method as PCAone uses for `'alg1'` so its logical that PCAone with `'alg1'` produces results much more siilar to FastPCA. Interestingly, FastPCA without random projection and power iterations produces results more similar to `'alg1'` and FastPCA's Randomized method. 
+First exploring the eigenvalues calculated by all methods, on the high end they are all very similar as expected. `FastPCA` uses essentially the same method as `PCAone` uses for `'alg1'` so its logical that `PCAone` with `'alg1'` produces results much more similar to `FastPCA`. Interestingly, `FastPCA` without random projection and power iterations produces results more similar to `'alg1'` and `FastPCA`'s Randomized method. `irlba` also produces resutls very in line with those from the full output of `FastPCA`'s exact.
 
-```{r eigenvalue_against, echo = FALSE, fig.width=8, fig.height=8, dpi=300, out.width="75%", fig.align="center"}
+```{r eigenvalue_against, echo = FALSE, fig.width=10, fig.height=10, dpi=300, out.width="75%", fig.align="center"}
 library(ggplot2)
 eigenvalues = lapply(grep("gpu", runs, value = TRUE, invert = TRUE), function(x){
     if("S" %in% names(grouped_dat[[x]]$res)){
@@ -144,15 +144,52 @@ eigenvalues2 %>%
   coord_equal()
 ```
 
-The 
+The values start to deviate after ~50 dimensions between `PCAone`'s `'alg1'` compared to `FastPCA` and `irlba`.
 
 ```{r eigenvalues_differ, echo = FALSE}
-eigenvalues2 %>%
-    dplyr::select(Dimension, `Method 1`, e1) %>%
-    dplyr::distinct() %>%
-    tidyr::pivot_wider(names_from = "Method 1", values_from = "e1")
+eigenvalues3 = eigenvalues2 %>%
+  dplyr::select(Dimension, `Method 1`, e1) %>%
+  dplyr::distinct() %>%
+  tidyr::pivot_wider(names_from = "Method 1", values_from = "e1") %>%
+  dplyr::filter(as.numeric(gsub("PC", "", Dimension)) >= 45)
+eigenvalues3 %>%
+  dplyr::slice(1: 10) %>%
+  knitr::kable(escape = FALSE)
 ```
 
+Visualizing PCs past 45, we can see the discrepancies better. `PCAone`'s `'alg2'` shows more deviation from all other methods. Compared to the Exact solution from `FastPCA`, `irlba`, `PCAone` with `'alg1'`, and `FastPCA`'s randomized method all match very well up to the 100 PCs returned.
+
+```{r eigenvalue_against_45, echo = FALSE, fig.width=10, fig.height=10, dpi=300, out.width="75%", fig.align="center"}
+tmp = eigenvalues3 %>%
+  tidyr::pivot_longer(-Dimension, names_to = "method", values_to = "Eigenvalues")
+combos2 = expand.grid(`m2` = unique(tmp$method),
+                     `m1` = unique(tmp$method)) %>%
+  data.frame() %>%
+  dplyr::filter(m2 != m1)
+eigenvalues4 = tmp %>%
+  dplyr::rename("m1" = "method", "e1" = "Eigenvalues") %>%
+  dplyr::full_join(combos2, by = c("m1" = "m1"),
+                   relationship = "many-to-many") %>%
+  dplyr::full_join(tmp %>%
+                     dplyr::rename("m2" = "method", "e2" = "Eigenvalues"),
+                   relationship = "many-to-many",
+                   by = dplyr::join_by(Dimension, m2)) %>%
+  dplyr::rename("Method 1" = "m1",
+                "Method 2" = "m2") %>%
+  dplyr::mutate(`Method 1` = factor(`Method 1`, levels = unique(runs_ordered)),
+                `Method 2` = factor(`Method 2`, levels = unique(runs_ordered)))
+
+eigenvalues4 %>%
+  ggplot() +
+  geom_abline(slope = 1, intercept = 0, color = "red") +
+  geom_point(aes(x = e1, y = e2), shape = 20, alpha = 0.4, stroke = NA, size = 5) +
+  facet_grid(`Method 1` ~ `Method 2`) +
+  scale_y_log10() +
+  scale_x_log10() +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
+  coord_equal()
+```
 
 ## Example
 
