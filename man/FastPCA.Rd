@@ -2,14 +2,23 @@
 % Please edit documentation in R/FastPCA.R
 \name{FastPCA}
 \alias{FastPCA}
-\title{Perform Randomized SVD with PyTorch backend}
+\title{Perform SVD}
 \usage{
-FastPCA(input_r_matrix, k, p = 10, q_iter = 2, exact = FALSE)
+FastPCA(
+  input_r_matrix,
+  k = 100,
+  p = 10,
+  q_iter = 2,
+  exact = FALSE,
+  backend = c("tinygrad", "pytorch"),
+  device = c("cpu", "gpu"),
+  cores = 4
+)
 }
 \arguments{
 \item{input_r_matrix}{A numeric R matrix. It's assumed that rows are observations
 (e.g., samples) and columns are features (e.g., genes). The function will
-transpose this for the PyTorch SVD based on the original Python script's logic.}
+transpose this for the PyTorch or Tinygrad SVD based on the original Python script's logic.}
 
 \item{k}{Integer. The number of singular values/vectors to compute.}
 
@@ -18,6 +27,10 @@ transpose this for the PyTorch SVD based on the original Python script's logic.}
 \item{q_iter}{Integer. Number of power iterations (default: 2).}
 
 \item{exact}{Boolean. Whether to compute the exact matrix or not.}
+
+\item{backend}{Character. which backend to use, either torch or tinygrad. \strong{Only pytorch is currently implemented. Waiting on Tidygrad maturation}}
+
+\item{cores}{Integer. number of CPU cores to use with the backend}
 }
 \value{
 A list containing:
@@ -27,8 +40,8 @@ A list containing:
 All results are moved to CPU by the Python script and returned as R objects.
 }
 \description{
-This function uses PyTorch implementation of Randomized SVD to compute
-the singular value decomposition.
+This function will perform either Randomized SVD or exact SVD to compute
+the singullar value decomposition of large matrices.
 }
 \examples{
 \dontrun{

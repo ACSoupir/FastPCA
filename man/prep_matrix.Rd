@@ -4,7 +4,15 @@
 \alias{prep_matrix}
 \title{Perform transpose and scaling of matrix}
 \usage{
-prep_matrix(mat, log2 = TRUE, transpose = FALSE, scale = TRUE)
+prep_matrix(
+  mat,
+  log2 = TRUE,
+  transpose = FALSE,
+  scale = TRUE,
+  backend = c("tinygrad", "pytorch"),
+  cores = 2,
+  device = c("CPU", "GPU")
+)
 }
 \arguments{
 \item{mat}{A numeric R matrix.}
@@ -12,13 +20,16 @@ prep_matrix(mat, log2 = TRUE, transpose = FALSE, scale = TRUE)
 \item{transpose}{Boolean. Whether the matrix needs to be transposed. If starting with samples as columns, set to \code{TRUE}. Default is \code{FALSE}}
 
 \item{scale}{Boolean. Whether to center and scale the matrix. Default to \code{TRUE}}
+
+\item{backend}{Character. The backend which to use for performing transformations. Default is "tinygrad"}
+
+\item{cores}{Numeric. The number of cores to use.}
 }
 \value{
 A matrix that has been rotated (transposed) and scaled if needed
 }
 \description{
-This function uses PyTorch implementation of Randomized SVD to compute
-the singular value decomposition.
+This function uses python to perform transformations of the input matrix
 }
 \examples{
 \dontrun{
