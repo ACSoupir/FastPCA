@@ -26,7 +26,37 @@ devtools::install_github("ACSoupir/FastPCA")
 After installation, need to perform setup by either creating a conda
 environment with (py)torch and numpy installed, or by running
 `FastPCA::setup_py_env()` which will attempt to create an environment
-and install the necessary packages.
+and install the necessary packages. **I recommend using python 3.10 if
+you want to leverage `tinygrad` as have noticed issues with device
+support with python 3.9.**
+
+### Mac
+
+On Mac if you run into issues, have had luck with installing
+[`macrtools`](https://mac.thecoatlessprofessor.com/macrtools/index.html)
+with:
+
+``` r
+# install.packages("remotes")
+remotes::install_github("coatless-mac/macrtools")
+```
+
+Then, either installing it’s full set:
+
+``` r
+macrtools::macos_rtools_install()
+```
+
+or if the error is gfortran related, uninstalling and installing again
+with:
+
+``` r
+macrtools::gfortran_uninstall()
+macrtools::gfortran_install(
+    password = base::getOption("macrtools.password"),
+    verbose = TRUE
+)
+```
 
 ## Benchmarking against PCAone
 
