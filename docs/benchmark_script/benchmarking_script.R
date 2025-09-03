@@ -69,3 +69,13 @@ irlba_mem = profmem::profmem(irlba(scaled_mat, nv = 100, work = 200))
 saveRDS(irlba_res, "docs/benchmark_script/outputs/irlba_res.rds")
 saveRDS(irlba_time, "docs/benchmark_script/outputs/irlba_time.rds")
 saveRDS(irlba_mem, "docs/benchmark_script/outputs/irlba_mem.rds")
+
+#bigstatsr
+A = bigstatsr::as_FBM(scaled_mat, type="double")
+bigstatsr_partial_time = system.time({
+  bigstatsr_partial_res = bigstatsr::big_SVD(A, k = 200)
+})
+bigstatsr_partial_mem = profmem::profmem(bigstatsr::big_SVD(A, k = 200))
+saveRDS(bigstatsr_partial_res, "docs/benchmark_script/outputs/bigstatsr_partial_res.rds")
+saveRDS(bigstatsr_partial_time, "docs/benchmark_script/outputs/bigstatsr_partial_time.rds")
+saveRDS(bigstatsr_partial_mem, "docs/benchmark_script/outputs/bigstatsr_partial_mem.rds")
