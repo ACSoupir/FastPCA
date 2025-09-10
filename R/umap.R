@@ -43,6 +43,11 @@ umap = function(pc_scores,
   densemap = as.integer(ifelse(densemap, 1, 0))
   verbose = as.integer(ifelse(verbose, 1, 0))
 
+  #make sure environment is initialized and the script is loaded.
+  if (!reticulate::py_available(initialize = FALSE)) {
+    stop("Python environment not initialized. Please run `FastPCA::start_FastPCA_env()` first.")
+  }
+
   .globals = python_functions()
   out = .globals$umap_calculation$umap_learn_py(pc_scores,
                                                 n_neighbors = n_neighbors,
