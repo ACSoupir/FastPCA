@@ -46,10 +46,6 @@ setup_py_env <- function(method = c("conda", "virtualenv"),
     if(method != "conda") stop("In order to use cuda, must have conda")
   }
 
-  if(!reticulate::py_available(initialize = TRUE)){
-    stop("Python not available to create a virtual environment with. Please install python at the system level")
-  }
-
   message(paste("Attempting to set up Python environment '", envname, "' using ", method, "...", sep=""))
 
     #allow for the error to be handled at the end
