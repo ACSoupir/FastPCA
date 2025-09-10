@@ -1,0 +1,287 @@
+---
+title: "Using FastPCA on Large Matrices"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Using FastPCA on Large Matrices}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## FastPCA!
+
+```{r setup}
+#library(FastPCA)
+devtools::load_all()
+library(ggplot2)
+library(magrittr)
+```
+
+### Example Data
+
+Typically data exported for biological studies have rows as features and samples as columns. Think about the bulk sequencing studies - have each row as a gene and a few columns representing samples. As we move to higher and higher resolution we are getting larger and larger sample sizes, but the number of genes haven't changed. Now we are stretching hundreds of thousands of samples and still a few thousand features profiled for those samples. To simulate this data, will generate 10,000 samples (columns) each with 200 features (rows) to start with. 
+
+```{r generation_params}
+n_samples = 10000
+n_features = 200
+n_groups = 3
+prop_diff=0.4
+```
+
+```{r sim_info, echo = FALSE}
+set.seed(333)
+#samples
+group = rep(seq(n_groups), length.out = n_samples)
+dat= (rexp(n_samples*n_features, rate = 0.1) + 
+        rnorm(n_samples*n_features, mean =1000, sd = 10)) * 
+  (rexp(n_samples*n_features, rate = 0.5) + 1)
+X <- matrix(dat, nrow=n_features, ncol=n_samples,
+            dimnames=list(paste0("feature_", seq_len(n_features)),
+                          paste0("cell_", seq_len(n_samples))))
+diff_feat1 = rbinom(n_features, 1, prop_diff)
+diff_feat2 = rbinom(n_features, 1, prop_diff)
+
+for(i in seq(n_features)){
+  if(diff_feat1[i] != 0) X[i, which(group == 1)] = X[i, which(group == 1)] * (rexp(1, rate = 0.5) + 0.7)
+  if(diff_feat2[i] != 0) X[i, which(group == 3)] = X[i, which(group == 3)] * (rexp(1, rate = 0.5) + 0.7)
+}
+```
+
+```{r summary_of_data, echo = FALSE, eval = FALSE}
+summary(as.vector(X)) #make sure that the matrix is the same each time 
+    # Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    # 0.0     0.0   865.0   677.6  1118.0 17853.0 
+```
+
+## Setting up FastPCA
+
+In order to use `FastPCA`, an environment needs to best created using `setup_py_env()`. It's recommended to use `method = 'conda'` for the environment as there are some perks, especially if there is a CUDA device available. To create the environment, simply call the function. Here, we already have one on the system so the function call tells us.
+
+```{r setup_conda}
+setup_py_env()
+```
+
+Then, after we have the environment built, we can activate it with another `FastPCA` functioned: `start_FastPCA_env()`. Since `setup_py_env()` was run with default parameters, running `start_FastPCA_env()` with default parameters will automatically select the right environment type (`conda` over `virtualenv`) and the environment name (`FastPCA`) to start.
+
+```{r start_conda}
+start_FastPCA_env()
+```
+
+To make sure that the right environment is loaded for use, `reticulate::py_config()` can be ran, which we should see having `FastPCA` in the path, or the environment name set when setting up the environment. If `reticulate` is in the path, unless explicitly named that, it is likely that `reticulate` itself loaded an environment. If that happens, restart your R session and then start with `start_FastPCA_env()` followed by `reticulate::py_config()` to make sure that the right environment is loaded.
+
+```{r python_config}
+reticulate::py_config()
+```
+
+## Prepping Data
+
+```{r}
+#jumpstarting
+d1 = matrix(rnorm(1000, mean = 1000, sd = 10), ncol = 100, nrow = 10)
+d2 = prep_matrix(d1, log2 = TRUE, transpose = TRUE, scale = TRUE, cores = 1)
+res = suppressMessages(FastPCA(d2, k = 5, p = 2, cores = 1))
+scores = get_pc_scores(res)
+```
+
+
+Within `FastPCA`, we've included a function to help prep data for use with the main function. Base R can sometimes be faster but in the event a really large data set is being used and GPU is available, its possible the `prep_matrix()` function is faster. In either case, `prep_matrix()` can do 3 things:
+
+1. log2 transform the data
+2. transpose the matrix from columns being samples to rows being samples (needed for the main function)
+3. scale the data to mean center and unit variance
+
+In this vignette (if viewing the raw markdown), I've included code to simulate some large data (200 features and 10,000 samples) to demonstrate FastPCA speed vs the common IRLBA method. To quickly see some of information about the simulated data:
+
+```{r simulated_data_dimensions}
+message("Data Summary:")
+summary(as.vector(X))
+message("Data Dimensions:")
+dim(X)
+```
+
+Because our main work is with spatial omics which tends to be zero inflated, this simulated data is also zero inflated (attempting to roughly mimic that of MALDI imaging data). To prevent issues with log2 transformations of 0 (-infinity), we are adding `1` to the matrix `X` bringing those values back to 0 after transformation. We will also transpose the data to have samples as rows and scale it so all features can be used. To speed up some of the process, we can increase cores, though, there is diminishing returns because the operations are 
+
+```{r fastpca_prep_matrix}
+prepped_mat = prep_matrix(X,
+                          log2 = TRUE,
+                          transpose = TRUE,
+                          scale = TRUE,
+                          cores = 1)
+```
+
+The matrix is now log2 transformed, scaled, and tranposed to have samples as rows:
+
+```{r new_dat_dimensions}
+message("Data Summary:")
+summary(as.vector(prepped_mat))
+message("Data Dimensions:")
+dim(prepped_mat)
+```
+
+## Running FastPCA
+
+`FastPCA()` works by randomized singular value decomposition (SVD) to calculate a subset of the top dimensions in the data. To do this, it needs to know how many dimensions to return (`k`), some number of over sampling dimensions (meaning that if a user wants 10 dimension, how many extra to calculate on in order to make the 10 desired more accurate; `p`), as well as 'power iterations' which is the number of times the real data are multiplied through the random matrix to transfer information (`q_iter`). If wanted, `FastPCA()` can return the exact SVD information, and typically does so faster than other implemented tools in R like IRLBA, but for things like single cell data analysis most of the information between cell types is held in the top 50 or so PCs, which allows these more memory efficient methods to extract meaningful information out of the data. Further, because `FastPCA()` uses matrix operation tools built for deep learning, it's possible to use GPUs as the compute engine to offer further speed-ups. Not really needed, but nice to have. 
+
+```{r}
+fastpca_res = FastPCA(prepped_mat,
+                      k = 5,
+                      p = 2,
+                      q_iter = 2,
+                      cores = 1)
+```
+
+The output of `FastPCA()` has the left (`U`) and right (`Vh`) singular vectors, as well as the singular values (`S`). This is similar to functions like `irlba::irlba()` but different than `prcomp()` which returns the rotation (eigenvectors) as well as scores by default. Because `irlba::irlba()` is similar to `FastPCA()` in returning the reduced SVD list, lets do some benchmarking using `bench` package.
+
+## Benchmarking
+
+We will use the same `prepped_mat` above that has 10,000 samples and 200 features, similar shape that we would see with biological data where we are profiling genes in a tissue, or we are imaging a tissue for lipids and each pixel has a spectral profile.
+
+### `IRLBA`
+
+First, `irlba::irlba()`. `irlba::irlba()` is a fantastic function the iterates until tolerance is reached in the singular vectors and singular values making very accurate. In combination with accuracy, because it uses the reduced space, it consumes much less memory on these large matrices than `stats::prcomp()`, which will attempt to calculate the full vectors. However, it is single-threaded, meaning that the larger the reduced space is and the input data, the longer it will take to converge. This isn't an issue for pipelines with typical single cell data analyses that have a pretty well defined workflow from the raw data to something that can be interrogated for biological meaning. Where the starts to hinder work is in things such as our spatial transcriptomic studies that we want to test different data normalization methods, transformation, adjustments, etc. Each time the data is normalized a different way (such as using nuclear size, spatially informed normalization, or just typical log2 following library size), the whole dimension reduction needs to be performed again. Further, to attempt to increase speed and decrease memory requirements, some implementations have reduced the input data to include only those features that are most variable globally which inherenly removes information from the data.
+
+Anyhow, all this to say `irlba::irlba()` is fantastic, accurate, and has a low memory foot print, with a few flaws. To demonstrate `FastPCA()` to `irlba::irlba()`, we will extract 5, 10, and 20 most variable dimensions from the data tracking time and memory, and will visualize the output between them afterwards. The only other parameter I'm setting is for making sure that the minimum amount of time the speed and is being assessed over to 5 seconds. 
+
+```{r irlba_timing, cache=TRUE}
+irlba_time_k5_c1 = bench::mark(irlba = irlba::irlba(prepped_mat, nv = 5), min_time = 5)
+irlba_time_k10_c1 = bench::mark(irlba = irlba::irlba(prepped_mat, nv = 10), min_time = 5)
+irlba_time_k20_c1 = bench::mark(irlba = irlba::irlba(prepped_mat, nv = 20), min_time = 5)
+```
+
+### `FastPCA`
+
+As previously discussed, `FastPCA()` also allows for using multiple threads with the pytorch backend so in addition to profiling extracting 5, 10, and 20 dimensions we will also assess using 1 core and 4 cores. This data set is likely too small to see any real difference from the number of threads unless the number or dimensions is increased and the number of power iterations increased (which has diminishing returns). For the sake of testing, will calculate 50 dimensions with 10 oversampling dimensions perform 5 power iterations. 
+
+```{r fast_pca_timing, cache=TRUE}
+fast_pca_time_k5_c1 = bench::mark(fastpca_res = suppressMessages(FastPCA(prepped_mat,
+                                  k = 5,
+                                  p = 20,
+                                  q_iter = 2,
+                                  cores = 1)), min_time = 5)
+fast_pca_time_k10_c1 = bench::mark(fastpca_res = suppressMessages(FastPCA(prepped_mat,
+                                  k = 10,
+                                  p = 20,
+                                  q_iter = 2,
+                                  cores = 1)), min_time = 5)
+fast_pca_time_k20_c1 = bench::mark(fastpca_res = suppressMessages(FastPCA(prepped_mat,
+                                  k = 20,
+                                  p = 2,
+                                  q_iter = 2,
+                                  cores = 1)), min_time = 5)
+fast_pca_time_k5_c4 = bench::mark(fastpca_res = suppressMessages(FastPCA(prepped_mat,
+                                  k = 5,
+                                  p = 20,
+                                  q_iter = 2,
+                                  cores = 4)), min_time = 5)
+fast_pca_time_k10_c4 = bench::mark(fastpca_res = suppressMessages(FastPCA(prepped_mat,
+                                  k = 10,
+                                  p = 20,
+                                  q_iter = 2,
+                                  cores = 4)), min_time = 5)
+fast_pca_time_k20_c4 = bench::mark(fastpca_res = suppressMessages(FastPCA(prepped_mat,
+                                  k = 20,
+                                  p = 20,
+                                  q_iter = 2,
+                                  cores = 4)), min_time = 5)
+fast_pca_time_k50_c1 = bench::mark(fastpca_res = suppressMessages(FastPCA(prepped_mat,
+                                  k = 50,
+                                  p = 20,
+                                  q_iter = 5,
+                                  cores = 1)), min_time = 5)
+fast_pca_time_k50_c4 = bench::mark(fastpca_res = suppressMessages(FastPCA(prepped_mat,
+                                  k = 50,
+                                  p = 20,
+                                  q_iter = 5,
+                                  cores = 4)), min_time = 5)
+```
+
+### Putting it Together
+
+Merging all the results (which could be done in a single call to `bench::mark()` with `check=FALSE`), we can then plot the results. The output of `bench::mark()` has time and memory, so will plot time on the x axis and memory usage on the y axis. 
+
+```{r joining_time_results}
+time_res = mget(grep("time_k", ls(), value = TRUE))
+pl_dat = dplyr::bind_rows(time_res, .id = "source") %>%
+    dplyr::mutate(smaller = gsub(".*time_", "", source),
+                  cores = gsub(".*\\_", "", smaller) %>% gsub("c", "", .) %>% as.numeric(),
+                  dims = gsub("\\_.*", "", smaller) %>% gsub("k", "", .) %>% as.numeric(),
+                  function_name = names(expression), .after = 1)
+```
+
+```{r plotting_time, fig.height = 6, fig.width=6}
+pl_dat %>%
+    ggplot() +
+    geom_point(aes(x = as.numeric(median) * 1000, 
+                   y = as.numeric(mem_alloc) / 1024^2, 
+                   shape = as.factor(cores), 
+                   size = function_name, 
+                   color = as.factor(dims), 
+                   stroke = 1), alpha = 0.5) +
+  theme_bw() +
+  guides(size = guide_legend(title = "CPU Cores"),
+         shape = guide_legend(title = "Dimensions"),
+         color = guide_legend(title = "SVD Method")) +
+  labs(x = "Time (ms)", y = "Memory (Mb)") +
+  lims(x = c(0, NA), y = c(0, NA)) +
+  scale_shape_manual(values = c(16, 3))
+```
+
+We can see that the increase in time and memory for `irlba::irlba()` as we discussed - as the number of dimensions extracted increases, memory and time also increases almost linearly. Conversely, we can see that the besides the run with `FastPCA()` that intentionally increased compute the time was pretty consistent for this data while memory increased with the number of reduced dimensions extracted. It's difficult to really see the differences between the runs with 1 core and 4 cores for these 3 dimension sizes. When we extract more dimensions and perform the increased number of power iterations, it uses more memory and takes longer, but we still don't have quite enough to see a benefit from th enumber of CPU cores. When data is hundreds of thousands of samples and thousands of features, then the increased core count helps.
+
+We can also compare the extracted eigenvalues, using `irlba::irlba()` as the gold standard.
+
+```{r svs_plot, fig.height=8, fig.width = 8}
+svs = lapply(seq(nrow(pl_dat)), function(x){
+  tmp = pl_dat$result[[x]]
+  if("S" %in% names(tmp)){
+    S = tmp$S[1:5]
+  } else {
+    S = tmp$d[1:5]
+  }
+  
+  return(data.frame(func = pl_dat$source[x],
+                    ord = 1:length(S),
+                    cores = pl_dat$cores[x],
+                    SV = S))
+}) %>%
+  do.call(rbind, .) %>%
+  dplyr::filter(cores == 1) %>%
+  dplyr::mutate(func = gsub("_c.*", "", func) %>% gsub("_time", "", .))
+combos = expand.grid(left = unique(svs$func),
+                     right = unique(svs$func)) %>%
+  dplyr::filter(left != right)
+merged_svs = dplyr::full_join(combos, svs, by = c("left" = "func"),relationship = "many-to-many") %>%
+  dplyr::full_join(svs, by = c("right" = "func", "ord" = "ord"),relationship = "many-to-many")
+merged_svs %>%
+  ggplot() +
+  geom_point(aes(x = log2(SV.x), y = log2(SV.y), color = as.factor(ord))) + 
+  geom_abline(intercept = 0, slope = 1, alpha = 0.5) + 
+  facet_grid(left ~ right) +
+  theme_bw() +
+  coord_equal() +
+  guides(color = guide_legend(title = "Value\nRank")) +
+  labs(x = "Singular Value (log2)", y = "Singular Value (log2)") +
+  scale_x_continuous(breaks = c(7, 8, 9))
+```
+
+This data isn't real so there isn't much for structured differences in groups within the data. Because of this only a few PCs would be needed to identify groups in the data. Here we can see that 2 PC explain a large portion of the variance (which we calculate below) and then from PC3 on is all pretty minimal (~0.6% each). With more structure, the singular values and vectors are more stable but from random data, is difficult to extract meaningful information. Even so, if we look at the the higher singular values (3, 4, and 5), they are all pretty stable with slight deviations. In real biological data, we've seen that `FastPCA()` only starts to deviate slightly from `irlba::irlba()` at ~50 PCs and even then it's fractions of a percent different varaince explained.
+
+For the total variance that each PC explains, we can sum the squared input matrix (assuming that it's centered and unit variance scaled) to identify the full variance of the data. Then, if we square each singular value and divide by the total variance, we see the proportion explained. Here I've then multiplied by 100 to get it as a percent.
+
+```{r}
+total_var = sum(prepped_mat^2)
+var_explained = (time_res$fast_pca_time_k50_c1$result[[1]]$S[1:5]^2)/total_var
+message(paste0(paste0(paste0("PC", 1:5), ": ", round(var_explained, 3) * 100, "%"), collapse = "\n"))
+```
+
+
+
+
+
+
