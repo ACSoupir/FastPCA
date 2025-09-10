@@ -60,3 +60,16 @@ python_functions = function(){
 #   .globals$exact_svd_python_module <- reticulate::py_run_file(script_path)
 #   message(paste("Python SVD script '", basename(script_path), "' loaded.", sep=""))
 }
+
+validate_backend = function(backend = c("pytorch", "tinygrad")){
+  backend = match.arg(backend)
+  if(length(backend) == 1 & "tinygrad" %in% backend){
+    message("Falling back to pytorch - current implementations of SVD in tinygrad are slow and memory hungry.")
+    backend = "pytorch"
+  }
+  if(length(backend) == 2){
+    message("Using pytorch backend.")
+    backend = "pytorch"
+  }
+  return(backend)
+}
