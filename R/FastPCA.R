@@ -36,9 +36,14 @@
 #'   # Perform Randomized SVD
 #'   svd_results <- FastPCA::FastPCA(test_data, k = 5)
 #' }
-FastPCA <- function(input_r_matrix, k = 100, p = 10, q_iter = 2, exact = FALSE, backend = c("tinygrad", "pytorch"), device = c("cpu","gpu"), cores = 4) {
-  if(backend == "tinygrad") message("Falling back to pytorch - current implementations of SVD in tinygrad are slow and memory hungry.")
-  backend = "pytorch"#match.arg(backend)
+FastPCA <- function(input_r_matrix,
+                    k = 100,
+                    p = 10,
+                    q_iter = 2,
+                    exact = FALSE,
+                    backend = c("pytorch"), #, "tinygrad"
+                    device = c("cpu","gpu"), cores = 4) {
+  backend = validate_backend(backend)
   device = match.arg(device)
   #make sure input is actualy matrix
   if (!is.matrix(input_r_matrix) || !is.numeric(input_r_matrix)) {
@@ -51,6 +56,11 @@ FastPCA <- function(input_r_matrix, k = 100, p = 10, q_iter = 2, exact = FALSE, 
   p <- as.integer(p)
   q_iter <- as.integer(q_iter)
   cores = as.integer(cores)
+
+  #make sure environment is initialized and the script is loaded.
+  if (!reticulate::py_available(initialize = FALSE)) {
+    stop("Python environment not initialized. Please run `FastPCA::start_FastPCA_env()` first.")
+  }
 
   check_backend(backend)
   #create new environment with the functions

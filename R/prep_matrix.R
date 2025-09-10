@@ -5,7 +5,7 @@
 #' @param mat A numeric R matrix.
 #' @param transpose Boolean. Whether the matrix needs to be transposed. If starting with samples as columns, set to `TRUE`. Default is `FALSE`
 #' @param scale Boolean. Whether to center and scale the matrix. Default to `TRUE`
-#' @param backend Character. The backend which to use for performing transformations. Default is "tinygrad"
+#' @param backend Character. The backend which to use for performing transformations. Default is "pytorch"
 #' @param cores Numeric. The number of cores to use.
 #'
 #' @return A matrix that has been rotated (transposed) and scaled if needed
@@ -28,9 +28,14 @@
 #'   prepped_matrix <- FastPCA::prep_matrix(test_data, log2 = TRUE,
 #'                                   transpose = FALSE, scale = TRUE)
 #' }
-prep_matrix <- function(mat, log2 = TRUE, transpose = FALSE, scale = TRUE, backend = c("tinygrad", "pytorch"), cores = 2, device = c("CPU", "GPU")) {
-  if(backend == "tinygrad") message("Falling back to pytorch - current implementations of SVD in tinygrad are slow and memory hungry.")
-  backend = "pytorch"#match.arg(backend)
+prep_matrix <- function(mat,
+                        log2 = TRUE,
+                        transpose = FALSE,
+                        scale = TRUE,
+                        backend = c("pytorch"), #, "tinygrad"
+                        cores = 2,
+                        device = c("CPU", "GPU")) {
+  backend = validate_backend(backend)
   device = match.arg(device)
   check_backend(backend)
   #convert cores to integer
@@ -42,7 +47,7 @@ prep_matrix <- function(mat, log2 = TRUE, transpose = FALSE, scale = TRUE, backe
   }
 
   #make sure environment is initialized and the script is loaded.
-  if (!reticulate::py_available(initialize = TRUE)) {
+  if (!reticulate::py_available(initialize = FALSE)) {
     stop("Python environment not initialized. Please run `FastPCA::start_FastPCA_env()` first.")
   }
   #create new environment with the functions

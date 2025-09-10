@@ -9,7 +9,7 @@ prep_matrix(
   log2 = TRUE,
   transpose = FALSE,
   scale = TRUE,
-  backend = c("tinygrad", "pytorch"),
+  backend = c("pytorch"),
   cores = 2,
   device = c("CPU", "GPU")
 )
@@ -21,7 +21,7 @@ prep_matrix(
 
 \item{scale}{Boolean. Whether to center and scale the matrix. Default to \code{TRUE}}
 
-\item{backend}{Character. The backend which to use for performing transformations. Default is "tinygrad"}
+\item{backend}{Character. The backend which to use for performing transformations. Default is "pytorch"}
 
 \item{cores}{Numeric. The number of cores to use.}
 }

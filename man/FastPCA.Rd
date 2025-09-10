@@ -10,7 +10,7 @@ FastPCA(
   p = 10,
   q_iter = 2,
   exact = FALSE,
-  backend = c("tinygrad", "pytorch"),
+  backend = c("pytorch"),
   device = c("cpu", "gpu"),
   cores = 4
 )
