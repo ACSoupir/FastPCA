@@ -162,7 +162,8 @@ system.time({
   out_svd = FastPCA(processed_dat, 
                     k = 50,
                     p = 10,
-                    q_iter = 2)
+                    q_iter = 2,
+                    backend = 'pytorch')
 })
 ```
 
