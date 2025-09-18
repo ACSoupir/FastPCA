@@ -8,3 +8,5 @@
 #only online vignettes
 ^vignettes/SpatialTranscriptomics\.Rmd
 ^vignettes/references\.bib
+^docs_acs
+^data
