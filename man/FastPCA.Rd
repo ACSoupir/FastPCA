@@ -12,7 +12,8 @@ FastPCA(
   exact = FALSE,
   backend = c("r", "rtorch", "pytorch", "irlba"),
   device = c("CPU", "GPU"),
-  cores = 4
+  cores = 4,
+  ...
 )
 }
 \arguments{
@@ -32,6 +33,8 @@ transpose this for the PyTorch or Tinygrad SVD based on the original Python scri
 See details for informaiotn about backends.}
 
 \item{cores}{Integer. number of CPU cores to use with the backend}
+
+\item{...}{other parameters to pass to irlba when \code{backend} is either \code{'r'} or \code{'irlba'}}
 }
 \value{
 A list containing:

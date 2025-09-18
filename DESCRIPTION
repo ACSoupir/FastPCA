@@ -1,9 +1,13 @@
 Package: FastPCA
-Title: FastPCA: Leveraging Pytorch for single vector decomposition
+Title: FastPCA: Providing computationally efficient access to dimension reduction.
 Version: 0.0.2.0000
 Authors@R: 
-    person("Alex", "Soupir", , "Alex.Soupir@moffitt.org", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
+    c(
+      person("Alex", "Soupir", , "Alex.Soupir@moffitt.org", role = c("aut", "cre"))
+    )
+Description: Fast singular value decomposition with various backends to improve speed of workflows. Main focus is on increasing speed of iteration in analyzing high dimensional biological data.
+URL: https://github.com/ACSoupir/FastPCA, https://acsoupir.github.io/FastPCA
+BugReports: https://github.com/ACSoupir/FastPCA/issues
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

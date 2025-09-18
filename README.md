@@ -13,6 +13,8 @@ into python libraries, specifically PyTorch, for matrix operations.
 `FastPCA` offers similar performance to other highly optimized SVD
 methods in R (see below) while being an order of magnitude faster.
 
+An interactive version of this site can be found on [GitHub.io](https://acsoupir.github.io/FastPCA)
+
 ## Installation
 
 You can install the development version of FastPCA from
@@ -59,6 +61,9 @@ macrtools::gfortran_install(
 ```
 
 ## Tutorials
+
+Get started running `FastPCA` with the [Using FastPCA on Large
+Matrices](news/index.html) vignette.
 
 ## Benchmarking against PCAone
 
