@@ -5,10 +5,18 @@
 #' @param mat A numeric R matrix.
 #' @param transpose Boolean. Whether the matrix needs to be transposed. If starting with samples as columns, set to `TRUE`. Default is `FALSE`
 #' @param scale Boolean. Whether to center and scale the matrix. Default to `TRUE`
-#' @param backend Character. The backend which to use for performing transformations. Default is "pytorch"
+#' @param backend Character. The backend which to use for performing transformations. Default is "rtorch". Options are "r", "rtorch", or "pytorch". See details for information about the pytorch/conda environments
 #' @param cores Numeric. The number of cores to use.
 #'
 #' @return A matrix that has been rotated (transposed) and scaled if needed
+#'
+#' @details
+#' Depending on the backend chosen, the session may need to be reset with `rstudioapi::restartSession()`.
+#' Mainly, this is due to conflicts between some underlying system level variables with 'rtorch' and 'pytorch'.
+#' Once one is used in a session, the other will fail. Even testing using 'rtorch' and then starting the conda environment
+#' resulted in the environment being loaded by the python libraries/modules are not available. Unless absolutely needed
+#' and for testing, would stick with 'rtorch'
+#'
 #' @export
 #' @examples
 #' \dontrun{
@@ -32,52 +40,37 @@ prep_matrix <- function(mat,
                         log2 = TRUE,
                         transpose = FALSE,
                         scale = TRUE,
-                        backend = c("pytorch"), #, "tinygrad"
+                        backend = c("r", "rtorch", "pytorch"), #, "tinygrad"
                         cores = 2,
                         device = c("CPU", "GPU")) {
-  backend = validate_backend(backend)
+
+  #tranformation backends
+  backend = match.arg(backend)
+  #devices
   device = match.arg(device)
-  check_backend(backend)
+  #validation
+  backend_device = validate_backend(backend, device)
+
   #convert cores to integer
   cores = as.integer(cores)
 
-  #make sure input is actualy matrix
-  if (!is.matrix(mat) || !is.numeric(mat)) {
-    stop("Input must be a numeric R matrix.")
-  }
-
-  #make sure environment is initialized and the script is loaded.
-  if (!reticulate::py_available(initialize = FALSE)) {
-    stop("Python environment not initialized. Please run `FastPCA::start_FastPCA_env()` first.")
-  }
-  #create new environment with the functions
-  .globals = python_functions()
-
-  if(backend=="tinygrad"){
-    avail_devices = .globals$tinygrad_devices$list_available_devices()
-    if(device == "GPU"){
-      device = match.arg(avail_devices, c("HIP", "METAL", "CUDA"), several.ok = TRUE)
-      if(length(device) == 0){
-        stop("GPU device not available")
-      }
-    }
-  }
-
 
   if(backend == "pytorch"){
+    .globals = python_functions()
     # Call the Python function.
-    #reticulate automatically converts mat (R matrix) to a NumPy array.
-    py_results <- .globals$torch_tranformation$transform_py(
+    #reticulate automatically converts mat (R matrix) to a numpy array.
+    out <- .globals$torch_tranformation$transform_py(
       mat,
       log2 = ifelse(log2 == FALSE, 0, 1),
       transpose = ifelse(transpose == FALSE, 0, 1),
       scale = ifelse(scale == FALSE, 0, 1),
       cores = cores
     )
-    rownames(py_results) = colnames(mat)
-    colnames(py_results) = row.names(mat)
-  } else {
-    py_results <- .globals$tinygrad_tranformation$transform_py_tg(
+    rownames(out) = colnames(mat)
+    colnames(out) = row.names(mat)#clearn environment
+    rm(.globals)
+  } else if(backend == "tinygrad") {
+    out <- .globals$tinygrad_tranformation$transform_py_tg(
       mat,
       log2 = ifelse(log2 == FALSE, 0, 1),
       transpose = ifelse(transpose == FALSE, 0, 1),
@@ -85,16 +78,31 @@ prep_matrix <- function(mat,
       cores = cores,
       device = device
     )
-    rownames(py_results) = colnames(mat)
-    colnames(py_results) = row.names(mat)
+    rownames(out) = colnames(mat)
+    colnames(out) = row.names(mat)
+    #clearn environment
+    rm(.globals)
+  } else if(backend == "rtorch"){
+    torch::torch_set_num_threads(cores)
+    mat = torch::torch_tensor(mat, dtype = torch::torch_double())
+    if(log2) mat = torch::torch_log2(mat)
+    if(transpose) mat = torch::torch_t(mat)
+    if(scale){
+      mean_vec = torch::torch_mean(mat, dim = 1)
+      std_vec = torch::torch_std(mat, dim = 1)
+      out = as.matrix((mat - mean_vec)/std_vec)
+    }
+  } else if(backend == "r"){
+    if(log2) mat = log2(mat)
+    if(transpose) mat = t(mat)
+    if(scale) mat = scale(mat)
+    out = mat
+    rm(mat)
   }
 
   #clearn environment
-  rm(.globals)
   invisible(gc(full=TRUE))
-  # py_results is a list (U_np, S_np, Vh_np) from Python.
-  # reticulate automatically converts NumPy arrays back to R matrices/vectors.
-  return(py_results)
+  return(out)
 
 
 }

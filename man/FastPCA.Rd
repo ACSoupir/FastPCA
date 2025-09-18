@@ -10,8 +10,8 @@ FastPCA(
   p = 10,
   q_iter = 2,
   exact = FALSE,
-  backend = c("pytorch"),
-  device = c("cpu", "gpu"),
+  backend = c("r", "rtorch", "pytorch", "irlba"),
+  device = c("CPU", "GPU"),
   cores = 4
 )
 }
@@ -26,9 +26,10 @@ transpose this for the PyTorch or Tinygrad SVD based on the original Python scri
 
 \item{q_iter}{Integer. Number of power iterations (default: 2).}
 
-\item{exact}{Boolean. Whether to compute the exact matrix or not.}
+\item{exact}{Boolean. Whether to compute the exact matrix or not. Only works with pytorch backend}
 
-\item{backend}{Character. which backend to use, either torch or tinygrad. \strong{Only pytorch is currently implemented. Waiting on Tidygrad maturation}}
+\item{backend}{Character. which backend to use, either r, rtorch, pytorch, or irlba. \strong{Tinygrad is not implemented. Waiting on tinygrad maturation}
+See details for informaiotn about backends.}
 
 \item{cores}{Integer. number of CPU cores to use with the backend}
 }
@@ -43,10 +44,15 @@ All results are moved to CPU by the Python script and returned as R objects.
 This function will perform either Randomized SVD or exact SVD to compute
 the singullar value decomposition of large matrices.
 }
+\details{
+Depending on the backend chosen, the session may need to be reset with \code{rstudioapi::restartSession()}.
+Mainly, this is due to conflicts between some underlying system level variables with 'rtorch' and 'pytorch'.
+Once one is used in a session, the other will fail. Even testing using 'rtorch' and then starting the conda environment
+resulted in the environment being loaded by the python libraries/modules are not available. Unless absolutely needed
+and for testing, would stick with 'rtorch'.
+}
 \examples{
 \dontrun{
-  #need to have environment first
-  FastPCA::setup_py_env()
 
   # Create a sample R matrix (e.g., 20 samples, 100 features)
   # Ensure values are positive for log transform.

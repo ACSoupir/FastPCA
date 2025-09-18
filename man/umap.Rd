@@ -8,13 +8,15 @@ umap(
   pc_scores,
   n_neighbors = 15,
   n_components = 2,
+  method = c("uwot", "umap-learn"),
   metric = "euclidean",
   min_dist = 0.1,
   cores = 4,
   seed = -1,
   densemap = TRUE,
   dense_lambda = 2,
-  verbose = FALSE
+  verbose = FALSE,
+  ...
 )
 }
 \arguments{
@@ -23,6 +25,8 @@ umap(
 \item{n_neighbors}{Integer: number of nearest neighbors to use}
 
 \item{n_components}{Integer: number of UMAP dimensions to calculate}
+
+\item{method}{Character: The backend method for calculating UMAP (either 'uwot' or 'umap-learn'). Default is 'uwot'.}
 
 \item{metric}{Character: How to calculate similarity. See details below for more informaation.}
 
@@ -37,6 +41,8 @@ umap(
 \item{dense_lambda}{Numeric: value to apply for local density. Default: 2. higher values prioritize local density while low values are closer to typical UMAP}
 
 \item{verbose}{Boolean: whether to be verbose in function calls}
+
+\item{...}{other parameters to pass to \code{uwot::umap} directly}
 }
 \value{
 matrix with UMAP reductions
@@ -45,7 +51,22 @@ matrix with UMAP reductions
 umap
 }
 \details{
-\code{metric}
+\code{method}:
+
+Currently, there are two ways that UMAP can be calculated: 'uwot' or 'umap-learn'.
+To use 'uwot', it's simply the installation of a dependency (likely already installed if FastPCA is installed).
+This is the same method that is default for Seurat, and is very efficient and fast.
+Some of the parameters that are explicit in the function call (like \code{n_neighbors} and \code{n_components})
+are passed while others shown in \code{uwot::umap}'s documentation can be passed by the \code{...}.
+
+Alternatively, there is a python method called \code{umap-learn}. To use this, a conda environment is preferred.
+\code{FastPCA} provides interfaces to create and then activate the environment with \code{FastPCA::setup_py_env()} and
+\code{FastPCA::start_FastPCA_env()}. Something to keep in mind, that if using this method it's recommended (required?)
+to restart your R session, load \code{FastPCA}, then \code{FastPCA::start_FastPCA_env()}. There are system level conflicts
+somwhere between \code{reticulate} and R's \code{torch} package.
+
+\code{metric}:
+
 There are many metrics that are supported in the python implementation. Here
 are the list in the \href{https://umap-learn.readthedocs.io/en/latest/parameters.html#metric}{documentation}
 for the umap function;

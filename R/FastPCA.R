@@ -9,20 +9,28 @@
 #' @param k Integer. The number of singular values/vectors to compute.
 #' @param p Integer. Oversampling parameter (default: 10).
 #' @param q_iter Integer. Number of power iterations (default: 2).
-#' @param exact Boolean. Whether to compute the exact matrix or not.
-#' @param backend Character. which backend to use, either torch or tinygrad. **Only pytorch is currently implemented. Waiting on Tidygrad maturation**
+#' @param exact Boolean. Whether to compute the exact matrix or not. Only works with pytorch backend
+#' @param backend Character. which backend to use, either r, rtorch, pytorch, or irlba. **Tinygrad is not implemented. Waiting on tinygrad maturation**
+#' See details for informaiotn about backends.
 #' @param cores Integer. number of CPU cores to use with the backend
+#' @param ... other parameters to pass to irlba when `backend` is either `'r'` or `'irlba'`
 #'
 #' @return A list containing:
 #'   \item{U}{The left singular vectors (R matrix). Dimensions: Features x k.}
 #'   \item{S}{The singular values (R numeric vector). Length: k.}
 #'   \item{Vh}{The transpose of the right singular vectors (R matrix). Dimensions: Samples x k.}
 #'   All results are moved to CPU by the Python script and returned as R objects.
+#'
+#' @details
+#' Depending on the backend chosen, the session may need to be reset with `rstudioapi::restartSession()`.
+#' Mainly, this is due to conflicts between some underlying system level variables with 'rtorch' and 'pytorch'.
+#' Once one is used in a session, the other will fail. Even testing using 'rtorch' and then starting the conda environment
+#' resulted in the environment being loaded by the python libraries/modules are not available. Unless absolutely needed
+#' and for testing, would stick with 'rtorch'.
+#'
 #' @export
 #' @examples
 #' \dontrun{
-#'   #need to have environment first
-#'   FastPCA::setup_py_env()
 #'
 #'   # Create a sample R matrix (e.g., 20 samples, 100 features)
 #'   # Ensure values are positive for log transform.
@@ -41,52 +49,67 @@ FastPCA <- function(input_r_matrix,
                     p = 10,
                     q_iter = 2,
                     exact = FALSE,
-                    backend = c("pytorch"), #, "tinygrad"
-                    device = c("cpu","gpu"), cores = 4) {
-  backend = validate_backend(backend)
+                    backend = c("r", "rtorch", "pytorch", "irlba"), #, "tinygrad"
+                    device = c("CPU","GPU"), cores = 4,
+                    ...) {
+  dots = list(...)
+  #tranformation backends
+  backend = match.arg(backend)
+  #devices
+  device = toupper(device)
   device = match.arg(device)
-  #make sure input is actualy matrix
-  if (!is.matrix(input_r_matrix) || !is.numeric(input_r_matrix)) {
-    stop("Input must be a numeric R matrix.")
-  }
-  if (!is.numeric(k) || length(k) != 1 || k <= 0 || k > min(dim(input_r_matrix))) {
-    stop("k must be a single positive integer not exceeding the smaller dimension of the matrix.")
-  }
+  #validation
+  backend_device = validate_backend(backend, device)
   k <- as.integer(k)
   p <- as.integer(p)
   q_iter <- as.integer(q_iter)
   cores = as.integer(cores)
 
-  #make sure environment is initialized and the script is loaded.
-  if (!reticulate::py_available(initialize = FALSE)) {
-    stop("Python environment not initialized. Please run `FastPCA::start_FastPCA_env()` first.")
-  }
-
-  check_backend(backend)
-  #create new environment with the functions
-  .globals = python_functions()
-
   #call python
   if(backend == "pytorch"){
+    .globals = python_functions()
     if(exact){
       py_results <- .globals$torch_exact_svd$exact_svd_py(input_r_matrix, device = device, cores = cores)
       U_r <- py_results[[1]]  # (Features x k)
       S_r <- py_results[[2]]  # (k,) vector
       Vh_r <- py_results[[3]] # (Samples x k)
+      message("Received SVD results from Python. Returning as R objects.")
+      rm(.globals)
     } else {
       py_results <- .globals$torch_random_svd$randomized_svd_py(input_r_matrix, k = k, p = p, q_iter = q_iter, device = device, cores = cores)
       U_r <- py_results[[1]][,1:k]  # (Features x k)
       S_r <- py_results[[2]][1:k]  # (k,) vector
       Vh_r <- py_results[[3]][1:k,] # (Samples x k)
+      message("Received SVD results from Python. Returning as R objects.")
+      rm(.globals)
     }
-  } else {
+  } else if(backend == "tinygrad") {
+    .globals = python_functions()
     py_results <- .globals$tinygrad_random_svd$randomized_svd_py_tg(input_r_matrix, k = k, p = p, q_iter = q_iter, device = device, cores = cores)
     U_r <- py_results[[1]][,1:k]  # (Features x k)
     S_r <- py_results[[2]][1:k]  # (k,) vector
     Vh_r <- py_results[[3]][1:k,] # (Samples x k)
+    message("Received SVD results from Python. Returning as R objects.")
+    rm(.globals)
+  } else if(backend == "rtorch"){
+    results = rtorch_randomized_svd(input_r_matrix, k = k, p = p, q_iter = q_iter, device = device, cores = cores)
+    U_r <- results[[1]]  # (Features x k)
+    S_r <- results[[2]]  # (k,) vector
+    Vh_r <- results[[3]] # (Samples x k)
+  } else if(backend %in% c("r", "irlba")){
+    irlba_vars = names(formals(irlba::irlba))
+    explicit_vars = list(A = input_r_matrix,
+                         nv = k,
+                         work = k + p)
+    irlba_params = dots[names(dots) %in% irlba_vars]
+    irlba_params = irlba_params[!(names(irlba_params) %in% names(explicit_vars))]
+    irlba_params = c(explicit_vars, irlba_params)
+    results = do.call(irlba::irlba,
+                      irlba_params, quote = TRUE)
+    U_r = results$u
+    S_r = results$d
+    Vh_r = t(results$v)
   }
-
-  message("Received SVD results from Python. Returning as R objects.")
 
   # Optionally, set row/column names if you want to preserve them
   # U matrix columns are typically principal components
@@ -104,7 +127,6 @@ FastPCA <- function(input_r_matrix,
   }
 
   #clearn environment
-  rm(.globals)
   invisible(gc(full=TRUE))
 
   # S is a vector, no names needed typically

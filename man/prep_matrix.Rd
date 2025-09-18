@@ -9,7 +9,7 @@ prep_matrix(
   log2 = TRUE,
   transpose = FALSE,
   scale = TRUE,
-  backend = c("pytorch"),
+  backend = c("r", "rtorch", "pytorch"),
   cores = 2,
   device = c("CPU", "GPU")
 )
@@ -21,7 +21,7 @@ prep_matrix(
 
 \item{scale}{Boolean. Whether to center and scale the matrix. Default to \code{TRUE}}
 
-\item{backend}{Character. The backend which to use for performing transformations. Default is "pytorch"}
+\item{backend}{Character. The backend which to use for performing transformations. Default is "rtorch". Options are "r", "rtorch", or "pytorch". See details for information about the pytorch/conda environments}
 
 \item{cores}{Numeric. The number of cores to use.}
 }
@@ -30,6 +30,13 @@ A matrix that has been rotated (transposed) and scaled if needed
 }
 \description{
 This function uses python to perform transformations of the input matrix
+}
+\details{
+Depending on the backend chosen, the session may need to be reset with \code{rstudioapi::restartSession()}.
+Mainly, this is due to conflicts between some underlying system level variables with 'rtorch' and 'pytorch'.
+Once one is used in a session, the other will fail. Even testing using 'rtorch' and then starting the conda environment
+resulted in the environment being loaded by the python libraries/modules are not available. Unless absolutely needed
+and for testing, would stick with 'rtorch'
 }
 \examples{
 \dontrun{

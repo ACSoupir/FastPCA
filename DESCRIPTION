@@ -1,6 +1,6 @@
 Package: FastPCA
 Title: FastPCA: Leveraging Pytorch for single vector decomposition
-Version: 0.0.1.0000
+Version: 0.0.2.0000
 Authors@R: 
     person("Alex", "Soupir", , "Alex.Soupir@moffitt.org", role = c("aut", "cre"))
 Description: What the package does (one paragraph).
@@ -9,11 +9,17 @@ Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Imports: 
-    reticulate
+    reticulate,
+    irlba,
+    uwot
 Suggests: 
     knitr,
     rmarkdown,
     ggplot2,
     dplyr,
-    magrittr
+    magrittr,
+    torch,
+    Seurat,
+    SeuratObject,
+    bench
 VignetteBuilder: knitr

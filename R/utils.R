@@ -6,13 +6,11 @@ check_backend = function(backend = c("tinygrad", "pytorch")){
   #for torch backend
   if(backend == "pytorch"){
     if (!reticulate::py_module_available("torch") || !reticulate::py_module_available("numpy")) {
-      stop("PyTorch 'torch' and/or 'numpy' are not available in the current Python environment.
-           Please run `FastPCA::setup_py_env()` and `FastPCA::start_FastPCA_env()`.")
+      stop("PyTorch 'torch' and/or 'numpy' are not available in the current Python environment.\nPlease run `FastPCA::setup_py_env()` and `FastPCA::start_FastPCA_env()`.")
     }
   } else { #for tinygrad
     if(!reticulate::py_module_available("tinygrad")){
-      stop("Tinygrad is not availble in the current Python environment.
-           Please run `FastPCA::setup_py_env()` and `FastPCA::start_FastPCA_env()`.")
+      stop("Tinygrad is not availble in the current Python environment.\nPlease run `FastPCA::setup_py_env()` and `FastPCA::start_FastPCA_env()`.")
     }
   }
 }
@@ -61,15 +59,46 @@ python_functions = function(){
 #   message(paste("Python SVD script '", basename(script_path), "' loaded.", sep=""))
 }
 
-validate_backend = function(backend = c("pytorch", "tinygrad")){
+validate_backend = function(backend = c("r", "rtorch", "pytorch", "irlba", "tinygrad"),
+                            device = c("CPU", "GPU")){
   backend = match.arg(backend)
-  if(length(backend) == 1 & "tinygrad" %in% backend){
-    message("Falling back to pytorch - current implementations of SVD in tinygrad are slow and memory hungry.")
-    backend = "pytorch"
+  device = match.arg(device)
+  #quick exit if all good
+  if(backend == "r"){
+    if(device == "GPU"){
+      warning("Currently no GPU device implemented for base R PCA")
+      message("Setting device to 'CPU'")
+      device = "CPU"
+    }
   }
-  if(length(backend) == 2){
-    message("Using pytorch backend.")
-    backend = "pytorch"
+  #more complicated things
+  if(backend == "rtorch"){
+    rtorch_avail <- "torch" %in% row.names(installed.packages())
+    if(!rtorch_avail){
+      warning("Torch is not fully installed.\nPlease run `install.packages('torch')` and `torch::install_torch()`")
+      message("Setting backend to 'r' and device to 'CPU'")
+      backend = "r"
+      device = "CPU"
+    } else { #torch is available
+      if(device == "GPU" & !torch::cuda_is_available()){
+        warning("GPU is not avialable for `torch`")
+        message("Setting device to 'CPU'")
+        device = "CPU"
+      }
+      #torch is available and user selected CPU
+    }
   }
-  return(backend)
+
+  #pytorch
+  #doesn't matter if gpu or cpu since the function themselves does the checks in python
+  if(backend == 'pytorch'){
+    check_backend('pytorch')
+  }
+
+  #tinygrad for future implementations
+  if(backend == 'tinygrad'){
+    check_backend('tinygrad')
+  }
+  return(list(backend = backend,
+              device = device))
 }

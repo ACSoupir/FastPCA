@@ -1,0 +1,294 @@
+---
+title: "FastPCA with Single Cell Spatial Transcriptomics"
+output: rmarkdown::html_vignette
+bibliography:
+  references.bib
+vignette: >
+  %\VignetteIndexEntry{FastPCA with Single Cell Spatial Transcriptomics}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(FastPCA)
+library(magrittr)
+```
+
+## Current Landscape of Biological Data Analysis
+
+Data used for studying diseases is increasing at a fast pace. We used to profile \~30,000 genes across 20 samples, then \~30,000 genes across 1,000 samples, now we can profile 18k genes across millions of cells using Bruker (Nanostring) CosMx SMI. We can also image samples in high dimensions with mass spec to get lipid and metabolite profiles from 5x5 um bins in a whole tissue section with \~10,000 unique peaks. Who knows what the future will hold in terms of data dimensionality, but we need to be able to maintain as much information from the whole data as possible while also making it manageable to analyze. This is where dimension reductions like PCA play a big role.
+
+Currently, with how large data has gotten, the widely accepted way to do this is to identify those features (genes, peaks, etc) that have the largest variation between samples (cells, bins, pixels, etc), then use only those to calculate the embedding. But can imagine that there is information in those other features that are then being lost. The great `irlba` package and method performs this dimension reduction accurately but does take time and the R package doesn't offer multithreading which means it can take a very long time depending on how many dimensions are being extracted and the number of samples which are included.
+
+This got me thinking "Is there another way to identify these top dimensions that can be meaningfully multithreaded and produce results that are almost as accurate for the sake of clustering samples?". The field of machine learning has long depended on matrix multiplication to perform operations on large feature-space, leading to the logical path of using their optimized code-bases to do the matrix operations on our high dimensional biological data. `FastPCA` originally was started because of my experience with `pytorch`. [Dr. Rafael S. de Souza](https://github.com/RafaelSdeSouza) created a package [`qrpca`](https://github.com/RafaelSdeSouza/qrpca) is a similar thought to `FastPCA`, though using Rs [`torch`](https://cran.r-project.org/web/packages/torch/index.html) impementation. However, `qrpca` doesn't seem to produce reduced-spaced singular value decomposition like `FastPCA` does with [randomized SVD](https://epubs.siam.org/doi/10.1137/090771806). Because my experience with `pytorch`, I wanted to do this with python through `reticulate` rather than with Rs `torch` (which actually ended up providing more benefits in terms of speed, but does require careful usage because of system-level conflicts). **Due to CRANs checks, the defaults in the package are using base R and `irlba`, but parameter selection can change the backends.**
+
+Here, we will walk through how to use `FastPCA` with the `pytorch` backend, and discuss how this meaningfully differs from both `irlba` and Dr. Rafael's `qrpca`.
+
+## Prepping Conda Environment
+
+Within `FastPCA`, I've included a function called `setup_py_env()` which makes the creation of the python environment with `reticulate` easy to do. The recommended method is `'conda'` since that's what I have had the most experience with and it allows for installing CUDA dependencies as I demonstrated [here](https://github.com/ACSoupir/cuda_conda). If wanting to use CUDA, I'd suggest creating the environment from scratch to ensure that the pytorch install can see the CUDA device as shown in the repo. Otherwise, it's rather straightforward and can be ran by calling:
+
+```{r, eval = FALSE}
+setup_py_env(method = "conda")
+```
+
+## Starting the Environment
+
+Once the environment is created, then it can be started. \*\*If using RStudio, I recommend restarting the session again just to be sure that there isn't anything that would cause conflicts. Again, inside of `FastPCA` I included a function to start the environment: `start_FastPCA_env()`. If the defaults were used when setting up the environment, the defaults can be used when starting the environment as well.
+
+```{r}
+start_FastPCA_env()
+```
+
+Just as a sanity check to make sure that the python packages are available, I typically check with `reticulate`. When using packages like `Seurat` or `torch`, `reticulate` sometimes loses track of where packages are even though it can see the correct python version within the environment and the config paths are all correct. Not sure how this can be fixed without basically writing my own R-python handler that builds function calls and then launches them on the terminal before reading it back to R, so be mindful that certain orders can cause crashes and errors and that they aren't `FastPCA`'s fault but rather something deeper in the software. One example is `reticulate` won't be able to load `pytorch` if R's `torch` has already been used somewhere in the same session.
+
+Here we can see the config is correctly pointing to the conda environment for `FastCPA`.
+
+```{r}
+reticulate::py_config()
+```
+
+And here, can see that the package for `pytorch` is available in the current environment.
+
+```{r}
+reticulate::py_module_available("torch")
+```
+
+If this returns `FALSE`, likely either `start_FastPCA_env()` hasn't been ran or, if the config prints everything write but still get `FALSE` from this, then likely need to restart the environment for reasons beyond my knowledge.
+
+## Spatial Transcriptomic Data
+
+Previously, we performed single-cell spatial transcriptomics using Nanostring (now Bruker) CosMx SMI to identify changes to the tumor microenvironment and specific cell types associated with whether the tumors had been exposed to immunotherapy or not (@Soupir2024-ww). This is a large study in terms of uniquely profiled tissues (tumor and stroma from ~20 patients) and number of cells (~200,000) while the number of genes was small (~1000). As mentioned at the beginning, there are now panels that are 18,000+ genes and can be applied across whole tissues resulting in millions of cells. Because the focus of this vignette is on the performance of the PCA, we are going to compare `FastPCA` to `Seurat`'s. For larger feature-space and sample count, `Seurat` will either: 
+
+- identify the most variables features, select them from the data and perform PCA on those, or
+- create a 'sketch'? of the high sample count (essentially down sample to a smaller number of samples), identify most variable features, select those features and perform PCA on the smaller sample x feature matrix, then use the model from the smaller data set to project the full data in lower dimension
+
+Both of these remove information form the data when performing dimension reduction. One benefit is that it is more memory friendly. However, those that should be helping in the analysis of this type of data should have access to work stations and high performance computing resources, both of which aren't (shouldn't be?) low memory systems. Even with the `Seurat` object from this study, when imported into R it's 2.2GB in size. The data get's large quickly (and this is with sparse matrices).
+
+The dataset is publically available on [Zenodo](https://zenodo.org/doi/10.5281/zenodo.12730226) and can be downloaded locally to be used. I have saved mine to my lab folder. Here, it's read into the environment and then we can start working with it.
+
+```{r}
+seurat_obj = readRDS("/Volumes/lab_soupir/spatial_transcriptomics/example_data/seurat_object.Rds")
+```
+
+##Prepping the Expression Matrix
+
+```{r, echo = FALSE}
+mat = matrix(rnorm(1000 * 20, mean = 100, sd = 10), ncol = 100)
+mat2 = prep_matrix(mat, log2 = TRUE, transpose = TRUE, scale = TRUE, backend = "pytorch")
+mat_svd = suppressMessages(FastPCA(mat2, k = 10, p = 3, q_iter = 2, backend = "pytorch"))
+rm(mat, mat2, mat_svd)
+```
+
+The results here will look different than from the above mentioned manuscript because we are going to process differently (not SCTransform). Will perform the normalization (not scaling) outside of the `FastPCA` package but will use `prep_matrix()` to transform and scale the data. The `prep_matrix()` function will perform log2 transformation but sometimes `log1p()` is used instead.
+
+The raw count data is in the object at `seurat_obj@assays$Nanostring@counts` and in sparse format. How `Seurat` performs normalization is with a scaling factor to bring expression in line between samples after finding the proportion of total counts each gene contributes. This is then used with the `log1p()` function mentioned. 
+
+```{r}
+scale.factor = 10000
+count_mat = as.matrix(seurat_obj@assays$Nanostring@counts)
+count_mat_norm = t(log1p((t(count_mat) / colSums(count_mat)) * scale.factor))
+```
+
+**One large advantage of using `FastPCA` with they python environment is the ability to change the number of CPU cores on the fly, which the `rtorch` backend does not support once it's used (will see `libtorch` warning messages printed out in the terminal)**. Since our data is columns as samples and rows as features, it needs to be transformed to have samples as rows and features as columns. Further, for singular vector decomposition the values should be mean centered (mean of 0) and unit variance (variance of 1) scaled. To do this, we can run:
+
+```{r}
+prepped_mat = prep_matrix(mat = count_mat_norm,
+                          log2 = FALSE,
+                          transpose = TRUE,
+                          scale = TRUE,
+                          backend = "pytorch",
+                          cores = 2,
+                          device = "CPU")
+```
+
+## Running `FastPCA()`
+
+Next is actually running the singular value decomposition with `FastPCA()`. Depending on the backend, there are different parameters that can be passed. The default backend is `'r'` or `'irlba'` which all of the extra parameters with `...` are passed to. The important parameters are `k` for the number of dimensions to return, `p` for the number of extra dimensions to use to more accurately capture information in the `k` dimensions, and `q_iter` for the number of power iterations. **The best way to increase accuracy in the tail end dimensions is to increase `p` rather than inceasing `q_iter`.** The oversampling `p` will increase memory because it increases the size of the matrix but if the variance doesn't differ much in the higher dimensions, it has limited benefit. The `q_iter` parameter will increase accuracy of the top dimensions, which are typically fairly accurately estimated anyway.
+
+```{r}
+fastpca_runs = bench::mark(
+  suppressMessages(
+    FastPCA(input_r_matrix = prepped_mat,
+                      k = 100,
+                      p = 10,
+                      q_iter = 2,
+                      exact = FALSE,
+                      backend = "pytorch",
+                      cores = 1)
+  ),
+  min_time = 5,
+  min_iterations = 5
+)
+```
+
+We can look at the time that it took to calculate the dimensions here:
+
+```{r}
+summary(fastpca_runs$time[[1]])
+```
+
+We will look at the results in the end when we have also run `irlba::irlba` to compare.
+
+## Running with Seurat
+
+The original export from the machine produced a `Seurat` object that was a V4 object. We can create a V5 object from the count matrix and meta data since we don't care about the spatial information for now. 
+
+```{r}
+seurat_obj2 = Seurat::CreateSeuratObject(counts = count_mat,
+                                 meta.data = seurat_obj@meta.data)
+```
+
+The `Seurat::RunPCA()` function requires data to be normalized and scaled. `Seurat` makes this pretty straight forward. Since we will use all genes present (actually 959 genes for this data), will pass in all of the features to the `Seurat::NormalizeData()` and `Seurat::ScaleData()` functions.
+
+```{r}
+seurat_obj2 = Seurat::NormalizeData(seurat_obj2,
+                                    features = rownames(seurat_obj2))
+seurat_obj2 = Seurat::ScaleData(seurat_obj2,
+                                features = rownames(seurat_obj2))
+```
+
+Since `Seurat` uses `irlba` as well behind the scenes, to match the same dimension search that we used with `FastPCA` we 
+
+```{r}
+seurat_run = bench::mark(
+  suppressMessages(
+    Seurat::RunPCA(seurat_obj2, 
+                 reduction.name = "pca", 
+                 npcs = 100, 
+                 work = 110,
+                 features = rownames(seurat_obj2))
+  ),
+  min_time = 1,
+  min_iterations = 1
+)
+```
+
+Again, lets look at the time:
+
+```{r}
+summary(seurat_run$time[[1]])
+```
+
+## Comparing FastPCA to IRLBA
+
+`FastPCA` and `irlba` return the left and right singular vectors as well as the diagonal singular values, but `Seurat` returns `stdev` which from looking at their `Seurat:::RunPCA.default()` is the singular values divided by the square root of the number of samples just like:
+
+```{r}
+fastpca_out = fastpca_runs$result[[1]]
+fastpca_stdev_vec = fastpca_out$S / sqrt(nrow(prepped_mat))
+```
+
+We can visualize these together with some `ggplot2` code.
+
+```{r, fig.height=6, fig.width=8}
+library(ggplot2)
+seurat_stdev = data.frame(
+    stdev = seurat_run$result[[1]]@reductions$pca@stdev
+) %>%
+    dplyr::mutate(dim = 1:dplyr::n(),
+                  method = "SeuratIrlba")
+fastpca_stdev = data.frame(
+  stdev = fastpca_stdev_vec
+) %>%
+  dplyr::mutate(dim = 1:dplyr::n(),
+                method = "FastPCA")
+plot_dat = dplyr::bind_rows(
+  seurat_stdev,
+  fastpca_stdev
+)
+
+#generate plot
+plot_dat %>%
+  dplyr::filter(dim %in% 1:20) %>%
+  ggplot() + 
+  geom_point(aes(x = dim, y = stdev, color = method)) +
+  theme_classic()
+
+```
+
+We can see that in the dimension up to ~10, they are almost identical. When they flatten out (little difference in the variance explained between PCs) it's more difficult for FastPCA. However, let's look at the variance that those dimensions explain. This can be done by squaring the singular values then dividing them by the variance of the full prepped matrix `prepped_mat`:
+
+```{r}
+#signif(fastpca_out$S^2 / sum(prepped_mat^2)*100, digits = 4)
+plot_dat = plot_dat %>% 
+    dplyr::mutate(S = stdev * sqrt(nrow(prepped_mat)),
+                  var_explained = S^2 / sum(prepped_mat^2) * 100)
+plot_dat %>%
+  dplyr::filter(method == "FastPCA") %>%
+  head(n = 15)
+```
+
+View same for `Seurat`/`irlba`:
+
+```{r}
+plot_dat %>%
+  dplyr::filter(method == "SeuratIrlba") %>%
+  head(n = 15)
+```
+
+Here we see that the just how little variance is explained by these slightly higher dimensions, keeping in mind that there are *at most* 978 dimensions before we get back to the full matrix. Speaking of, lets quickly run the exact SVD using `FastPCA`.
+
+```{r}
+fastpca_runs_exact = bench::mark(
+  suppressMessages(
+    FastPCA(input_r_matrix = prepped_mat,
+                      k = 100,
+                      p = 10,
+                      q_iter = 2,
+                      exact = TRUE,
+                      backend = "pytorch",
+                      cores = 1)
+  ),
+  min_time = 5,
+  min_iterations = 5
+)
+```
+
+Even with the full SVD (left) matrix, it still ran:
+
+```{r}
+summary(fastpca_runs_exact$time[[1]])
+```
+
+Can now add these exact values to the plotting data and see how they compare, still taking *FAR* less time than `Seurat`/`irlba`.
+
+```{r, fig.height = 6, fig.width = 8}
+plot_dat_all = plot_dat %>%
+  dplyr::bind_rows(data.frame(method = "FastPCA Exact",
+                             S = fastpca_runs_exact$result[[1]]$S) %>%
+                     dplyr::mutate(stdev = S / sqrt(nrow(prepped_mat)),
+                                   var_explained = S^2 / sum(prepped_mat^2) * 100,
+                                   dim = 1:dplyr::n()))
+plot_dat_all %>%
+  dplyr::filter(dim %in% 1:20) %>%
+  ggplot() + 
+  geom_point(aes(x = dim, y = stdev, color = method), alpha = 0.2) +
+  theme_classic()
+```
+
+Lastly, lets look at the time it took to run each of these:
+
+```{r, fig.height = 6, fig.width = 8}
+time_dat = data.frame(time = c(fastpca_runs$time[[1]], 
+                               fastpca_runs_exact$time[[1]],
+                               seurat_run$time[[1]]),
+                      method = c(rep("FastPCA", fastpca_runs$n_itr[[1]]),
+                                 rep("FastPCA Exact", fastpca_runs_exact$n_itr[[1]]),
+                                 rep("Seurat/Irlba", seurat_run$n_itr[[1]])))
+time_dat %>%
+  ggplot() + 
+  geom_point(aes(x = method, y = time, color = method)) +
+    labs(x = "Method", y = "Time (s)") +
+    theme_classic() +
+    scale_y_log10()
+```
+
+Even on a log scale(!), `FastPCA` looks significantly faster (because it is). 
