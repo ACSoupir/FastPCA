@@ -13,7 +13,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-# FastPCA
+# FastPCA 
 
 <!-- badges: start -->
 <!-- badges: end -->
@@ -56,11 +56,13 @@ macrtools::gfortran_install(
 )
 ```
 
+## Tutorials
+
 ## Benchmarking against PCAone
 
 ```{r finding_files, echo = FALSE}
 library(magrittr)
-files = list.files("docs/benchmark_script/outputs", pattern = "rds", full.names = TRUE) %>%
+files = list.files("docs_acs/benchmark_script/outputs", pattern = "rds", full.names = TRUE) %>%
   grep("bigstatsr", ., value = TRUE, invert = TRUE)
 runs = files %>% gsub(".*\\/", "", .) %>% gsub("_mem..*|_res..*|_time..*", "", .) %>% unique() %>% setNames(.,.)
 grouped_files = lapply(runs, function(x) grep(x, files, value = TRUE))

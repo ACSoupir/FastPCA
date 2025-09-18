@@ -58,6 +58,8 @@ macrtools::gfortran_install(
 )
 ```
 
+## Tutorials
+
 ## Benchmarking against PCAone
 
 Using a matrix that contains 98,647 pixels with 2,925 MALDI peaks, I
