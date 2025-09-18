@@ -58,7 +58,7 @@ macrtools::gfortran_install(
 
 ## Tutorials
 
-Get started running `FastPCA` with the [Using FastPCA on Large Matrices](news/index.html) vignette.
+Get started running `FastPCA` with the [Using FastPCA on Large Matrices](https://acsoupir.github.io/FastPCA/articles/intro.html) vignette.
 
 ## Benchmarking against PCAone
 
