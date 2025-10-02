@@ -63,7 +63,7 @@ macrtools::gfortran_install(
 ## Tutorials
 
 Get started running `FastPCA` with the [Using FastPCA on Large
-Matrices](news/index.html) vignette.
+Matrices](articles/intro.html) vignette.
 
 ## Benchmarking against PCAone
 
