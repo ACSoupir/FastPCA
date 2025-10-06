@@ -1,6 +1,6 @@
 ---
 # Example from https://joss.readthedocs.io/en/latest/submitting.html
-title: 'FastPCA: An R package for fast single value decomposition'
+title: '`FastPCA`: An R package for fast single value decomposition'
 tags:
   - R
   - Python
@@ -38,72 +38,36 @@ journal: JOSS
 
 # Summary
 
-The forces on stars, galaxies, and dark matter under external gravitational
-fields lead to the dynamical evolution of structures in the universe. The orbits
-of these bodies are therefore key to understanding the formation, history, and
-future state of galaxies. The field of "galactic dynamics," which aims to model
-the gravitating components of galaxies to study their structure and evolution,
-is now well-established, commonly taught, and frequently used in astronomy.
-Aside from toy problems and demonstrations, the majority of problems require
-efficient numerical tools, many of which require the same base code (e.g., for
-performing numerical orbit integration).
+The `FastPCA` package provides an interface to optimized matrix multiplication libraries (`libtorch`) for the purpose of singular value decomposition. Using `FastPCA` to perform randomized singular value decomposition drastically reduces the time. Developed for biological data such as single-cell RNA-seq, spatial transcriptomics, or matrix-assisted laser desorption/ionization, `FastPCA` can accurately identify the top singular values in high dimensional data. 
 
-``Gala`` is an Astropy-affiliated Python package for galactic dynamics. Python
-enables wrapping low-level languages (e.g., C) for speed without losing
-flexibility or ease-of-use in the user-interface. The API for ``Gala`` was
-designed to provide a class-based and user-friendly interface to fast (C or
-Cython-optimized) implementations of common operations such as gravitational
-potential and force evaluation, orbit integration, dynamical transformations,
-and chaos indicators for nonlinear dynamics. ``Gala`` also relies heavily on and
-interfaces well with the implementations of physical units and astronomical
-coordinate systems in the ``Astropy`` package [@astropy] (``astropy.units`` and
-``astropy.coordinates``).
+# Introduction
 
-``Gala`` was designed to be used by both astronomical researchers and by
-students in courses on gravitational dynamics or astronomy. It has already been
-used in a number of scientific publications [@Pearson:2017] and has also been
-used in graduate courses on Galactic dynamics to, e.g., provide interactive
-visualizations of textbook material [@Binney:2008]. The combination of speed,
-design, and support for Astropy functionality in ``Gala`` will enable exciting
-scientific explorations of forthcoming data releases from the *Gaia* mission
-[@gaia] by students and experts alike.
+The scale and complexity of biological data have increased substantially in recent years. Advances in single-cell technologies and spatially resolved assays such as matrix-assisted laser desorption/ionization (MALDI) imaging have enabled the collection of datasets with tens of thousands of cells or pixels and thousands of measured features per sample. For example, MALDI datasets may contain over 98,000 pixels and greater than 3,000 spectral peaks, resulting in matrices with millions of values. As the dimensionality of these datasets grows, efficient methods for reducing dimensionality are essential to group samples, such as pixels, cells, or bins, and to perform comparative biological analyses.
+Principal component analysis (PCA) is a widely used technique for dimensionality reduction in biological research. In the R programming environment, which remains a primary tool for many researchers, PCA is commonly performed using functions such as prcomp (which computes full singular value decomposition, or SVD) and irlba (which uses a truncated SVD algorithm). However, prcomp becomes computationally impractical for large datasets due to its memory and time requirements, and irlba, while more efficient, still exhibits performance limitations when estimating a large number of components.
+To address these challenges, we developed `FastPCA`, an R package that wraps high-performance Python-based SVD functionality using base R, R `torch` package, and python `PyTorch` module. `FastPCA` enables researchers to perform scalable and accelerated dimensionality reduction directly from R. The package supports both randomized and exact SVD methods and can utilize either CPU or GPU resources. Benchmarks using a MALDI dataset with 98,647 pixels and 2,925 features show that `FastPCA` achieves significantly faster execution times compared to irlba and the PCAone package while . For example, `FastPCA`’s randomized GPU implementation completed the decomposition in under one second (elapsed time: 0.939 s), while irlba required over 145 seconds under similar conditions. These results are based on direct timing measurements using R’s system.time() function.
+`FastPCA` also produces eigenvalues and principal components that are consistent with those from other established methods. When comparing the top 100 components, `FastPCA`’s randomized and exact methods closely match the outputs from irlba and PCAone’s 'alg1' implementation. Deviations between methods begin to appear beyond the 50th component, particularly with PCAone’s 'alg2', which diverges more noticeably from the others.
+By integrating optimized Python matrix operations into R workflows, `FastPCA` provides a practical and reproducible solution for researchers working with large-scale biological data. Installation is available via GitHub (ACSoupir/FastPCA), and setup can be completed using either a preconfigured conda environment or the built-in setup_py_env() function. This approach allows users to retain their existing R-based analysis pipelines while benefiting from the computational efficiency of modern Python libraries.
 
-# Mathematics
+# Demonstration
 
-Single dollars ($) are required for inline mathematics e.g. $f(x) = e^{\pi/x}$
+`FastPCA`, when using the `libtorch` methods from the R `torch` package or the python `pytorch` module, have a just-in-time compilation of the code so for comparing with `irlba` will 
+```{r, echo = TRUE}
+mat = matrix(rnorm(1000 * 20, mean = 100, sd = 10), ncol = 100)
+mat2 = prep_matrix(mat, log2 = TRUE, transpose = TRUE, scale = TRUE, backend = "pytorch")
+mat_svd = suppressMessages(FastPCA(mat2, k = 10, p = 3, q_iter = 2, backend = "pytorch"))
+rm(mat, mat2, mat_svd)
+```
 
-Double dollars make self-standing equations:
+The dataset is publically available on [Zenodo](https://zenodo.org/doi/10.5281/zenodo.12730226) and can be downloaded locally to be used. (@Soupir2024-ww)
 
-$$\Theta(x) = \left\{\begin{array}{l}
-0\textrm{ if } x < 0\cr
-1\textrm{ else}
-\end{array}\right.$$
+```{r getting_data}
 
-
-# Citations
-
-Citations to entries in paper.bib should be in
-[rMarkdown](https://rmarkdown.rstudio.com/authoring_bibliographies_and_citations.html)
-format.
-
-For a quick reference, the following citation commands can be used:
-- `@author:2001`  ->  "Author et al. (2001)"
-- `[@author:2001]` -> "(Author et al., 2001)"
-- `[@author1:2001; @author2:2001]` -> "(Author1 et al., 2001; Author2 et al., 2002)"
-
-# Rendered R Figures
-
-Figures can be plotted like so:
-
-```{r}
-plot(1:10)
 ```
 
 
 # Acknowledgements
 
-We acknowledge contributions from Brigitta Sipocz, Syrtis Major, and Semyeong
-Oh, and support from Kathryn Johnston during the genesis of this project.
+
 
 # References
 
