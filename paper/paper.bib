@@ -49,3 +49,187 @@
               Single-cell RNA; Spatial transcriptomics",
   language = "en"
 }
+
+@ARTICLE{Lim2025-vb,
+  title    = "A practical guide for choosing an optimal spatial transcriptomics
+              technology from seven major commercially available options",
+  author   = "Lim, Hyun Ju and Wang, Ye and Buzdin, Anton and Li, Xinmin",
+  abstract = "Spatial transcriptomics technology enables the mapping of gene
+              expression within tissues, allowing researchers to visualize the
+              spatial distribution of RNA molecules and gain insights into
+              cellular organization, interactions, and functions in their
+              native environments. A variety of spatial technologies are now
+              commercially available, each offering distinct technical
+              parameters such as cellular resolution, detection sensitivity,
+              gene coverage, and throughput. This wide range of options can
+              make it challenges or create confusion for researchers to select
+              the most appropriate platform for their specific research
+              objectives. In this paper, we will analyze and compare seven
+              major commercially available spatial platforms to guide
+              researchers in choosing the most suitable option for their needs.",
+  journal  = "BMC Genomics",
+  volume   =  26,
+  number   =  1,
+  pages    = "47",
+  month    =  jan,
+  year     =  2025,
+  keywords = "10X Visium; 10X visium HD; CosMx SMI; GeoMx DSP; Merscope; RNA
+              sequencing; Spatial transcriptomics; Stereoseq; Xenium",
+  language = "en"
+}
+@ARTICLE{Zaima2010-gy,
+  title     = "Matrix-assisted laser desorption/ionization imaging mass
+               spectrometry",
+  author    = "Zaima, Nobuhiro and Hayasaka, Takahiro and Goto-Inoue, Naoko and
+               Setou, Mitsutoshi",
+  abstract  = "Matrix-assisted laser desorption/ionization mass spectrometry
+               (MALDI-MS) is a powerful tool that enables the simultaneous
+               detection and identification of biomolecules in analytes.
+               MALDI-imaging mass spectrometry (MALDI-IMS) is a two-dimensional
+               MALDI-mass spectrometric technique used to visualize the spatial
+               distribution of biomolecules without extraction, purification,
+               separation, or labeling of biological samples. MALDI-IMS has
+               revealed the characteristic distribution of several
+               biomolecules, including proteins, peptides, amino acids, lipids,
+               carbohydrates, and nucleotides, in various tissues. The
+               versatility of MALDI-IMS has opened a new frontier in several
+               fields such as medicine, agriculture, biology, pharmacology, and
+               pathology. MALDI-IMS has a great potential for discovery of
+               unknown biomarkers. In this review, we describe the methodology
+               and applications of MALDI-IMS for biological samples.",
+  journal   = "Int. J. Mol. Sci.",
+  publisher = "MDPI AG",
+  volume    =  11,
+  number    =  12,
+  pages     = "5040--5055",
+  month     =  dec,
+  year      =  2010,
+  keywords  = "biomarker; imaging mass spectrometry; lipids; matrix-assisted
+               laser desorption/ionization mass spectrometry; protein",
+  copyright = "https://creativecommons.org/licenses/by/3.0/",
+  language  = "en"
+}
+
+@MISC{Baglama2011-ob,
+  title     = "Irlba: Fast truncated singular value decomposition and principal
+               components analysis for large dense and sparse matrices",
+  author    = "Baglama, Jim and Reichel, Lothar and Lewis, B W",
+  publisher = "The R Foundation",
+  month     =  may,
+  year      =  2011,
+  note      = "Title of the publication associated with this dataset: CRAN:
+               Contributed Packages"
+}
+
+@ARTICLE{Li2023-aa,
+  title    = "Fast and accurate out-of-core {PCA} framework for large scale
+              biobank data",
+  author   = "Li, Zilong and Meisner, Jonas and Albrechtsen, Anders",
+  abstract = "Principal component analysis (PCA) is widely used in statistics,
+              machine learning, and genomics for dimensionality reduction and
+              uncovering low-dimensional latent structure. To address the
+              challenges posed by ever-growing data size, fast and
+              memory-efficient PCA methods have gained prominence. In this
+              paper, we propose a novel randomized singular value decomposition
+              (RSVD) algorithm implemented in PCAone, featuring a window-based
+              optimization scheme that enables accelerated convergence while
+              improving the accuracy. Additionally, PCAone incorporates
+              out-of-core and multithreaded implementations for the existing
+              Implicitly Restarted Arnoldi Method (IRAM) and RSVD. Through
+              comprehensive evaluations using multiple large-scale real-world
+              data sets in different fields, we show the advantage of PCAone
+              over existing methods. The new algorithm achieves significantly
+              faster computation time while maintaining accuracy comparable to
+              the slower IRAM method. Notably, our analyses of UK Biobank,
+              comprising around 0.5 million individuals and 6.1 million common
+              single nucleotide polymorphisms, show that PCAone accurately
+              computes the top 40 principal components within 9 h. This
+              analysis effectively captures population structure, signals of
+              selection, structural variants, and low recombination regions,
+              utilizing <20 GB of memory and 20 CPU threads. Furthermore, when
+              applied to single-cell RNA sequencing data featuring 1.3 million
+              cells, PCAone, accurately capturing the top 40 principal
+              components in 49 min. This performance represents a 10-fold
+              improvement over state-of-the-art tools.",
+  journal  = "Genome Res.",
+  volume   =  33,
+  number   =  9,
+  pages    = "1599--1608",
+  month    =  sep,
+  year     =  2023,
+  language = "en"
+}
+
+@ARTICLE{De_Souza2022-lk,
+  title        = "Qrpca: A package for fast principal component analysis with
+                  {GPU} acceleration",
+  author       = "de Souza, Rafael S and Quanfeng, Xu and Shen, Shiyin and
+                  Peng, Chen and Mu, Zihao",
+  abstract     = "We present qrpca, a fast and scalable QR-decomposition
+                  principal component analysis package. The software, written
+                  in both R and python languages, makes use of torch for
+                  internal matrix computations, and enables GPU acceleration,
+                  when available. qrpca provides similar functionalities to
+                  prcomp (R) and sklearn (python) packages respectively. A
+                  benchmark test shows that qrpca can achieve computational
+                  speeds 10-20 $\times$ faster for large dimensional matrices
+                  than default implementations, and is at least twice as fast
+                  for a standard decomposition of spectral data cubes. The
+                  qrpca source code is made freely available to the community.",
+  year         =  2022,
+  primaryClass = "astro-ph.IM",
+  eprint       = "2206.06797"
+}
+
+@MISC{Falbel2020-wq,
+  title     = "torch: Tensors and Neural Networks with {'GPU'} Acceleration",
+  author    = "Falbel, Daniel and Luraschi, Javier",
+  publisher = "The R Foundation",
+  month     =  aug,
+  year      =  2020,
+  note      = "Title of the publication associated with this dataset: CRAN:
+               Contributed Packages"
+}
+
+@ARTICLE{Paszke2019-go,
+  title        = "{PyTorch}: An imperative style, high-performance deep
+                  learning library",
+  author       = "Paszke, Adam and Gross, Sam and Massa, Francisco and Lerer,
+                  Adam and Bradbury, James and Chanan, Gregory and Killeen,
+                  Trevor and Lin, Zeming and Gimelshein, Natalia and Antiga,
+                  Luca and Desmaison, Alban and K{\"o}pf, Andreas and Yang,
+                  Edward and DeVito, Zach and Raison, Martin and Tejani,
+                  Alykhan and Chilamkurthy, Sasank and Steiner, Benoit and
+                  Fang, Lu and Bai, Junjie and Chintala, Soumith",
+  abstract     = "Deep learning frameworks have often focused on either
+                  usability or speed, but not both. PyTorch is a machine
+                  learning library that shows that these two goals are in fact
+                  compatible: it provides an imperative and Pythonic
+                  programming style that supports code as a model, makes
+                  debugging easy and is consistent with other popular
+                  scientific computing libraries, while remaining efficient and
+                  supporting hardware accelerators such as GPUs. In this paper,
+                  we detail the principles that drove the implementation of
+                  PyTorch and how they are reflected in its architecture. We
+                  emphasize that every aspect of PyTorch is a regular Python
+                  program under the full control of its user. We also explain
+                  how the careful and pragmatic implementation of the key
+                  components of its runtime enables them to work together to
+                  achieve compelling performance. We demonstrate the efficiency
+                  of individual subsystems, as well as the overall speed of
+                  PyTorch on several common benchmarks.",
+  year         =  2019,
+  primaryClass = "cs.LG",
+  eprint       = "1912.01703"
+}
+
+@MISC{Ushey2017-mx,
+  title     = "reticulate: Interface to 'Python'",
+  author    = "Ushey, Kevin and Allaire, J J and Tang, Yuan",
+  publisher = "The R Foundation",
+  month     =  mar,
+  year      =  2017,
+  note      = "Title of the publication associated with this dataset: CRAN:
+               Contributed Packages"
+}
+

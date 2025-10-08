@@ -4,7 +4,10 @@
 ^FastPCA\.Rproj$
 ^\.Rproj\.user$
 ^README\.Rmd$
+^docs_acs$
 
 #only online vignettes
 ^vignettes/SpatialTranscriptomics\.Rmd
 ^vignettes/references\.bib
+^data-raw$
+^data$

@@ -1,6 +1,6 @@
 ---
 # Example from https://joss.readthedocs.io/en/latest/submitting.html
-title: 'FastPCA: An R package for fast single value decomposition'
+title: '`FastPCA`: An R package for fast single value decomposition'
 tags:
   - R
   - Python
@@ -28,7 +28,7 @@ affiliations:
   - name: Department of Bioinformatics and Biostatistics, Moffitt Cancer Center
     index: 3
 citation_author: Ward, Hayes, and Soupir
-date: "04 September, 2025"
+date: "07 October, 2025"
 year: "2025"
 bibliography: paper.bib
 output: rticles::joss_article
@@ -38,75 +38,66 @@ journal: JOSS
 
 # Summary
 
-The forces on stars, galaxies, and dark matter under external gravitational
-fields lead to the dynamical evolution of structures in the universe. The orbits
-of these bodies are therefore key to understanding the formation, history, and
-future state of galaxies. The field of "galactic dynamics," which aims to model
-the gravitating components of galaxies to study their structure and evolution,
-is now well-established, commonly taught, and frequently used in astronomy.
-Aside from toy problems and demonstrations, the majority of problems require
-efficient numerical tools, many of which require the same base code (e.g., for
-performing numerical orbit integration).
+The `FastPCA` package provides an interface to optimized matrix multiplication libraries (`libtorch`) for the purpose of singular value decomposition. Using `FastPCA` to perform randomized singular value decomposition (SVD) drastically reduces the time. Developed for biological data such as single-cell RNA-seq, spatial transcriptomics, or matrix-assisted laser desorption/ionization, `FastPCA` can accurately identify the top singular values in high dimensional data.
 
-``Gala`` is an Astropy-affiliated Python package for galactic dynamics. Python
-enables wrapping low-level languages (e.g., C) for speed without losing
-flexibility or ease-of-use in the user-interface. The API for ``Gala`` was
-designed to provide a class-based and user-friendly interface to fast (C or
-Cython-optimized) implementations of common operations such as gravitational
-potential and force evaluation, orbit integration, dynamical transformations,
-and chaos indicators for nonlinear dynamics. ``Gala`` also relies heavily on and
-interfaces well with the implementations of physical units and astronomical
-coordinate systems in the ``Astropy`` package [@astropy] (``astropy.units`` and
-``astropy.coordinates``).
+# Statement of Need
 
-``Gala`` was designed to be used by both astronomical researchers and by
-students in courses on gravitational dynamics or astronomy. It has already been
-used in a number of scientific publications [@Pearson:2017] and has also been
-used in graduate courses on Galactic dynamics to, e.g., provide interactive
-visualizations of textbook material [@Binney:2008]. The combination of speed,
-design, and support for Astropy functionality in ``Gala`` will enable exciting
-scientific explorations of forthcoming data releases from the *Gaia* mission
-[@gaia] by students and experts alike.
+The scale of biological data has increased substantially in recent years (@Lim2025-vb). Advances in single-cell technologies and spatially resolved assays such as matrix-assisted laser desorption/ionization (MALDI) imaging have enabled the collection of datasets with tens of thousands of cells or pixels and thousands of measured features per sample (@Zaima2010-gy). The current way that these data are processed in R is with dimensionality reduction bringing the feature space down to tens or hundreds of features. However, this is typically done with packages like `irlba` (@Baglama2011-ob) where the process of identifying singular values is iterative, meaning single-thread limited. There are faster packages like `pcaone` (@Li2023-aa) which provides an API for R, but is not multithreaded without modification to the source code. The `qrpca` R package (@De_Souza2022-lk) uses the `torch` (@Falbel2020-wq; @Paszke2019-go) to perform QR based principal component analysis, but doesn't produce reduces space singular values resulting in incredibly large memory requirements for large matrices like those in biological studies with hundreds of thousands of samples (i.e., spots, cells, pixels, etc) and thousands of features (i.e., genes, peaks, etc). To quickly iterate and identify parameters that are biologically relevant (i.e., separate cell types, appropriate normalizations, etc), a faster, more adaptable package is needed for the R environment where these types of analyses are performed.
 
-# Mathematics
+The `FastPCA` R pacakge was developed to address this critical need. `FastPCA` has access to the `torch` backend through R, as well as `pytorch` with `reticulate` (@Ushey2017-mx). We've also included vignettes to demonstrate `FastPCA`'s utility and functionality (<https://acsoupir.github.io/FastPCA/>).
 
-Single dollars ($) are required for inline mathematics e.g. $f(x) = e^{\pi/x}$
+# Functionality
 
-Double dollars make self-standing equations:
+`FastPCA` will default to using `irlba` if the backend is set to `r` but through setting the backend to `torch` or `pytorch`, will use the `libtorch` through different APIs (R or python). Largest flexibility is found through `pytorch` or `torch` since the initial function call will allow setting the number of threads to use for matrix operations. There are two functions within `FastPCA` that aid in the setup of the environments:
 
-$$\Theta(x) = \left\{\begin{array}{l}
-0\textrm{ if } x < 0\cr
-1\textrm{ else}
-\end{array}\right.$$
+-   `setup_py_env()`: creates a python environment (either with 'conda' or 'virtualenv') for using in the event that `pytorch` is wanted for the backend
+-   `start_FastPCA_env`: starts the environment created with `setup_py_env()` to use for `pytorch` backend
 
+Then, there are processing functions that work on input matrices or intermediate lists produced by `FastPCA`:
 
-# Citations
+-   `prep_matrix()`: aids in transformation like log2 and scaling while also providing a single function to transpose the data into the needed orientation for `FastPCA()` (rows as samples, columns as features)
+-   `FastPCA()`: performs either exact SVD (though not recommended other than benchmarking) or reduced-dimension singular value decomposition with `irlba` or randomized SVD
+-   `get_pc_scores()`: calculates the principal component scores from the output of SVD ($U$ matrix which contains left sinular vectors, $\Sigma$ vector containing the singular values, and $V^T$ matrix of the left singular vectors) which are typically expected for downstream analyses
+-   `umap()`: uses either `uwot` (R) or `uwot-learn` (python) for visualization of the principal component scores
 
-Citations to entries in paper.bib should be in
-[rMarkdown](https://rmarkdown.rstudio.com/authoring_bibliographies_and_citations.html)
-format.
+# Demonstration of Improvement
 
-For a quick reference, the following citation commands can be used:
-- `@author:2001`  ->  "Author et al. (2001)"
-- `[@author:2001]` -> "(Author et al., 2001)"
-- `[@author1:2001; @author2:2001]` -> "(Author1 et al., 2001; Author2 et al., 2002)"
+To demonstrate the improvements of `FastPCA`, we use our previous data set of single-cell spatial transcriptomics of kidney cancer. The dataset is publically available on [Zenodo](https://zenodo.org/doi/10.5281/zenodo.12730226) and can be downloaded locally to be used (@Soupir2024-ww). Since the main benefits of `FastPCA` is in the it's application of singular value decomposition, that is what will be focused on. The counts for each cell was extracted from the Seurat object in the Nanostring assay which contains the expression of 978 probes (959 genes, 19 negative control probes) in 199,112 cells. Normalization was performed using `prep_matrix()`, apply a log transformation, scaling (mean centering and unit variance), and transposing for samples to be rows and columns to be the gene features. The full script can be found <https://github.com/ACSoupir/FastPCA/docs_acs/paper/benchmarking_script.R>.
 
-# Rendered R Figures
+Running `FastPCA`, both randomized SVD and exact, `irlba`, `pcaone`, and `bigstatsr`, both partial and partial random SVD, was profiled on an M3 Pro MacBook Pro with 36GB unified RAM. `FastPCA` by default uses 4 CPU cores while the others are single threaded (with the acception of bigstatsr random SVD which does appropriately use mulitiple threads). Time was profiled with the base `system.time()` function. The elapsed time of `FastPCA` calculating the singular value decomposition on the full data took 10.55 seconds and the randomized SVD with `FastPCA`taking 7.63 seconds (Table 1). The next fastest were the methods with PCAone which took 31.35 and 32.75 seconds for "alg1" and "alg2", respectively.
 
-Figures can be plotted like so:
+| Method                 | User Time (s) | System Time (s) | Elapsed Time (s) |
+|------------------------|:-------------:|:---------------:|:----------------:|
+| FastPCA (rSVD)         |     29.39     |      3.83       |       7.63       |
+| FastPCA (Exact)        |     22.29     |      3.47       |      10.55       |
+| IRLBA                  |    477.64     |      11.79      |      490.18      |
+| PCAone (alg1)          |     30.26     |      1.10       |      31.35       |
+| PCAone (alg2)          |     31.82     |      0.95       |      32.75       |
+| bigstatsr (Partial)    |    117.68     |      4.11       |      122.12      |
+| bigstatsr (random SVD) |     0.27      |       0.2       |      69.89       |
 
+: Table 1: Time to calculate singular value decomposition using different R packages and methods.
 
-``` r
-plot(1:10)
-```
+Memory is another area that may dictate methods used. We used `profmem::profmem()` using the same function calls as for time profiling. PCAone (alg1 and alg2) and `bigstatsr` randomized partial SVD used between 152.7 Mb and 163.1 Mb (Table 2). `FastPCA` with calculating randomized SVD used 321.4 Mb and `irlba`, which is often used for single-cell studies with Seurat, consumed 886.2 Mb. Surprisingly, `bigstatsr::big_svd()` used just over 2000 Mb and `FastPCA` calculating the exact SVD matrices used 2986 Mb.
 
-![](articles_files/figure-latex/unnamed-chunk-1-1.pdf)<!-- --> 
+| Method                 | Memory (Mb) |
+|------------------------|:-----------:|
+| FastPCA (rSVD)         |    321.4    |
+| FastPCA (Exact)        |    2986     |
+| IRLBA                  |    886.2    |
+| PCAone (alg1)          |    152.7    |
+| PCAone (alg2)          |    152.7    |
+| bigstatsr (Partial)    |   2001.5    |
+| bigstatsr (random SVD) |    163.1    |
 
+: Table 2: Memory usage for the calculation of singular value decomposition with different R packages and methods.
+
+Lastly, to assess the quality of the top singular values, we plotted the 100 derived values from all methods against all others. Using the `irlba` as the comparator due to it's common use in workflows for deriving eigenvectors and eigenvalues, we observe that the exact singular values from `FastPCA` are essentially identical, as are those from both `bigstatsr` methods (Figure 1). `FastPCA` using the randomized singular vector approach showed slight deviation in the lower end singular values, though, still maintained high similarity to the exact approach. PCAone with "alg1" also showed a slight deviation from IRLBA while maintaining the main dimensions' singular values.
+
+![Figure 1: Singular values derived from different methods plotted against each other.](images/figure1.png)
 
 # Acknowledgements
 
-We acknowledge contributions from Brigitta Sipocz, Syrtis Major, and Semyeong
-Oh, and support from Kathryn Johnston during the genesis of this project.
+We would like to thank Dr. Oscar Ospina for his testing of the `FastPCA` in a single-cell workflow to validate it's similarity to values derived from Seurat.
 
 # References
-
