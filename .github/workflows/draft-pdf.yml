@@ -15,6 +15,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Install TeX packages
         run: |
           sudo apt-get update
@@ -24,12 +25,14 @@ jobs:
             texlive-fonts-recommended \
             latexmk \
             lmodern
+
       - name: Build draft PDF
         uses: openjournals/openjournals-draft-action@master
         with:
           journal: joss
           # This should be the path to the paper within your repo.
           paper-path: paper/articles.md
+
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
