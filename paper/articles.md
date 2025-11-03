@@ -37,14 +37,12 @@ affiliations:
   - name: Department of Bioinformatics and Biostatistics, Moffitt Cancer Center
     index: 5
 citation_author: Ward et al
-date: "30 October, 2025"
+date: "03 November, 2025"
 year: "2025"
 bibliography: paper.bib
 output: 
   rticles::joss_article:
     extra_dependencies: ["float"]
-header-includes:
-  - \usepackage{placeins}
 csl: apa.csl
 journal: JOSS
 ---
