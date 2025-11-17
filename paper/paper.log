@@ -1,9 +1,9 @@
-This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025) (preloaded format=xelatex 2025.3.8)  3 NOV 2025 12:48
+This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025) (preloaded format=xelatex 2025.3.8)  17 NOV 2025 08:55
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
-**articles.tex
-(./articles.tex
+**paper.tex
+(./paper.tex
 LaTeX2e <2024-11-01> patch level 2
 L3 programming layer <2025-01-18>
 (/usr/local/texlive/2025/texmf-dist/tex/latex/base/article.cls
@@ -964,7 +964,9 @@ Package: grffile 2019/11/11 v2.1 Extended file name support for graphics (legac
 y)
 Package grffile Info: This package is an empty stub for compatibility on input 
 line 40.
-) (/usr/local/texlive/2025/texmf-dist/tex/latex/parskip/parskip.sty
+)
+\pandoc@box=\box78
+(/usr/local/texlive/2025/texmf-dist/tex/latex/parskip/parskip.sty
 Package: parskip 2021-03-14 v2.0h non-zero parskip adjustments
 ) (/usr/local/texlive/2025/texmf-dist/tex/latex/tools/longtable.sty
 Package: longtable 2024-10-27 v4.22 Multi-page Table package (DPC)
@@ -974,11 +976,11 @@ Package: longtable 2024-10-27 v4.22 Multi-page Table package (DPC)
 \LTpost=\skip102
 \LTchunksize=\count475
 \LTcapwidth=\dimen291
-\LT@head=\box78
-\LT@firsthead=\box79
-\LT@foot=\box80
-\LT@lastfoot=\box81
-\LT@gbox=\box82
+\LT@head=\box79
+\LT@firsthead=\box80
+\LT@foot=\box81
+\LT@lastfoot=\box82
+\LT@gbox=\box83
 \LT@cols=\count476
 \LT@rows=\count477
 \c@LT@tables=\count478
@@ -1006,15 +1008,15 @@ Package: booktabs 2020/01/12 v1.61803398 Publication quality tables
 ) (/usr/local/texlive/2025/texmf-dist/tex/latex/tools/array.sty
 Package: array 2024/10/17 v2.6g Tabular extension package (FMi)
 \col@sep=\dimen305
-\ar@mcellbox=\box83
+\ar@mcellbox=\box84
 \extrarowheight=\dimen306
 \NC@list=\toks47
 \extratabsurround=\skip103
 \backup@length=\skip104
-\ar@cellbox=\box84
+\ar@cellbox=\box85
 ) (/usr/local/texlive/2025/texmf-dist/tex/latex/footnotehyper/footnotehyper.sty
 Package: footnotehyper 2021/08/13 v1.1e hyperref aware footnote.sty (JFB)
-\FNH@notes=\box85
+\FNH@notes=\box86
 \FNH@width=\dimen307
 \FNH@toks=\toks48
 )
@@ -1024,39 +1026,39 @@ Package: footnotehyper 2021/08/13 v1.1e hyperref aware footnote.sty (JFB)
 Package: float 2001/11/08 v1.3d Float enhancements (AL)
 \c@float@type=\count484
 \float@exts=\toks49
-\float@box=\box86
+\float@box=\box87
 \@float@everytoks=\toks50
-\@floatcapt=\box87
+\@floatcapt=\box88
 )
 \@quotelevel=\count485
 \@quotereset=\count486
-(./articles.aux)
-\openout1 = `articles.aux'.
+(./paper.aux)
+\openout1 = `paper.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 257.
-LaTeX Font Info:    ... okay on input line 257.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 257.
-LaTeX Font Info:    ... okay on input line 257.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 257.
-LaTeX Font Info:    ... okay on input line 257.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 257.
-LaTeX Font Info:    ... okay on input line 257.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 257.
-LaTeX Font Info:    ... okay on input line 257.
-LaTeX Font Info:    Checking defaults for TU/lmr/m/n on input line 257.
-LaTeX Font Info:    ... okay on input line 257.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 257.
-LaTeX Font Info:    ... okay on input line 257.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 257.
-LaTeX Font Info:    ... okay on input line 257.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 257.
-LaTeX Font Info:    ... okay on input line 257.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 257.
-LaTeX Font Info:    ... okay on input line 257.
-Package hyperref Info: Link coloring ON on input line 257.
-(./articles.out) (./articles.out)
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 261.
+LaTeX Font Info:    ... okay on input line 261.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 261.
+LaTeX Font Info:    ... okay on input line 261.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 261.
+LaTeX Font Info:    ... okay on input line 261.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 261.
+LaTeX Font Info:    ... okay on input line 261.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 261.
+LaTeX Font Info:    ... okay on input line 261.
+LaTeX Font Info:    Checking defaults for TU/lmr/m/n on input line 261.
+LaTeX Font Info:    ... okay on input line 261.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 261.
+LaTeX Font Info:    ... okay on input line 261.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 261.
+LaTeX Font Info:    ... okay on input line 261.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 261.
+LaTeX Font Info:    ... okay on input line 261.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 261.
+LaTeX Font Info:    ... okay on input line 261.
+Package hyperref Info: Link coloring ON on input line 261.
+(./paper.out) (./paper.out)
 \@outlinefile=\write5
-\openout5 = `articles.out'.
+\openout5 = `paper.out'.
 
 Package caption Info: Begin \AtBeginDocument code.
 Package caption Info: float package is loaded.
@@ -1074,13 +1076,13 @@ Package biblatex Info: XeTeX detected.
 (biblatex)             Assuming input encoding 'utf8'.
 Package biblatex Info: Automatic encoding selection.
 (biblatex)             Assuming data encoding 'utf8'.
-\openout4 = `articles.bcf'.
+\openout4 = `paper.bcf'.
 
 Package biblatex Info: Trying to load bibliographic data...
-Package biblatex Info: ... file 'articles.bbl' not found.
-No file articles.bbl.
-Package biblatex Info: Reference section=0 on input line 257.
-Package biblatex Info: Reference segment=0 on input line 257.
+Package biblatex Info: ... file 'paper.bbl' not found.
+No file paper.bbl.
+Package biblatex Info: Reference section=0 on input line 261.
+Package biblatex Info: Reference segment=0 on input line 261.
 *geometry* driver: auto-detecting
 *geometry* detected driver: xetex
 *geometry* verbose mode - [ preamble ] result:
@@ -1115,13 +1117,13 @@ Package biblatex Info: Reference segment=0 on input line 257.
 * \@reversemargintrue
 * (1in=72.27pt=25.4mm, 1cm=28.453pt)
 
-LaTeX Info: Redefining \microtypecontext on input line 257.
-Package microtype Info: Applying patch `item' on input line 257.
-Package microtype Info: Applying patch `toc' on input line 257.
-Package microtype Info: Applying patch `eqnum' on input line 257.
-Package microtype Info: Applying patch `footnote' on input line 257.
-Package microtype Info: Applying patch `verbatim' on input line 257.
-LaTeX Info: Redefining \microtypesetup on input line 257.
+LaTeX Info: Redefining \microtypecontext on input line 261.
+Package microtype Info: Applying patch `item' on input line 261.
+Package microtype Info: Applying patch `toc' on input line 261.
+Package microtype Info: Applying patch `eqnum' on input line 261.
+Package microtype Info: Applying patch `footnote' on input line 261.
+Package microtype Info: Applying patch `verbatim' on input line 261.
+LaTeX Info: Redefining \microtypesetup on input line 261.
 Package microtype Info: Character protrusion enabled (level 2).
 Package microtype Info: Using protrusion set `basicmath'.
 Package microtype Info: No adjustment of tracking.
@@ -1140,14 +1142,14 @@ Package microtype Info: Loading generic protrusion settings for font family
 File: mt-cmr.cfg 2013/05/19 v2.2 microtype config. file: Computer Modern Roman 
 (RS)
 )
-LaTeX Font Info:    Trying to load font information for U+msa on input line 258
+LaTeX Font Info:    Trying to load font information for U+msa on input line 262
 .
 (/usr/local/texlive/2025/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 ) (/usr/local/texlive/2025/texmf-dist/tex/latex/microtype/mt-msa.cfg
 File: mt-msa.cfg 2006/02/04 v1.1 microtype config. file: AMS symbols (a) (RS)
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 258
+LaTeX Font Info:    Trying to load font information for U+msb on input line 262
 .
 (/usr/local/texlive/2025/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
@@ -1155,25 +1157,25 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 File: mt-msb.cfg 2005/06/01 v1.0 microtype config. file: AMS symbols (b) (RS)
 )
 
-Package hyperref Warning: Suppressing link with empty target on input line 284.
+Package hyperref Warning: Suppressing link with empty target on input line 288.
 
 
 
-Package hyperref Warning: Suppressing link with empty target on input line 284.
+Package hyperref Warning: Suppressing link with empty target on input line 288.
 
 
 
-Package hyperref Warning: Suppressing link with empty target on input line 284.
+Package hyperref Warning: Suppressing link with empty target on input line 288.
 
 
 
 
-File: /Users/4471592/Library/Caches/org.R-project.R/R/renv/cache/v5/macos/R-4.5
-/aarch64-apple-darwin20/rticles/0.27/1a05d2cc06f9fb360d2dc15f99293dfe/rticles/r
-markdown/templates/joss/resources/JOSS-logo.png Graphic file (type bmp)
-</Users/4471592/Library/Caches/org.R-project.R/R/renv/cache/v5/macos/R-4.5/aarc
-h64-apple-darwin20/rticles/0.27/1a05d2cc06f9fb360d2dc15f99293dfe/rticles/rmarkd
-own/templates/joss/resources/JOSS-logo.png>
+File: /Users/4471592/Library/Caches/org.R-project.R/R/renv/library/FastPCA-5314
+b0b3/macos/R-4.4/aarch64-apple-darwin20/rticles/rmarkdown/templates/joss/resour
+ces/JOSS-logo.png Graphic file (type bmp)
+</Users/4471592/Library/Caches/org.R-project.R/R/renv/library/FastPCA-5314b0b3/
+macos/R-4.4/aarch64-apple-darwin20/rticles/rmarkdown/templates/joss/resources/J
+OSS-logo.png>
 
 Package fancyhdr Warning: \headheight is too small (62.59596pt): 
 (fancyhdr)                Make it at least 63.55022pt, for example:
@@ -1182,17 +1184,17 @@ Package fancyhdr Warning: \headheight is too small (62.59596pt):
 (fancyhdr)                \addtolength{\topmargin}{-0.95425pt}.
 
 LaTeX Font Info:    Font shape `TU/lmss/m/it' in size <8> not available
-(Font)              Font shape `TU/lmss/m/sl' tried instead on input line 343.
+(Font)              Font shape `TU/lmss/m/sl' tried instead on input line 347.
 [1
 
 ]
 
-File: /Users/4471592/Library/Caches/org.R-project.R/R/renv/cache/v5/macos/R-4.5
-/aarch64-apple-darwin20/rticles/0.27/1a05d2cc06f9fb360d2dc15f99293dfe/rticles/r
-markdown/templates/joss/resources/JOSS-logo.png Graphic file (type bmp)
-</Users/4471592/Library/Caches/org.R-project.R/R/renv/cache/v5/macos/R-4.5/aarc
-h64-apple-darwin20/rticles/0.27/1a05d2cc06f9fb360d2dc15f99293dfe/rticles/rmarkd
-own/templates/joss/resources/JOSS-logo.png>
+File: /Users/4471592/Library/Caches/org.R-project.R/R/renv/library/FastPCA-5314
+b0b3/macos/R-4.4/aarch64-apple-darwin20/rticles/rmarkdown/templates/joss/resour
+ces/JOSS-logo.png Graphic file (type bmp)
+</Users/4471592/Library/Caches/org.R-project.R/R/renv/library/FastPCA-5314b0b3/
+macos/R-4.4/aarch64-apple-darwin20/rticles/rmarkdown/templates/joss/resources/J
+OSS-logo.png>
 
 Package fancyhdr Warning: \headheight is too small (62.59596pt): 
 (fancyhdr)                Make it at least 63.55022pt, for example:
@@ -1203,12 +1205,12 @@ Package fancyhdr Warning: \headheight is too small (62.59596pt):
 [2]
 File: images/figure1.png Graphic file (type bmp)
 <images/figure1.png>
-File: /Users/4471592/Library/Caches/org.R-project.R/R/renv/cache/v5/macos/R-4.5
-/aarch64-apple-darwin20/rticles/0.27/1a05d2cc06f9fb360d2dc15f99293dfe/rticles/r
-markdown/templates/joss/resources/JOSS-logo.png Graphic file (type bmp)
-</Users/4471592/Library/Caches/org.R-project.R/R/renv/cache/v5/macos/R-4.5/aarc
-h64-apple-darwin20/rticles/0.27/1a05d2cc06f9fb360d2dc15f99293dfe/rticles/rmarkd
-own/templates/joss/resources/JOSS-logo.png>
+File: /Users/4471592/Library/Caches/org.R-project.R/R/renv/library/FastPCA-5314
+b0b3/macos/R-4.4/aarch64-apple-darwin20/rticles/rmarkdown/templates/joss/resour
+ces/JOSS-logo.png Graphic file (type bmp)
+</Users/4471592/Library/Caches/org.R-project.R/R/renv/library/FastPCA-5314b0b3/
+macos/R-4.4/aarch64-apple-darwin20/rticles/rmarkdown/templates/joss/resources/J
+OSS-logo.png>
 
 Package fancyhdr Warning: \headheight is too small (62.59596pt): 
 (fancyhdr)                Make it at least 63.55022pt, for example:
@@ -1221,12 +1223,12 @@ File: images/figure2.png Graphic file (type bmp)
 <images/figure2.png>
 
 
-File: /Users/4471592/Library/Caches/org.R-project.R/R/renv/cache/v5/macos/R-4.5
-/aarch64-apple-darwin20/rticles/0.27/1a05d2cc06f9fb360d2dc15f99293dfe/rticles/r
-markdown/templates/joss/resources/JOSS-logo.png Graphic file (type bmp)
-</Users/4471592/Library/Caches/org.R-project.R/R/renv/cache/v5/macos/R-4.5/aarc
-h64-apple-darwin20/rticles/0.27/1a05d2cc06f9fb360d2dc15f99293dfe/rticles/rmarkd
-own/templates/joss/resources/JOSS-logo.png>
+File: /Users/4471592/Library/Caches/org.R-project.R/R/renv/library/FastPCA-5314
+b0b3/macos/R-4.4/aarch64-apple-darwin20/rticles/rmarkdown/templates/joss/resour
+ces/JOSS-logo.png Graphic file (type bmp)
+</Users/4471592/Library/Caches/org.R-project.R/R/renv/library/FastPCA-5314b0b3/
+macos/R-4.4/aarch64-apple-darwin20/rticles/rmarkdown/templates/joss/resources/J
+OSS-logo.png>
 
 Package fancyhdr Warning: \headheight is too small (62.59596pt): 
 (fancyhdr)                Make it at least 63.55022pt, for example:
@@ -1236,12 +1238,12 @@ Package fancyhdr Warning: \headheight is too small (62.59596pt):
 
 [4]
 
-File: /Users/4471592/Library/Caches/org.R-project.R/R/renv/cache/v5/macos/R-4.5
-/aarch64-apple-darwin20/rticles/0.27/1a05d2cc06f9fb360d2dc15f99293dfe/rticles/r
-markdown/templates/joss/resources/JOSS-logo.png Graphic file (type bmp)
-</Users/4471592/Library/Caches/org.R-project.R/R/renv/cache/v5/macos/R-4.5/aarc
-h64-apple-darwin20/rticles/0.27/1a05d2cc06f9fb360d2dc15f99293dfe/rticles/rmarkd
-own/templates/joss/resources/JOSS-logo.png>
+File: /Users/4471592/Library/Caches/org.R-project.R/R/renv/library/FastPCA-5314
+b0b3/macos/R-4.4/aarch64-apple-darwin20/rticles/rmarkdown/templates/joss/resour
+ces/JOSS-logo.png Graphic file (type bmp)
+</Users/4471592/Library/Caches/org.R-project.R/R/renv/library/FastPCA-5314b0b3/
+macos/R-4.4/aarch64-apple-darwin20/rticles/rmarkdown/templates/joss/resources/J
+OSS-logo.png>
 
 Package fancyhdr Warning: \headheight is too small (62.59596pt): 
 (fancyhdr)                Make it at least 63.55022pt, for example:
@@ -1249,24 +1251,24 @@ Package fancyhdr Warning: \headheight is too small (62.59596pt):
 (fancyhdr)                You might also make \topmargin smaller:
 (fancyhdr)                \addtolength{\topmargin}{-0.95425pt}.
 
-[5] (./articles.aux)
+[5] (./paper.aux)
  ***********
 LaTeX2e <2024-11-01> patch level 2
 L3 programming layer <2025-01-18>
  ***********
-Package rerunfilecheck Info: File `articles.out' has not changed.
+Package rerunfilecheck Info: File `paper.out' has not changed.
 (rerunfilecheck)             Checksum: 409B88710D43BC64D56885EFFDBC97D9;825.
-Package logreq Info: Writing requests to 'articles.run.xml'.
-\openout1 = `articles.run.xml'.
+Package logreq Info: Writing requests to 'paper.run.xml'.
+\openout1 = `paper.run.xml'.
 
  ) 
 Here is how much of TeX's memory you used:
  36955 strings out of 473832
- 755674 string characters out of 5729482
- 1641212 words of memory out of 5000000
+ 755341 string characters out of 5729482
+ 1641099 words of memory out of 5000000
  59469 multiletter control sequences out of 15000+600000
  565709 words of font info for 84 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
- 84i,12n,87p,1197b,852s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 84i,12n,87p,1194b,850s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on articles.pdf (5 pages).
+Output written on paper.pdf (5 pages).
