@@ -40,7 +40,7 @@ setup_py_env <- function(method = c("conda", "virtualenv"),
   if(backend == "pytorch") backend = 'torch' #think it works with either for conda but not pip?
   #expand backend
   if(backend == "all") backend = c("torch", "tinygrad")
-  backend = c("numpy", backend)
+  backend = c("numpy", "umap-learn", backend)
   #if cuda, need conda
   if(cuda){
     if(method != "conda") stop("In order to use cuda, must have conda")
@@ -107,7 +107,7 @@ create_environment = function(method, envname, python_version, ...){
       } else {
         message("\tCreating ", envname)
         reticulate::conda_create(envname = envname, python_version = python_version,
-                                 packages = c("umap-learn"),
+                                 packages = c(),
                                  ...)
       }
     }
