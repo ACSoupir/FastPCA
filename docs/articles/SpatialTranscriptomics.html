@@ -56,8 +56,18 @@
     </li>
   </ul>
 </li>
+<li>
+  <a href="../news/index.html">Changelog</a>
+</li>
       </ul>
-<ul class="nav navbar-nav navbar-right"></ul>
+<ul class="nav navbar-nav navbar-right">
+<li>
+  <a href="https://github.com/ACSoupir/FastPCA/" class="external-link">
+    <span class="fab fa-github fa-lg"></span>
+
+  </a>
+</li>
+      </ul>
 </div>
 <!--/.nav-collapse -->
   </div>
@@ -74,7 +84,7 @@
 Transcriptomics</h1>
             
       
-
+      <small class="dont-index">Source: <a href="https://github.com/ACSoupir/FastPCA/blob/HEAD/vignettes/SpatialTranscriptomics.Rmd" class="external-link"><code>vignettes/SpatialTranscriptomics.Rmd</code></a></small>
       <div class="hidden name"><code>SpatialTranscriptomics.Rmd</code></div>
 
     </div>
@@ -82,7 +92,7 @@ Transcriptomics</h1>
     
     
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">FastPCA</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/ACSoupir/FastPCA" class="external-link">FastPCA</a></span><span class="op">)</span></span>
 <span><span class="co">#&gt; Thank you for using FastPCA!</span></span>
 <span><span class="co">#&gt; To cite this package, run: citation('FastPCA')</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://magrittr.tidyverse.org" class="external-link">magrittr</a></span><span class="op">)</span></span></code></pre></div>
@@ -221,20 +231,38 @@ those features and perform PCA on the smaller sample x feature matrix,
 then use the model from the smaller data set to project the full data in
 lower dimension</li>
 </ul>
-<p>Both of these remove information form the data when performing
+<p>Both of these remove information from the data when performing
 dimension reduction. One benefit is that it is more memory friendly.
 However, those that should be helping in the analysis of this type of
 data should have access to work stations and high performance computing
 resources, both of which aren’t (shouldn’t be?) low memory systems. Even
 with the <code>Seurat</code> object from this study, when imported into
 R it’s 2.2GB in size. The data get’s large quickly (and this is with
-sparse matrices).</p>
-<p>The dataset is publically available on <a href="https://zenodo.org/doi/10.5281/zenodo.12730226" class="external-link">Zenodo</a> and can
+sparse matrices). The libraries <code>Seurat</code> and
+<code>SeuratObject</code> can be installed:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">#Seurat</span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="st"><a href="https://satijalab.org/seurat" class="external-link">"Seurat"</a></span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"Seurat"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Attaching package: 'SeuratObject'</span></span>
+<span><span class="co">#&gt; The following objects are masked from 'package:base':</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;     intersect, t</span></span>
+<span><span class="co">#SeuratObject</span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="st"><a href="https://satijalab.github.io/seurat-object/" class="external-link">"SeuratObject"</a></span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"SeuratObject"</span><span class="op">)</span></span></code></pre></div>
+<p>The dataset is publicly available on <a href="https://zenodo.org/doi/10.5281/zenodo.12730226" class="external-link">Zenodo</a> and can
 be downloaded locally to be used. I have saved mine to my lab folder.
 Here, it’s read into the environment and then we can start working with
 it.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">seurat_obj</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="st">"/Volumes/lab_soupir/spatial_transcriptomics/example_data/seurat_object.Rds"</span><span class="op">)</span></span></code></pre></div>
+<p>Alternatively, it may be downloaded and loaded directly into R
+with:</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>timeout <span class="op">=</span> <span class="fl">300</span><span class="op">)</span></span>
+<span><span class="va">seurat_obj</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/connections.html" class="external-link">url</a></span><span class="op">(</span><span class="st">"https://zenodo.org/records/12730227/files/seurat_object.Rds?download=1"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>##Prepping the Expression Matrix</p>
 <p>The results here will look different than from the above mentioned
 manuscript because we are going to process differently (not
@@ -249,7 +277,7 @@ How <code>Seurat</code> performs normalization is with a scaling factor
 to bring expression in line between samples after finding the proportion
 of total counts each gene contributes. This is then used with the
 <code><a href="https://rdrr.io/r/base/Log.html" class="external-link">log1p()</a></code> function mentioned.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">scale.factor</span> <span class="op">=</span> <span class="fl">10000</span></span>
 <span><span class="va">count_mat</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">seurat_obj</span><span class="op">@</span><span class="va">assays</span><span class="op">$</span><span class="va">Nanostring</span><span class="op">@</span><span class="va">counts</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Warning in asMethod(object): sparse-&gt;dense coercion: allocating vector of size</span></span>
@@ -264,7 +292,7 @@ as features, it needs to be transformed to have samples as rows and
 features as columns. Further, for singular vector decomposition the
 values should be mean centered (mean of 0) and unit variance (variance
 of 1) scaled. To do this, we can run:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">prepped_mat</span> <span class="op">=</span> <span class="fu"><a href="../reference/prep_matrix.html">prep_matrix</a></span><span class="op">(</span>mat <span class="op">=</span> <span class="va">count_mat_norm</span>,</span>
 <span>                          log2 <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>                          transpose <span class="op">=</span> <span class="cn">TRUE</span>,</span>
@@ -292,7 +320,7 @@ matrix but if the variance doesn’t differ much in the higher dimensions,
 it has limited benefit. The <code>q_iter</code> parameter will increase
 accuracy of the top dimensions, which are typically fairly accurately
 estimated anyway.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fastpca_runs</span> <span class="op">=</span> <span class="fu">bench</span><span class="fu">::</span><span class="fu"><a href="https://bench.r-lib.org/reference/mark.html" class="external-link">mark</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">suppressMessages</a></span><span class="op">(</span></span>
 <span>    <span class="fu"><a href="../reference/FastPCA.html">FastPCA</a></span><span class="op">(</span>input_r_matrix <span class="op">=</span> <span class="va">prepped_mat</span>,</span>
@@ -308,10 +336,10 @@ estimated anyway.</p>
 <span><span class="op">)</span></span></code></pre></div>
 <p>We can look at the time that it took to calculate the dimensions
 here:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fastpca_runs</span><span class="op">$</span><span class="va">time</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. </span></span>
-<span><span class="co">#&gt;   2.587   2.589   2.589   2.626   2.667   2.699</span></span></code></pre></div>
+<span><span class="co">#&gt;   2.618   2.630   2.631   2.643   2.666   2.670</span></span></code></pre></div>
 <p>We will look at the results in the end when we have also run
 <code><a href="https://rdrr.io/pkg/irlba/man/irlba.html" class="external-link">irlba::irlba</a></code> to compare.</p>
 </div>
@@ -322,7 +350,7 @@ here:</p>
 object that was a V4 object. We can create a V5 object from the count
 matrix and meta data since we don’t care about the spatial information
 for now.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">seurat_obj2</span> <span class="op">=</span> <span class="fu">Seurat</span><span class="fu">::</span><span class="fu"><a href="https://satijalab.github.io/seurat-object/reference/CreateSeuratObject.html" class="external-link">CreateSeuratObject</a></span><span class="op">(</span>counts <span class="op">=</span> <span class="va">count_mat</span>,</span>
 <span>                                 meta.data <span class="op">=</span> <span class="va">seurat_obj</span><span class="op">@</span><span class="va">meta.data</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Warning: Data is of class matrix. Coercing to dgCMatrix.</span></span></code></pre></div>
@@ -332,7 +360,7 @@ forward. Since we will use all genes present (actually 959 genes for
 this data), will pass in all of the features to the
 <code><a href="https://satijalab.org/seurat/reference/NormalizeData.html" class="external-link">Seurat::NormalizeData()</a></code> and
 <code><a href="https://satijalab.org/seurat/reference/ScaleData.html" class="external-link">Seurat::ScaleData()</a></code> functions.</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">seurat_obj2</span> <span class="op">=</span> <span class="fu">Seurat</span><span class="fu">::</span><span class="fu"><a href="https://satijalab.org/seurat/reference/NormalizeData.html" class="external-link">NormalizeData</a></span><span class="op">(</span><span class="va">seurat_obj2</span>,</span>
 <span>                                    features <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">seurat_obj2</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Normalizing layer: counts</span></span>
@@ -343,7 +371,7 @@ this data), will pass in all of the features to the
 <p>Since <code>Seurat</code> uses <code>irlba</code> as well behind the
 scenes, to match the same dimension search that we used with
 <code>FastPCA</code> we</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">seurat_run</span> <span class="op">=</span> <span class="fu">bench</span><span class="fu">::</span><span class="fu"><a href="https://bench.r-lib.org/reference/mark.html" class="external-link">mark</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">suppressMessages</a></span><span class="op">(</span></span>
 <span>    <span class="fu">Seurat</span><span class="fu">::</span><span class="fu"><a href="https://satijalab.org/seurat/reference/RunPCA.html" class="external-link">RunPCA</a></span><span class="op">(</span><span class="va">seurat_obj2</span>, </span>
@@ -358,10 +386,10 @@ scenes, to match the same dimension search that we used with
 <span><span class="co">#&gt; Warning: Some expressions had a GC in every iteration; so filtering is</span></span>
 <span><span class="co">#&gt; disabled.</span></span></code></pre></div>
 <p>Again, lets look at the time:</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">seurat_run</span><span class="op">$</span><span class="va">time</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. </span></span>
-<span><span class="co">#&gt;   497.3   497.3   497.3   497.3   497.3   497.3</span></span></code></pre></div>
+<span><span class="co">#&gt;   518.3   518.3   518.3   518.3   518.3   518.3</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="comparing-fastpca-to-irlba">Comparing FastPCA to IRLBA<a class="anchor" aria-label="anchor" href="#comparing-fastpca-to-irlba"></a>
@@ -371,12 +399,12 @@ singular vectors as well as the diagonal singular values, but
 <code>Seurat</code> returns <code>stdev</code> which from looking at
 their <code>Seurat:::RunPCA.default()</code> is the singular values
 divided by the square root of the number of samples just like:</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fastpca_out</span> <span class="op">=</span> <span class="va">fastpca_runs</span><span class="op">$</span><span class="va">result</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span>
 <span><span class="va">fastpca_stdev_vec</span> <span class="op">=</span> <span class="va">fastpca_out</span><span class="op">$</span><span class="va">S</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">prepped_mat</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>We can visualize these together with some <code>ggplot2</code>
 code.</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
 <span><span class="va">seurat_stdev</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>    stdev <span class="op">=</span> <span class="va">seurat_run</span><span class="op">$</span><span class="va">result</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">@</span><span class="va">reductions</span><span class="op">$</span><span class="va">pca</span><span class="op">@</span><span class="va">stdev</span></span>
@@ -399,14 +427,14 @@ code.</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">dim</span>, y <span class="op">=</span> <span class="va">stdev</span>, color <span class="op">=</span> <span class="va">method</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_classic</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p><img src="SpatialTranscriptomics_files/figure-html/unnamed-chunk-17-1.png" width="768"></p>
+<p><img src="SpatialTranscriptomics_files/figure-html/unnamed-chunk-18-1.png" width="768"></p>
 <p>We can see that in the dimension up to ~10, they are almost
 identical. When they flatten out (little difference in the variance
 explained between PCs) it’s more difficult for FastPCA. However, let’s
 look at the variance that those dimensions explain. This can be done by
 squaring the singular values then dividing them by the variance of the
 full prepped matrix <code>prepped_mat</code>:</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#signif(fastpca_out$S^2 / sum(prepped_mat^2)*100, digits = 4)</span></span>
 <span><span class="va">plot_dat</span> <span class="op">=</span> <span class="va">plot_dat</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
 <span>    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>S <span class="op">=</span> <span class="va">stdev</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">prepped_mat</span><span class="op">)</span><span class="op">)</span>,</span>
@@ -415,23 +443,23 @@ full prepped matrix <code>prepped_mat</code>:</p>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">method</span> <span class="op">==</span> <span class="st">"FastPCA"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">15</span><span class="op">)</span></span>
 <span><span class="co">#&gt;       stdev dim  method         S var_explained</span></span>
-<span><span class="co">#&gt; 1  5.595580   1 FastPCA 2496.8579     3.2015003</span></span>
-<span><span class="co">#&gt; 2  3.860744   2 FastPCA 1722.7398     1.5240712</span></span>
-<span><span class="co">#&gt; 3  3.397633   3 FastPCA 1516.0906     1.1803647</span></span>
-<span><span class="co">#&gt; 4  2.784533   4 FastPCA 1242.5136     0.7928083</span></span>
-<span><span class="co">#&gt; 5  2.417531   5 FastPCA 1078.7500     0.5975957</span></span>
-<span><span class="co">#&gt; 6  2.098351   6 FastPCA  936.3256     0.4502147</span></span>
-<span><span class="co">#&gt; 7  2.012898   7 FastPCA  898.1945     0.4142921</span></span>
-<span><span class="co">#&gt; 8  1.948158   8 FastPCA  869.3064     0.3880714</span></span>
-<span><span class="co">#&gt; 9  1.817298   9 FastPCA  810.9141     0.3376880</span></span>
-<span><span class="co">#&gt; 10 1.652378  10 FastPCA  737.3235     0.2791785</span></span>
-<span><span class="co">#&gt; 11 1.567201  11 FastPCA  699.3161     0.2511383</span></span>
-<span><span class="co">#&gt; 12 1.529472  12 FastPCA  682.4803     0.2391917</span></span>
-<span><span class="co">#&gt; 13 1.508728  13 FastPCA  673.2243     0.2327477</span></span>
-<span><span class="co">#&gt; 14 1.394348  14 FastPCA  622.1854     0.1987950</span></span>
-<span><span class="co">#&gt; 15 1.377546  15 FastPCA  614.6882     0.1940330</span></span></code></pre></div>
+<span><span class="co">#&gt; 1  5.595580   1 FastPCA 2496.8578     3.2015002</span></span>
+<span><span class="co">#&gt; 2  3.860739   2 FastPCA 1722.7377     1.5240676</span></span>
+<span><span class="co">#&gt; 3  3.397660   3 FastPCA 1516.1028     1.1803837</span></span>
+<span><span class="co">#&gt; 4  2.784523   4 FastPCA 1242.5090     0.7928025</span></span>
+<span><span class="co">#&gt; 5  2.417505   5 FastPCA 1078.7385     0.5975830</span></span>
+<span><span class="co">#&gt; 6  2.098642   6 FastPCA  936.4556     0.4503397</span></span>
+<span><span class="co">#&gt; 7  2.013304   7 FastPCA  898.3759     0.4144595</span></span>
+<span><span class="co">#&gt; 8  1.947149   8 FastPCA  868.8562     0.3876696</span></span>
+<span><span class="co">#&gt; 9  1.814438   9 FastPCA  809.6378     0.3366258</span></span>
+<span><span class="co">#&gt; 10 1.649567  10 FastPCA  736.0694     0.2782297</span></span>
+<span><span class="co">#&gt; 11 1.562700  11 FastPCA  697.3076     0.2496978</span></span>
+<span><span class="co">#&gt; 12 1.525018  12 FastPCA  680.4929     0.2378007</span></span>
+<span><span class="co">#&gt; 13 1.500120  13 FastPCA  669.3829     0.2300992</span></span>
+<span><span class="co">#&gt; 14 1.403497  14 FastPCA  626.2678     0.2014123</span></span>
+<span><span class="co">#&gt; 15 1.376403  15 FastPCA  614.1783     0.1937112</span></span></code></pre></div>
 <p>View same for <code>Seurat</code>/<code>irlba</code>:</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">plot_dat</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">method</span> <span class="op">==</span> <span class="st">"SeuratIrlba"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">15</span><span class="op">)</span></span>
@@ -455,7 +483,7 @@ full prepped matrix <code>prepped_mat</code>:</p>
 slightly higher dimensions, keeping in mind that there are <em>at
 most</em> 978 dimensions before we get back to the full matrix. Speaking
 of, lets quickly run the exact SVD using <code>FastPCA</code>.</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fastpca_runs_exact</span> <span class="op">=</span> <span class="fu">bench</span><span class="fu">::</span><span class="fu"><a href="https://bench.r-lib.org/reference/mark.html" class="external-link">mark</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">suppressMessages</a></span><span class="op">(</span></span>
 <span>    <span class="fu"><a href="../reference/FastPCA.html">FastPCA</a></span><span class="op">(</span>input_r_matrix <span class="op">=</span> <span class="va">prepped_mat</span>,</span>
@@ -470,14 +498,14 @@ of, lets quickly run the exact SVD using <code>FastPCA</code>.</p>
 <span>  min_iterations <span class="op">=</span> <span class="fl">5</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>Even with the full SVD (left) matrix, it still ran:</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fastpca_runs_exact</span><span class="op">$</span><span class="va">time</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. </span></span>
-<span><span class="co">#&gt;   10.02   10.09   10.11   10.13   10.18   10.28</span></span></code></pre></div>
+<span><span class="co">#&gt;   10.17   10.18   10.19   10.23   10.21   10.39</span></span></code></pre></div>
 <p>Can now add these exact values to the plotting data and see how they
 compare, still taking <em>FAR</em> less time than
 <code>Seurat</code>/<code>irlba</code>.</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">plot_dat_all</span> <span class="op">=</span> <span class="va">plot_dat</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/bind_rows.html" class="external-link">bind_rows</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>method <span class="op">=</span> <span class="st">"FastPCA Exact"</span>,</span>
 <span>                             S <span class="op">=</span> <span class="va">fastpca_runs_exact</span><span class="op">$</span><span class="va">result</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">S</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
@@ -489,9 +517,9 @@ compare, still taking <em>FAR</em> less time than
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">dim</span>, y <span class="op">=</span> <span class="va">stdev</span>, color <span class="op">=</span> <span class="va">method</span><span class="op">)</span>, alpha <span class="op">=</span> <span class="fl">0.2</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_classic</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p><img src="SpatialTranscriptomics_files/figure-html/unnamed-chunk-22-1.png" width="768"></p>
+<p><img src="SpatialTranscriptomics_files/figure-html/unnamed-chunk-23-1.png" width="768"></p>
 <p>Lastly, lets look at the time it took to run each of these:</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">time_dat</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>time <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">fastpca_runs</span><span class="op">$</span><span class="va">time</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>, </span>
 <span>                               <span class="va">fastpca_runs_exact</span><span class="op">$</span><span class="va">time</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>,</span>
 <span>                               <span class="va">seurat_run</span><span class="op">$</span><span class="va">time</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">)</span>,</span>
@@ -504,7 +532,7 @@ compare, still taking <em>FAR</em> less time than
 <span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Method"</span>, y <span class="op">=</span> <span class="st">"Time (s)"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_classic</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_y_log10</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p><img src="SpatialTranscriptomics_files/figure-html/unnamed-chunk-23-1.png" width="768"></p>
+<p><img src="SpatialTranscriptomics_files/figure-html/unnamed-chunk-24-1.png" width="768"></p>
 <p>Even on a log scale(!), <code>FastPCA</code> looks significantly
 faster (because it is).</p>
 <div id="refs" class="references csl-bib-body hanging-indent" entry-spacing="0">

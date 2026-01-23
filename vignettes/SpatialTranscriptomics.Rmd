@@ -70,12 +70,27 @@ Previously, we performed single-cell spatial transcriptomics using Nanostring (n
 - identify the most variables features, select them from the data and perform PCA on those, or
 - create a 'sketch'? of the high sample count (essentially down sample to a smaller number of samples), identify most variable features, select those features and perform PCA on the smaller sample x feature matrix, then use the model from the smaller data set to project the full data in lower dimension
 
-Both of these remove information form the data when performing dimension reduction. One benefit is that it is more memory friendly. However, those that should be helping in the analysis of this type of data should have access to work stations and high performance computing resources, both of which aren't (shouldn't be?) low memory systems. Even with the `Seurat` object from this study, when imported into R it's 2.2GB in size. The data get's large quickly (and this is with sparse matrices).
+Both of these remove information from the data when performing dimension reduction. One benefit is that it is more memory friendly. However, those that should be helping in the analysis of this type of data should have access to work stations and high performance computing resources, both of which aren't (shouldn't be?) low memory systems. Even with the `Seurat` object from this study, when imported into R it's 2.2GB in size. The data get's large quickly (and this is with sparse matrices). The libraries `Seurat` and `SeuratObject` can be installed:
 
-The dataset is publically available on [Zenodo](https://zenodo.org/doi/10.5281/zenodo.12730226) and can be downloaded locally to be used. I have saved mine to my lab folder. Here, it's read into the environment and then we can start working with it.
+```{r install_seurats}
+#Seurat
+if (!require("Seurat", quietly = TRUE))
+  install.packages("Seurat")
+#SeuratObject
+if (!require("SeuratObject", quietly = TRUE))
+  install.packages("SeuratObject")
+```
+
+The dataset is publicly available on [Zenodo](https://zenodo.org/doi/10.5281/zenodo.12730226) and can be downloaded locally to be used. I have saved mine to my lab folder. Here, it's read into the environment and then we can start working with it.
 
 ```{r}
 seurat_obj = readRDS("/Volumes/lab_soupir/spatial_transcriptomics/example_data/seurat_object.Rds")
+```
+
+Alternatively, it may be downloaded and loaded directly into R with:
+```{r, eval = FALSE}
+options(timeout = 300)
+seurat_obj = readRDS(url("https://zenodo.org/records/12730227/files/seurat_object.Rds?download=1"))
 ```
 
 ##Prepping the Expression Matrix

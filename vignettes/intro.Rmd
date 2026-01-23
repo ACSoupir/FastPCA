@@ -18,8 +18,17 @@ knitr::opts_chunk$set(
 
 ```{r setup}
 library(FastPCA)
-library(ggplot2)
 library(magrittr)
+```
+
+```{r install_others_if_needed}
+#Seurat
+if (!require("dplyr", quietly = TRUE))
+  install.packages("dplyr")
+#SeuratObject
+if (!require("ggplot2", quietly = TRUE))
+  install.packages("ggplot2")
+library(ggplot2)
 ```
 
 ### Example Data
@@ -33,7 +42,7 @@ n_groups = 3
 prop_diff=0.4
 ```
 
-```{r sim_info, echo = FALSE}
+```{r sim_info, echo = TRUE}
 set.seed(333)
 #samples
 group = rep(seq(n_groups), length.out = n_samples)
