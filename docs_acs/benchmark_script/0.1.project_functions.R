@@ -6,7 +6,7 @@ cmdAvail <- function(cmd) as.logical(nchar(Sys.which(cmd)))
 writeRDS <- function(object, con) {
   tryCatch({
     base::saveRDS(
-      object, 
+      object,
       file = con
     )
   }, warning = function(w) {
@@ -39,9 +39,9 @@ saveRDS.gz <-
            compression_level = 6) {
     if (cmdAvail("pigz")) {
       writeRDS(
-        object, 
+        object,
         pipe(
-          paste0("pigz -c -k -p", threads, " -",compression_level," > ", file), 
+          paste0("pigz -c -k -p", threads, " -",compression_level," > ", file),
           "wb"
         )
       )
@@ -51,7 +51,7 @@ saveRDS.gz <-
   }
 
 readRDS.gz <-
-  function(file, 
+  function(file,
            threads = parallel::detectCores()) {
     if (cmdAvail("pigz")) {
       object <-
@@ -61,7 +61,7 @@ readRDS.gz <-
           )
         )
     } else {
-      object <- 
+      object <-
         base::readRDS(file)
     }
     return(object)
@@ -75,9 +75,9 @@ saveRDS.zst <-
            compression_level = 17) {
     if (cmdAvail("zstd")) {
       writeRDS(
-        object, 
+        object,
         pipe(
-          paste0("zstd -q --threads ", threads, " -", compression_level," -c > ", shQuote(file)), 
+          paste0("zstd -q --threads ", threads, " -", compression_level," -c > ", shQuote(file)),
           "wb"
         )
       )
@@ -96,7 +96,7 @@ readRDS.zst <-
           )
         )
     } else {
-      object <- 
+      object <-
         base::readRDS(file)
     }
     return(object)
@@ -141,4 +141,37 @@ get_slurm_out = function (slr_job, outtype = "raw", wait = TRUE, ncores = NULL)
     slurm_out <- as.data.frame(do.call(rbind, slurm_out))
   }
   slurm_out
+}
+
+bench_time_mem<-function(x, step_of_monitor = 0.001) {
+  gc(reset=FALSE,verbose=FALSE)  ## force a gc here
+  pidfile <- tempfile() # temp file to story Perl's PID
+  outfile <- tempfile() # stdout redirection for Perl
+  pid <- Sys.getpid()   # get R's PID
+  ret<-NULL
+  system2("./docs_acs/paper/monitor_memory.pl",
+          c(pid,step_of_monitor,pidfile),wait=FALSE,stdout=outfile)
+  Sys.sleep(0.2)  # Wait for PID file to be written
+  monitor_pid <- readLines(pidfile)[1] # Get Perl's PID
+  tryCatch (
+    expr = {
+      mem<-profmem::profmem(time<-system.time(x,gcFirst = FALSE))
+      rettime<-c(time)
+      names(rettime)<-names(time)
+      retval<-c(time,"R_gc_alloc" = sum(mem$bytes,na.rm=T))
+    }, # execute R expression, get timing and allocations
+    finally = {
+      system2("kill",c("-TERM", monitor_pid)) # kill the ? orphan
+      Sys.sleep(0.2) # Wait for Perl to finish logging
+      memstats<-read.csv(outfile,sep="\t",
+                         header=FALSE) # get memory statistics
+      unlink(c(pidfile,outfile)) #cleanup files
+      retval<-c(retval ,
+                "delta"= memstats[1,1]*1024,
+                "initial"= memstats[1,2]*1024
+      )
+    }
+  )
+
+  return(retval)
 }
