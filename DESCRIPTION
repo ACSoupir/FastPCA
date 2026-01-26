@@ -1,6 +1,6 @@
 Package: FastPCA
 Title: FastPCA: Providing computationally efficient access to dimension reduction.
-Version: 0.0.2.0000
+Version: 0.0.3.0000
 Authors@R: 
     c(
       person("Alex", "Soupir", , "Alex.Soupir@moffitt.org", role = c("aut", "cre"))
@@ -25,5 +25,7 @@ Suggests:
     torch,
     Seurat,
     SeuratObject,
-    bench
+    bench,
+    testthat (>= 3.0.0)
 VignetteBuilder: knitr
+Config/testthat/edition: 3
