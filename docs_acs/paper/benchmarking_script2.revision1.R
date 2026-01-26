@@ -51,8 +51,10 @@ out = dplyr::bind_rows(benchmark_results, benchmark_resuls2)
 # saveRDS(out,
 #         "docs_acs/paper/paper_data_bench-mark.rds")
 out = readRDS("docs_acs/paper/paper_data_bench-mark.rds")
+gpu_out = readRDS("docs_acs/paper/paper_data_bench-mark_gpu.rds")
+out = dplyr::bind_rows(out, gpu_out)
 
-
+library(bench)
 pl = out %>%
   tidyr::unnest(c(time, gc)) %>%
   dplyr::mutate(expression = dplyr::case_when(expression == "pcaone_alg1_res" ~ "PCAone (Alg1)",
@@ -62,16 +64,17 @@ pl = out %>%
                                               expression == "bigstatsr_randomSVD_res" ~ "bigstatsr (rSVD)",
                                               expression == "fastpca_res_c1" ~ "FastPCA (rSVD)",
                                               expression == "fastpca_exact_res" ~ "FastPCA (Exact)",
-                                              expression == "biosingular" ~ "BiocSingular (SVD)"),
+                                              expression == "biosingular" ~ "BiocSingular (SVD)",
+                                              expression == "fastpca_res_gpu" ~ "FastPCA GPU (rSVD)"),
                 expression = factor(expression, levels = c("FastPCA (rSVD)","FastPCA (Exact)","IRLBA","PCAone (Alg1)","PCAone (Alg2)",
-                                                           "bigstatsr (rSVD)","bigstatsr (Partial)","BiocSingular (SVD)"))) %>%
+                                                           "bigstatsr (rSVD)","bigstatsr (Partial)","BiocSingular (SVD)", "FastPCA GPU (rSVD)"))) %>%
   #dplyr::arrange(expression) %>%
   ggplot() +
   geom_boxplot(aes(x = expression, y = time, color = expression)) +
   scale_color_viridis_d() +
   theme_bw() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  labs(x = "Singular Value Decomposition Algorithm",
+  labs(x = "Singular Value Decomposition Implementation",
        y = "Time") +
   guides(color = "none")
 pl
@@ -91,17 +94,18 @@ out %>%
                                               expression == "bigstatsr_randomSVD_res" ~ "bigstatsr (rSVD)",
                                               expression == "fastpca_res_c1" ~ "FastPCA (rSVD)",
                                               expression == "fastpca_exact_res" ~ "FastPCA (Exact)",
-                                              expression == "biosingular" ~ "BiocSingular (SVD)"),
+                                              expression == "biosingular" ~ "BiocSingular (SVD)",
+                                              expression == "fastpca_res_gpu" ~ "FastPCA GPU (rSVD)"),
                 expression = factor(expression, levels = c("FastPCA (rSVD)","FastPCA (Exact)","IRLBA","PCAone (Alg1)","PCAone (Alg2)",
-                                                           "bigstatsr (rSVD)","bigstatsr (Partial)","BiocSingular (SVD)"))) %>%
+                                                           "bigstatsr (rSVD)","bigstatsr (Partial)","BiocSingular (SVD)", "FastPCA GPU (rSVD)"))) %>%
   dplyr::arrange(expression)
 
 out %>%
   tidyr::unnest(c(time, gc)) %>%
   dplyr::group_by(expression) %>%
-  dplyr::summarise(median = median(time),
+  dplyr::summarise(min = min(time),
+                   median = median(time),
                    mean = mean(time),
-                   min = min(time),
                    max = max(time)) %>%
   dplyr::mutate(expression = dplyr::case_when(expression == "pcaone_alg1_res" ~ "PCAone (Alg1)",
                                               expression == "pcaone_alg2_res" ~ "PCAone (Alg2)",
@@ -110,7 +114,10 @@ out %>%
                                               expression == "bigstatsr_randomSVD_res" ~ "bigstatsr (rSVD)",
                                               expression == "fastpca_res_c1" ~ "FastPCA (rSVD)",
                                               expression == "fastpca_exact_res" ~ "FastPCA (Exact)",
-                                              expression == "biosingular" ~ "BiocSingular (SVD)"),
+                                              expression == "biosingular" ~ "BiocSingular (SVD)",
+                                              expression == "fastpca_res_gpu" ~ "FastPCA GPU (rSVD)"),
                 expression = factor(expression, levels = c("FastPCA (rSVD)","FastPCA (Exact)","IRLBA","PCAone (Alg1)","PCAone (Alg2)",
-                                                           "bigstatsr (rSVD)","bigstatsr (Partial)","BiocSingular (SVD)"))) %>%
-  dplyr::arrange(expression)
+                                                           "bigstatsr (rSVD)","bigstatsr (Partial)","BiocSingular (SVD)", "FastPCA GPU (rSVD)"))) %>%
+  dplyr::arrange(expression) %>%
+  dplyr::mutate(dplyr::across(min:max, ~as.numeric(.x) %>% round(2))) %>%
+  data.frame()
