@@ -82,6 +82,11 @@ validate_backend = function(backend = c("r", "rtorch", "pytorch", "irlba", "tiny
   }
   #more complicated things
   if(backend == "rtorch"){
+    if(reticulate::py_available(initialize = FALSE)){
+      stop("Looks like python has already been initialized.\n",
+           "To use rtorch, you must restart your R session.\n",
+           "Only do this after saving everything and if absolutely required.")
+    }
     rtorch_avail <- "torch" %in% row.names(installed.packages())
     if(!rtorch_avail){
       warning("Torch is not fully installed.\nPlease run `install.packages('torch')` and `torch::install_torch()`")
