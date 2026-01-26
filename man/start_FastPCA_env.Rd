@@ -7,7 +7,7 @@
 start_FastPCA_env(
   method = c("conda", "virtualenv"),
   envname = "FastPCA",
-  required = FALSE
+  required = TRUE
 )
 }
 \arguments{
