@@ -22,14 +22,21 @@ The goal of `FastPCA` is to speed up calculations of singular value decompositio
 
 ## Installation
 
-You can install the development version of FastPCA from [GitHub](https://github.com/) with:
+You can install the development version of `FastPCA` from [GitHub](https://github.com/ACSoupir/FastPCA) with:
 
 ``` r
 # install.packages("devtools")
 devtools::install_github("ACSoupir/FastPCA")
 ```
 
-After installation, need to perform setup by either creating a conda environment with (py)torch and numpy installed, or by running `FastPCA::setup_py_env()` which will attempt to create an environment and install the necessary packages. **I recommend using python 3.10 if you want to leverage `tinygrad` as have noticed issues with device support with python 3.9.**
+After installation, need to perform setup by either creating a conda environment with (py)torch and numpy installed, or by running `FastPCA::setup_py_env()` which will attempt to create an environment and install the necessary packages. <!-- **I recommend using python 3.10 if you want to leverage `tinygrad` as have noticed issues with device support with python 3.9.** -->
+
+There are some other packages that are in the "[Suggests](https://github.com/ACSoupir/FastPCA/blob/main/DESCRIPTION)" to use vignettes but are not strictly required for using `FastPCA`. If wanting to run the vignettes, users can run this code block:
+``` r
+suggested_packages = c(knitr, rmarkdown, ggplot2, dplyr, magrittr, torch, Seurat, SeuratObject, bench)
+install.packages(suggested_packages)
+
+```
 
 ### Mac
 
@@ -58,13 +65,13 @@ macrtools::gfortran_install(
 
 ## Tutorials
 
-Get started running `FastPCA` with the [Using FastPCA on Large Matrices](news/index.html) vignette.
+Get started running `FastPCA` with the [Using FastPCA on Large Matrices](https://acsoupir.github.io/FastPCA/articles/intro.html) vignette.
 
 ## Benchmarking against PCAone
 
 ```{r finding_files, echo = FALSE}
 library(magrittr)
-files = list.files("docs_acs/benchmark_script/outputs", pattern = "rds", full.names = TRUE) %>%
+files = list.files("docs_acs/benchmark_script/outputs_old", pattern = "rds", full.names = TRUE) %>%
   grep("bigstatsr", ., value = TRUE, invert = TRUE)
 runs = files %>% gsub(".*\\/", "", .) %>% gsub("_mem..*|_res..*|_time..*", "", .) %>% unique() %>% setNames(.,.)
 grouped_files = lapply(runs, function(x) grep(x, files, value = TRUE))
@@ -111,6 +118,7 @@ lapply(grouped_dat, function(d) t(data.frame(d$time))) %>%
     knitr::kable(escape = FALSE)
 ```
 
+<!-- Because cannot figure out best way to assess memory usage
 Memory does appear to be greater when using `FastPCA` over `PCAone`, but `irlba` also has higher memory usage than both when estimating top dimensions (except with `FastPCA` estimating all dimensions; profiled with [`profmem`](https://cran.r-project.org/web/packages/profmem/)):
 
 ```{r table_memory, echo = FALSE, align = "center"}
@@ -125,6 +133,8 @@ lapply(grouped_dat, function(d) utils:::format.object_size(sum(d$mem$bytes, na.r
   dplyr::select(-groups) %>%
     knitr::kable(escape = FALSE)
 ```
+
+--> 
 
 ### Results
 

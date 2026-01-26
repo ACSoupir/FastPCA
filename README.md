@@ -13,12 +13,10 @@ into python libraries, specifically PyTorch, for matrix operations.
 `FastPCA` offers similar performance to other highly optimized SVD
 methods in R (see below) while being an order of magnitude faster.
 
-An interactive version of this site can be found on [GitHub.io](https://acsoupir.github.io/FastPCA)
-
 ## Installation
 
-You can install the development version of FastPCA from
-[GitHub](https://github.com/) with:
+You can install the development version of `FastPCA` from
+[GitHub](https://github.com/ACSoupir/FastPCA) with:
 
 ``` r
 # install.packages("devtools")
@@ -28,9 +26,18 @@ devtools::install_github("ACSoupir/FastPCA")
 After installation, need to perform setup by either creating a conda
 environment with (py)torch and numpy installed, or by running
 `FastPCA::setup_py_env()` which will attempt to create an environment
-and install the necessary packages. **I recommend using python 3.10 if
-you want to leverage `tinygrad` as have noticed issues with device
-support with python 3.9.**
+and install the necessary packages.
+<!-- **I recommend using python 3.10 if you want to leverage `tinygrad` as have noticed issues with device support with python 3.9.** -->
+
+There are some other packages that are in the
+“[Suggests](https://github.com/ACSoupir/FastPCA/blob/main/DESCRIPTION)”
+to use vignettes but are not strictly required for using `FastPCA`. If
+wanting to run the vignettes, users can run this code block:
+
+``` r
+suggested_packages = c(knitr, rmarkdown, ggplot2, dplyr, magrittr, torch, Seurat, SeuratObject, bench)
+install.packages(suggested_packages)
+```
 
 ### Mac
 
@@ -63,7 +70,8 @@ macrtools::gfortran_install(
 ## Tutorials
 
 Get started running `FastPCA` with the [Using FastPCA on Large
-Matrices](articles/intro.html) vignette.
+Matrices](https://acsoupir.github.io/FastPCA/articles/intro.html)
+vignette.
 
 ## Benchmarking against PCAone
 
@@ -86,19 +94,19 @@ pacakge using `work=200` for a similar 200 dims in `FastPCA` and
 | FastPCA Randomized (GPU) |         0.799 |           0.638 | **0.939**        |
 | FastPCA Exact (CPU)      |        79.694 |          11.564 | **35.819**       |
 
-Memory does appear to be greater when using `FastPCA` over `PCAone`, but
-`irlba` also has higher memory usage than both when estimating top
-dimensions (except with `FastPCA` estimating all dimensions; profiled
-with [`profmem`](https://cran.r-project.org/web/packages/profmem/)):
-
-|                          | Memory   |
-|:-------------------------|:---------|
-| Irlba                    | 660.3 Mb |
-| PCAone Alg1              | 77.5 Mb  |
-| PCAone Alg2              | 77.5 Mb  |
-| FastPCA Randomized (CPU) | 163.1 Mb |
-| FastPCA Randomized (GPU) | 163.1 Mb |
-| FastPCA Exact (CPU)      | 4.4 Gb   |
+<!-- Because cannot figure out best way to assess memory usage
+Memory does appear to be greater when using `FastPCA` over `PCAone`, but `irlba` also has higher memory usage than both when estimating top dimensions (except with `FastPCA` estimating all dimensions; profiled with [`profmem`](https://cran.r-project.org/web/packages/profmem/)):
+&#10;
+&#10;|                         |Memory   |
+|:------------------------|:--------|
+|Irlba                    |660.3 Mb |
+|PCAone Alg1              |77.5 Mb  |
+|PCAone Alg2              |77.5 Mb  |
+|FastPCA Randomized (CPU) |163.1 Mb |
+|FastPCA Randomized (GPU) |163.1 Mb |
+|FastPCA Exact (CPU)      |4.4 Gb   |
+&#10;
+&#10;-->
 
 ### Results
 
