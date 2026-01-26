@@ -1,16 +1,25 @@
 #make sure backend is present
 check_backend = function(backend = c("tinygrad", "pytorch")){
+  if(!reticulate::py_available(initialize = FALSE)){
+    stop("Python is not yet available.
+Save your work if needed, and restart R (this is a reticulate requirement).
+Please run `FastPCA::setup_py_env()` and `FastPCA::start_FastPCA_env()`.")
+  }
   if(backend == "tinygrad") message("Falling back to pytorch - current implementations of SVD in tinygrad are slow and memory hungry.")
   backend = "pytorch" #match.arg(backend)
 
   #for torch backend
   if(backend == "pytorch"){
     if (!reticulate::py_module_available("torch") || !reticulate::py_module_available("numpy")) {
-      stop("PyTorch 'torch' and/or 'numpy' are not available in the current Python environment.\nPlease run `FastPCA::setup_py_env()` and `FastPCA::start_FastPCA_env()`.")
+      stop("PyTorch 'torch' and/or 'numpy' are not available in the current Python environment.
+Save your work if needed, and restart R (this is a reticulate requirement).
+Please run `FastPCA::setup_py_env()` and `FastPCA::start_FastPCA_env()`.")
     }
   } else { #for tinygrad
     if(!reticulate::py_module_available("tinygrad")){
-      stop("Tinygrad is not availble in the current Python environment.\nPlease run `FastPCA::setup_py_env()` and `FastPCA::start_FastPCA_env()`.")
+      stop("PyTorch 'torch' and/or 'numpy' are not available in the current Python environment.
+Save your work if needed, and restart R (this is a reticulate requirement).
+Please run `FastPCA::setup_py_env()` and `FastPCA::start_FastPCA_env()`.")
     }
   }
 }

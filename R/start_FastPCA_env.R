@@ -34,7 +34,17 @@ start_FastPCA_env = function(method = c("conda", "virtualenv"),
   method <- match.arg(method)
   #for conda
   if(method == "conda"){
-    if (!reticulate::condaenv_exists(envname)) {
+    conda_loc = Sys.which("conda")
+    conda_res = tryCatch(system2(conda_loc, c("env", "list"), stdout = TRUE),
+                         warning = function(w){
+                           print(w)
+                           stop("Conda produced a warning")
+                         })
+    conda_envs = conda_res %>%
+      grep(gsub("\\/bin.*", "", conda_loc), ., value = TRUE) %>%
+      read.table(text = ., header = FALSE)
+
+    if (!envname %in% conda_envs[[1]]) {
       stop("Environment is not available through this method.
            Please run `FastPCA::setup_py_env()`.")
     }
@@ -42,7 +52,11 @@ start_FastPCA_env = function(method = c("conda", "virtualenv"),
   }
   #for virtual env with system python installed
   if(method == "virtualenv"){
-    if(!reticulate::virtualenv_exists(envname)){
+    virtualenv_root_loc = reticulate::virtualenv_root()
+
+    if(!(dir.exists(file.path(virtualenv_root_loc, envname)) &&
+         (file.exists(file.path(virtualenv_root_loc, envname, "bin", "python")) ||
+          file.exists(file.path(virtualenv_root_loc, envname, "Scripts", "python.exe"))))){
       stop("Environment is not available through this method.
            Please run `FastPCA::setup_py_env()`.")
     }
