@@ -1,0 +1,98 @@
+---
+output: html
+---
+
+# @chrisarg
+
+> Point 1: Color Blind Palette for plots (viridis)
+
+Thank you for the suggestion. Have updated Figure 1 to use the Viridis color palette as suggested. 
+
+> Point 2: Correct spelling of `BioSingular::runSVD` to `BiocSingular::runSVD`
+
+We have corrected the in text spelling of the package. Thank you for pointing this out.
+
+> Points 3 and 4: Profile memory using @chrisarg profiler [here](https://chrisarg.github.io/Killing-It-with-PERL/2025/01/18/Timing-Peak-DRAM-Use-In-R-With-Perl-Part-1.html)
+
+Have attempted to profile memory using both your perl method as well as an R package (`memprof`) that claims to track the main process as well as any child processes (which by looking at the code in your [part 2](https://chrisarg.github.io/Killing-It-with-PERL/2025/01/19/Timing-Peak-DRAM-Use-In-R-With-Perl-Part-2.html) only tracks the main processes memory? not a perl guy nor a RSS guy so may not be understanding it). For using `memprof`, I summed the memory for all processes at each time (R, bash, python, etc; whatever it logged) and used that as the total function call memory usage. The initial entry was used as baseline (after data has been loaded and before function called) and then the maximum RSS of all processes at a time point was used as the maximum with the difference being that due to the function call. 
+
+The values between the two trend in a similar direction for most except `BiocSingular` which is wildly different. Since I do not know which is 'correct' or if there is a real 'correct' way to measure memory, we have collectively removed the memory comparison from the manuscript. All the scripts and files can be found in the github repository at `docs_acs/paper` where the `*.R` are the scripts used to prep and run the profiling, `*.csv` are the outputs of the `memprof` package where the main process and spawned processes' memory are logged, and the `*.rds` are those from using the perl method. Also, removed mention of memory usage in the README to avoid confusion. 
+
+For `BiocSingular`, there were errors when running inside the `profmem::profmem` call so a custom `bench_time_mem()` was used here to skip memory tracking and only do time (can see in the 2.08 script). Further, because running on Mac I suspect?, had to modify the `monitor_memory.pl` script to use explicit "dash flag" instead of what is provided in your github.io otherwise would get errors saying that "p" isn't a valid option for `ps`. The updated `monitor_memory.pl` is also in `docs_acs/paper`. 
+
+> Point 5: If keeping memory allocation points, touch on relationship between memory allocation and time in manuscript and Readme of repository
+
+Have removed the memory stuff from the paper altogether and because of this, have changed Figure 1 to show the time taken for different algorithms (over 10 reps) as a boxplot rather than point plot of time vs memory.
+
+> Point 6: tutorial/article link and benchmarking script link for pointing no where
+
+This is because of the differences between the github.io and the regular github repository, and me trying to use dynamic links. I have updated the tutorial link from the repository Readme to have the full github.io link path. As for the benchmarking script (assuming within the manuscript), this is due to github inserting `blob/main/` into the path. We have updated the text to reflect this and the link should now be accessible.
+https://github.com/ACSoupir/FastPCA/blob/main/docs_acs/paper/benchmarking_script.R
+
+> Point 7: Stating "R-native" is misleading
+
+Thank you for mentioning this. We agree that "R-native" is not an appropriate description. Have rephrased it slightly to maintain the intention:
+"`FastPCA` provides an accelerated route to principal component analysis on large matrices by coupling randomized SVD with `torch`/`pytorch` backends and a familiar R API." As you state, everything has existed or exists in it's separate components but the novelty of this package is giving users *in R* the familiar interface to use the power of the highly optimized `libtorch` specifically for PCA analyses. 
+
+> Point 8: Citations for `BiocSingular`, `bigstatsr`, and `pcaone`
+
+Thank you for bringing this to our attention. The PCAone from Li et al. ("Fast and accurate out-of-core PCA framework for large scale biobank data") is cited but not specifically for `PCAone`. Have added the `PCAone` and `bigstatsr` citations (produced with `citation()`) on line 78 and `BiocSingular::runSVD()` on line 97.
+
+> Point 9: Rename "Demonstration of Improvement" to "Research Impact"
+
+We have updated the text to reflect this change.
+
+> Point 10: Could not run `SpatialTranscriptomics.Rmd` in a fresh environment with instructions
+
+Thanks for the comment. The `DESCRIPTION` file has both `Seurat` and `SeuratObject` under the `Suggests` section since they aren't required for the core functionality, which results in them not being installed when the package is installed. I think this is still the desired behavior per CRAN. To help users, I have added a code block to install the packages in the event they are not installed already. 
+
+The same thing for `ggplot2` and `dplyr`. They are mentioned in the `Suggests` as they aren't required for functionality of the package itself. https://r-pkgs.org/dependencies-mindset-background.html#sec-dependencies-imports-vs-suggests points out these are for "example datasets, to run tests, **build vignettes**, ...". Similar to the Spatial Transcritpomics vignette, I have added an install block that can be run by copy/paste (or pressing the 'play' with the markdown; not run when knitting the markdown).
+
+> Point 11: (I think missing)
+
+> Point 12: Having a bash script to automate the vignette would be useful
+
+Thank you for the suggestion. While I understand that it may be helpful, I don't think it's necessary here. The broken vignette link was due to a difference in path for the github repository and the github.io, and since been repaired. The error you recieved was expected behavior from the functionality of the package perspective. For the data, I have added an *unevaluated* code block in the vignette users can use to download the data directly from Zenodo into their R environment for analysis.
+
+
+# @dhjx1996
+
+## Package Feedback
+
+> Point 1: Many broken links and missing sim matrix code
+
+Thank you for pointing this out, both the broken links and the non-displayed code block for simulating the random matrix. I have fixed the displaying of the code used for the simulation matrix (`r echo=TRUE`) for the user to see. I have also gone through as many of the links as I could to make sure that they work.
+
+> Point 2: Add tests based on "Using FastPCA on Large Matrices"
+
+Thank you for the suggestion. I have added tests to for prepping the matrix, setting up the py environment, running FastPCA (now with checks for OpenMP), calculating the PC scores, and UMAP.
+
+> Point 3: Add Community Guidelines
+
+Thank you for mentioning this section. We have added a couple sentences after the conclusions to address this point for contributing through added code and issues for others looking for help. 
+
+> Point 4: Add list of dependencies
+
+Thank you (and @chrisarg) for comments about dependencies. I have added a section in the repository README about dependencies. Have also removed mention of `tinygrad` there. Hoping to add in the future when their SVD implementation is more polished because it seeems (in some cases) to be more performant than `pytorch`. 
+
+## Paper Feedback
+
+> Point 1: Change figure 2 to show error
+
+Thank you for the feed back. Due to it's lack of clarity from too many implementations being compared, we have decided to actually remove the figure and show two tables (Table 2 and Table 3) that demonstrate the agreement of FastPCA randomized singular value decomposition with other methods, namely the exact FastPCA implementation (with *libtorch* used through *pytorch*). Firstly, we demonstrate that the reconstruction error ratio (compared to truncating the exact `FastPCA` decomposition to the same dimensions as directly calculated by others) from the truncated decomposition methods are under 0.34% for all methods, with iterative methods like `irlba` indicating undetectable error at 6 decimal places (script here: docs_acs/paper/benchmarking_script.revision1.R)
+
+> Point 2: Why are they called "expressions" and why multiple points?
+
+In some functions (like `bench::mark`) the functions are called 'expressions'. The first argument of the function has a descriptor of "Expressions to benchmark, if named the `expression` column will be the name, otherwise it will be the deparsed expression." Because not only are functions (like in this manuscript) able to be tested as a whole but operations or expressions like how long it takes to compute `dat[dat$x > 300, ]` on a column. I have changed the word throughout the text to be "implementation" or "method" rather than "expression" since there are some implementations (like `FastPCA`, `bigstatsr`, and `BiocSingular`) that use the same method (randomized SVD).
+
+> Point 3: Standardize units in Table 1 and fix header capitalizations
+
+Thanks for pointing out the capitalization of the headers; this has been fixed to be consistent. Also, thank you for suggesting changing the values from a combination of minutes and seconds to a consistent unit. It is now easier to see the differences in run time between all methods. 
+
+> Point 4: Pytorch can use GPUs, discuss more
+
+Thank you for mentioning this! Yes, that was the main inspiration for the whole faster PCA/SVD package. Using `pytorch` (or some other optimized matrix operation packages like `tinygrad`) are used for deep learning a lot and are highly optimized with their included functions without needing to produce custom kernels (although is possible). In the repositories README, I do have example showing the benefit of running on a GPU, but the README was on a spatial metabolomics dataset which hasn't been published yet so did not use for the paper. 
+
+I have benchmarked just the time for the GPU and included in the manuscript. The time for each of 10 repeated runs for the same matrix, performing randomized SVD with an L40 GPU in an HPC environment, was 2.44 seconds. This is even a significant improvement over the CPU randomized SVD from `FastPCA` which was between 8.35 seconds and 8.79 seconds.
+
+Through the documentation, the GPU is currently only available for those that are cuda enabled (Nvidia); however, I think this is not a good *end* to the implementation of GPU compute with `FastPCA`. As mentioned above and in places throughout the documentation, `tinygrad` is the next step but this may require some custom kernels or contributing to the main source code (have some functions in the inst/python folder for tinygrad anyway). There is also the possibility of using OpenGL but don't know enough about it yet to really weigh in on whether that would be practical or not. In the end, want to move away from the Nvidia-only GPU (only cuda).
