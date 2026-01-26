@@ -115,14 +115,14 @@ FastPCA <- function(input_r_matrix,
 
   # Optionally, set row/column names if you want to preserve them
   # U matrix columns are typically principal components
-  colnames(U_r) <- paste0("PC", 1:ncol(U_r))
+  colnames(U_r) <- paste0("dim", 1:ncol(U_r))
   #U_r is samples x PCs
   if (!is.null(rownames(input_r_matrix))) {
     rownames(U_r) <- rownames(input_r_matrix)
   }
 
   # Vh matrix columns are also principal components
-  rownames(Vh_r) <- paste0("PC", 1:nrow(Vh_r))
+  rownames(Vh_r) <- paste0("dim", 1:nrow(Vh_r))
   #Vh is features x PCs
   if (!is.null(colnames(input_r_matrix))) {
     colnames(Vh_r) <- colnames(input_r_matrix)

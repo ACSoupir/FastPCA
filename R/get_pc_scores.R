@@ -9,6 +9,7 @@ get_pc_scores = function(fastpca_out){
   #multiply the left singular values by the singular values
   scores = fastpca_out$U %*% diag(fastpca_out$S) #matrix with rows as samples and columns as scores
   #set back the correct column names
-  colnames(scores) = colnames(fastpca_out$U)
+  colnames(scores) = colnames(fastpca_out$U) %>%
+    gsub("dim", "PC", .)
   return(scores)
 }
