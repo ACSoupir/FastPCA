@@ -65,6 +65,8 @@ FastPCA <- function(input_r_matrix,
   q_iter <- as.integer(q_iter)
   cores = as.integer(cores)
 
+  if(is.data.frame(input_r_matrix)) stop("Input data must be in matrix format.")
+
   #call python
   if(backend == "pytorch"){
     .globals = python_functions()

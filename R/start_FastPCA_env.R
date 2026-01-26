@@ -29,7 +29,8 @@
 #' }
 start_FastPCA_env = function(method = c("conda", "virtualenv"),
                           envname = "FastPCA",
-                          required = FALSE){
+                          required = TRUE){
+  #Sys.setenv(KMP_DUPLICATE_LIB_OK = TRUE)
   #match method
   method <- match.arg(method)
   #for conda
@@ -41,14 +42,16 @@ start_FastPCA_env = function(method = c("conda", "virtualenv"),
                            stop("Conda produced a warning")
                          })
     conda_envs = conda_res %>%
-      grep(gsub("\\/bin.*", "", conda_loc), ., value = TRUE) %>%
+      grep(gsub("\\/(bin|condabin).*", "", conda_loc), ., value = TRUE) %>%
       read.table(text = ., header = FALSE)
 
     if (!envname %in% conda_envs[[1]]) {
-      stop("Environment is not available through this method.
-           Please run `FastPCA::setup_py_env()`.")
+      stop("Environment is not available through through conda",
+           "\nPlease run `FastPCA::setup_py_env()`.")
     }
+    message("Environment found.. Attempting to use..")
     reticulate::use_condaenv(envname, required = required)
+
   }
   #for virtual env with system python installed
   if(method == "virtualenv"){
@@ -57,9 +60,18 @@ start_FastPCA_env = function(method = c("conda", "virtualenv"),
     if(!(dir.exists(file.path(virtualenv_root_loc, envname)) &&
          (file.exists(file.path(virtualenv_root_loc, envname, "bin", "python")) ||
           file.exists(file.path(virtualenv_root_loc, envname, "Scripts", "python.exe"))))){
-      stop("Environment is not available through this method.
-           Please run `FastPCA::setup_py_env()`.")
+      stop("Environment is not available through virtualenv",
+           "\nPlease run `FastPCA::setup_py_env()`.")
     }
+    message("Environment found.. Attempting to use..")
     reticulate::use_virtualenv(envname, required = required)
   }
+
+  #check to see if umap is availabel since that is installed automatically when starting
+  message("Checking for modules available...")
+  if(!reticulate::py_module_available("umap")){
+    stop("Restart R and ensure the environment `", envname, "` is set up correctly.",
+         "\nPlease run `FastPCA::setup_py_env()` and `FastPCA::start_FastPCA_env()`.")
+  }
+  message("Successfully loaded and identified umap module..")
 }

@@ -34,13 +34,15 @@ setup_py_env <- function(method = c("conda", "virtualenv"),
                          ...) {
   #so much prefer conda
   #https://github.com/ACSoupir/cuda_conda
-  if(backend == "tinygrad") message("Falling back to pytorch - current implementations of SVD in tinygrad are slow and memory hungry.")
+  if(backend == "tinygrad"){
+    warning("Falling back to pytorch - current implementations of SVD in tinygrad are slow and memory hungry.")
+    backend <- "pytorch"#match.arg(backend)
+  }
   method <- match.arg(method)
-  backend <- "pytorch"#match.arg(backend)
   if(backend == "pytorch") backend = 'torch' #think it works with either for conda but not pip?
   #expand backend
-  if(backend == "all") backend = c("torch", "tinygrad")
-  backend = c("numpy", "umap-learn", backend)
+  if(backend == "all") backend = c("torch", "tinygrad") #is a way to get around the lock above
+  backend = c("numpy", "umap-learn", "nomkl", backend)
   #if cuda, need conda
   if(cuda){
     if(method != "conda") stop("In order to use cuda, must have conda")
@@ -84,10 +86,17 @@ install_python_package = function(method, envname, package){
     if("cudatoolkit" %in% package){
       reticulate::conda_install(envname = envname, packages = "cudatoolkit", channel = "anaconda")
     } else {
-      reticulate::py_install(packages = package,
-                             envname = envname,
-                             method = method,
-                             pip = TRUE)
+      if(method == "conda"){
+        reticulate::py_install(packages = gsub("torch", "pytorch", package),
+                               envname = envname,
+                               method = method,
+                               pip = FALSE)
+      } else {
+        reticulate::py_install(packages = package,
+                               envname = envname,
+                               method = method,
+                               pip = TRUE)
+      }
     }
 
   }, error = function(e){
