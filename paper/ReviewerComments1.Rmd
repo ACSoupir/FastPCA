@@ -46,13 +46,13 @@ We have updated the text to reflect this change.
 
 Thanks for the comment. The `DESCRIPTION` file has both `Seurat` and `SeuratObject` under the `Suggests` section since they aren't required for the core functionality, which results in them not being installed when the package is installed. I think this is still the desired behavior per CRAN. To help users, I have added a code block to install the packages in the event they are not installed already. 
 
-The same thing for `ggplot2` and `dplyr`. They are mentioned in the `Suggests` as they aren't required for functionality of the package itself. https://r-pkgs.org/dependencies-mindset-background.html#sec-dependencies-imports-vs-suggests points out these are for "example datasets, to run tests, **build vignettes**, ...". Similar to the Spatial Transcritpomics vignette, I have added an install block that can be run by copy/paste (or pressing the 'play' with the markdown; not run when knitting the markdown).
+The same thing for `ggplot2` and `dplyr`. They are mentioned in the `Suggests` as they aren't required for functionality of the package itself. https://r-pkgs.org/dependencies-mindset-background.html#sec-dependencies-imports-vs-suggests points out these are for "example datasets, to run tests, **build vignettes**, ...". Similar to the Spatial Transcritpomics vignette, I have added an install block to the introduction vignette that can be run by copy/paste (or pressing the 'play' with the markdown; not run when knitting the markdown).
 
 > Point 11: (I think missing)
 
 > Point 12: Having a bash script to automate the vignette would be useful
 
-Thank you for the suggestion. While I understand that it may be helpful, I don't think it's necessary here. The broken vignette link was due to a difference in path for the github repository and the github.io, and since been repaired. The error you recieved was expected behavior from the functionality of the package perspective. For the data, I have added an *unevaluated* code block in the vignette users can use to download the data directly from Zenodo into their R environment for analysis.
+Thank you for the suggestion. While I understand that it may be helpful, I don't think it's necessary here. The broken vignette link was due to a difference in path for the github repository and the github.io, and since been repaired. The error you recieved was expected behavior from the functionality of the package perspective. For the data, I have added an *unevaluated* code block in the vignette users can use to download the data directly from Zenodo into their R environment for analysis. (Similar to Point 10 above).
 
 
 # @dhjx1996
