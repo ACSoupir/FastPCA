@@ -72,13 +72,28 @@ Previously, we performed single-cell spatial transcriptomics using Nanostring (n
 
 Both of these remove information from the data when performing dimension reduction. One benefit is that it is more memory friendly. However, those that should be helping in the analysis of this type of data should have access to work stations and high performance computing resources, both of which aren't (shouldn't be?) low memory systems. Even with the `Seurat` object from this study, when imported into R it's 2.2GB in size. The data get's large quickly (and this is with sparse matrices). The libraries `Seurat` and `SeuratObject` can be installed:
 
-```{r install_seurats}
+```{r install_seurats, eval = FALSE}
 #Seurat
 if (!require("Seurat", quietly = TRUE))
   install.packages("Seurat")
 #SeuratObject
 if (!require("SeuratObject", quietly = TRUE))
   install.packages("SeuratObject")
+#dplyr
+if (!require("dplyr", quietly = TRUE))
+  install.packages("dplyr")
+#ggplot
+if (!require("ggplot2", quietly = TRUE))
+  install.packages("ggplot2")
+library(ggplot2)
+#magrittr
+if (!require("magrittr", quietly = TRUE))
+  install.packages("magrittr")
+library(magrittr)
+#bench
+if (!require("bench", quietly = TRUE))
+  install.packages("bench")
+library(bench)
 ```
 
 The dataset is publicly available on [Zenodo](https://zenodo.org/doi/10.5281/zenodo.12730226) and can be downloaded locally to be used. I have saved mine to my lab folder. Here, it's read into the environment and then we can start working with it.

@@ -21,14 +21,22 @@ library(FastPCA)
 library(magrittr)
 ```
 
-```{r install_others_if_needed}
-#Seurat
+```{r install_others_if_needed, eval = FALSE}
+#dplyr
 if (!require("dplyr", quietly = TRUE))
   install.packages("dplyr")
-#SeuratObject
+#ggplot
 if (!require("ggplot2", quietly = TRUE))
   install.packages("ggplot2")
 library(ggplot2)
+#magrittr
+if (!require("magrittr", quietly = TRUE))
+  install.packages("magrittr")
+library(magrittr)
+#bench
+if (!require("bench", quietly = TRUE))
+  install.packages("bench")
+library(bench)
 ```
 
 ### Example Data

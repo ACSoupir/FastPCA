@@ -32,7 +32,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">FastPCA</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.2.0000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.3.0000</span>
       </span>
     </div>
 
@@ -191,7 +191,7 @@ environment for <code>FastCPA</code>.</p>
 <span><span class="co">#&gt; python:         /opt/anaconda3/envs/FastPCA/bin/python</span></span>
 <span><span class="co">#&gt; libpython:      /opt/anaconda3/envs/FastPCA/lib/libpython3.10.dylib</span></span>
 <span><span class="co">#&gt; pythonhome:     /opt/anaconda3/envs/FastPCA:/opt/anaconda3/envs/FastPCA</span></span>
-<span><span class="co">#&gt; version:        3.10.18 | packaged by conda-forge | (main, Jun  4 2025, 14:46:00) [Clang 18.1.8 ]</span></span>
+<span><span class="co">#&gt; version:        3.10.19 | packaged by conda-forge | (main, Oct 22 2025, 22:46:49) [Clang 19.1.7 ]</span></span>
 <span><span class="co">#&gt; numpy:          /opt/anaconda3/envs/FastPCA/lib/python3.10/site-packages/numpy</span></span>
 <span><span class="co">#&gt; numpy_version:  2.2.6</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -244,14 +244,24 @@ sparse matrices). The libraries <code>Seurat</code> and
 <code class="sourceCode R"><span><span class="co">#Seurat</span></span>
 <span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="st"><a href="https://satijalab.org/seurat" class="external-link">"Seurat"</a></span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"Seurat"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Attaching package: 'SeuratObject'</span></span>
-<span><span class="co">#&gt; The following objects are masked from 'package:base':</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;     intersect, t</span></span>
 <span><span class="co">#SeuratObject</span></span>
 <span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="st"><a href="https://satijalab.github.io/seurat-object/" class="external-link">"SeuratObject"</a></span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"SeuratObject"</span><span class="op">)</span></span></code></pre></div>
+<span>  <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"SeuratObject"</span><span class="op">)</span></span>
+<span><span class="co">#dplyr</span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="st"><a href="https://dplyr.tidyverse.org" class="external-link">"dplyr"</a></span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"dplyr"</span><span class="op">)</span></span>
+<span><span class="co">#ggplot</span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="st"><a href="https://ggplot2.tidyverse.org" class="external-link">"ggplot2"</a></span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"ggplot2"</span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
+<span><span class="co">#magrittr</span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="st"><a href="https://magrittr.tidyverse.org" class="external-link">"magrittr"</a></span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"magrittr"</span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://magrittr.tidyverse.org" class="external-link">magrittr</a></span><span class="op">)</span></span>
+<span><span class="co">#bench</span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="st"><a href="https://bench.r-lib.org/" class="external-link">"bench"</a></span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"bench"</span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bench.r-lib.org/" class="external-link">bench</a></span><span class="op">)</span></span></code></pre></div>
 <p>The dataset is publicly available on <a href="https://zenodo.org/doi/10.5281/zenodo.12730226" class="external-link">Zenodo</a> and can
 be downloaded locally to be used. I have saved mine to my lab folder.
 Here, it’s read into the environment and then we can start working with
@@ -339,7 +349,7 @@ here:</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fastpca_runs</span><span class="op">$</span><span class="va">time</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. </span></span>
-<span><span class="co">#&gt;   2.618   2.630   2.631   2.643   2.666   2.670</span></span></code></pre></div>
+<span><span class="co">#&gt;   10.04   10.08   10.10   10.12   10.18   10.18</span></span></code></pre></div>
 <p>We will look at the results in the end when we have also run
 <code><a href="https://rdrr.io/pkg/irlba/man/irlba.html" class="external-link">irlba::irlba</a></code> to compare.</p>
 </div>
@@ -389,7 +399,7 @@ scenes, to match the same dimension search that we used with
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">seurat_run</span><span class="op">$</span><span class="va">time</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. </span></span>
-<span><span class="co">#&gt;   518.3   518.3   518.3   518.3   518.3   518.3</span></span></code></pre></div>
+<span><span class="co">#&gt;   515.4   515.4   515.4   515.4   515.4   515.4</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="comparing-fastpca-to-irlba">Comparing FastPCA to IRLBA<a class="anchor" aria-label="anchor" href="#comparing-fastpca-to-irlba"></a>
@@ -443,21 +453,21 @@ full prepped matrix <code>prepped_mat</code>:</p>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">method</span> <span class="op">==</span> <span class="st">"FastPCA"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">15</span><span class="op">)</span></span>
 <span><span class="co">#&gt;       stdev dim  method         S var_explained</span></span>
-<span><span class="co">#&gt; 1  5.595580   1 FastPCA 2496.8578     3.2015002</span></span>
-<span><span class="co">#&gt; 2  3.860739   2 FastPCA 1722.7377     1.5240676</span></span>
-<span><span class="co">#&gt; 3  3.397660   3 FastPCA 1516.1028     1.1803837</span></span>
-<span><span class="co">#&gt; 4  2.784523   4 FastPCA 1242.5090     0.7928025</span></span>
-<span><span class="co">#&gt; 5  2.417505   5 FastPCA 1078.7385     0.5975830</span></span>
-<span><span class="co">#&gt; 6  2.098642   6 FastPCA  936.4556     0.4503397</span></span>
-<span><span class="co">#&gt; 7  2.013304   7 FastPCA  898.3759     0.4144595</span></span>
-<span><span class="co">#&gt; 8  1.947149   8 FastPCA  868.8562     0.3876696</span></span>
-<span><span class="co">#&gt; 9  1.814438   9 FastPCA  809.6378     0.3366258</span></span>
-<span><span class="co">#&gt; 10 1.649567  10 FastPCA  736.0694     0.2782297</span></span>
-<span><span class="co">#&gt; 11 1.562700  11 FastPCA  697.3076     0.2496978</span></span>
-<span><span class="co">#&gt; 12 1.525018  12 FastPCA  680.4929     0.2378007</span></span>
-<span><span class="co">#&gt; 13 1.500120  13 FastPCA  669.3829     0.2300992</span></span>
-<span><span class="co">#&gt; 14 1.403497  14 FastPCA  626.2678     0.2014123</span></span>
-<span><span class="co">#&gt; 15 1.376403  15 FastPCA  614.1783     0.1937112</span></span></code></pre></div>
+<span><span class="co">#&gt; 1  5.595580   1 FastPCA 2496.8578     3.2015001</span></span>
+<span><span class="co">#&gt; 2  3.860740   2 FastPCA 1722.7381     1.5240683</span></span>
+<span><span class="co">#&gt; 3  3.397647   3 FastPCA 1516.0971     1.1803748</span></span>
+<span><span class="co">#&gt; 4  2.784498   4 FastPCA 1242.4977     0.7927880</span></span>
+<span><span class="co">#&gt; 5  2.417673   5 FastPCA 1078.8131     0.5976657</span></span>
+<span><span class="co">#&gt; 6  2.097351   6 FastPCA  935.8794     0.4497857</span></span>
+<span><span class="co">#&gt; 7  2.013494   7 FastPCA  898.4604     0.4145375</span></span>
+<span><span class="co">#&gt; 8  1.946368   8 FastPCA  868.5075     0.3873585</span></span>
+<span><span class="co">#&gt; 9  1.812663   9 FastPCA  808.8457     0.3359675</span></span>
+<span><span class="co">#&gt; 10 1.654758  10 FastPCA  738.3856     0.2799834</span></span>
+<span><span class="co">#&gt; 11 1.544072  11 FastPCA  688.9954     0.2437803</span></span>
+<span><span class="co">#&gt; 12 1.521899  12 FastPCA  679.1014     0.2368291</span></span>
+<span><span class="co">#&gt; 13 1.505025  13 FastPCA  671.5718     0.2316065</span></span>
+<span><span class="co">#&gt; 14 1.401836  14 FastPCA  625.5268     0.2009360</span></span>
+<span><span class="co">#&gt; 15 1.383696  15 FastPCA  617.4324     0.1957693</span></span></code></pre></div>
 <p>View same for <code>Seurat</code>/<code>irlba</code>:</p>
 <div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">plot_dat</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
@@ -501,7 +511,7 @@ of, lets quickly run the exact SVD using <code>FastPCA</code>.</p>
 <div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fastpca_runs_exact</span><span class="op">$</span><span class="va">time</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. </span></span>
-<span><span class="co">#&gt;   10.17   10.18   10.19   10.23   10.21   10.39</span></span></code></pre></div>
+<span><span class="co">#&gt;   30.26   30.29   30.44   30.45   30.55   30.68</span></span></code></pre></div>
 <p>Can now add these exact values to the plotting data and see how they
 compare, still taking <em>FAR</em> less time than
 <code>Seurat</code>/<code>irlba</code>.</p>
