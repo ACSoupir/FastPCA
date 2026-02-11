@@ -149,10 +149,6 @@ To demonstrate that the `FastPCA` exact is mathematically sound for the comparis
 
 `FastPCA` provides an accelerated route to principal component analysis on large matrices by coupling randomized SVD with `torch`/`pytorch` backends and a familiar R API. In our kidney cancer spatial-transcriptomics benchmark (199,112 cells × 978 features), `FastPCA`’s randomized SVD achieved 8.5 s mean runtime on commodity hardware while matching the early singular values from exact decompositions and widely used methods (IRLBA in `irlba`). Memory use remained modest for `FastPCA`'s randomized SVD implementation (321.4 MB), with predictable increase for exact decompositions when full matrices are returned. These results, together with setup helpers (optional Python via `reticulate`, otherwise R-only), make `FastPCA` a practical default for exploratory analyses and iterative pipelines (e.g., normalization alternatives, sub-clustering, visualization) where the top components contain the most biological information. Future work will extend functionality to sparse-matrix coverage and GPU pathways.
 
-# Community Guidelines
-
-Contributions by others is welcome for `FastPCA` as we believe it is a significant improvement to the field, allowing more people to analyze large datasets locally. To contribute, pull requests can be made to allow review before merging. Issues found should be submitted to https://github.com/ACSoupir/FastPCA/issues so we can fix them, improving user experience. 
-
 # Acknowledgements
 
 This work was supported in part by effort on NIH R01CA279065. We would like to thank Dr. Oscar Ospina for his testing of the `FastPCA` in a single-cell workflow to validate its similarity to values derived from Seurat (`irlba`) in real data. 
