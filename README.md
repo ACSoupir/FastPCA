@@ -119,7 +119,9 @@ produces results more similar to `'alg1'` and `FastPCA`’s Randomized
 method. `irlba` also produces resutls very in line with those from the
 full output of `FastPCA`’s exact.
 
-<img src="man/figures/README-eigenvalue_against-1.png" width="75%" style="display: block; margin: auto;" />
+    #> Warning: package 'ggplot2' was built under R version 4.4.3
+
+<img src="man/figures/README-eigenvalue_against-1.png" alt="" width="75%" style="display: block; margin: auto;" />
 
 The values start to deviate after ~50 dimensions between `PCAone`’s
 `'alg2'` compared to `FastPCA` and `irlba`.
@@ -143,7 +145,7 @@ Exact solution from `FastPCA`, `irlba`, `PCAone` with `'alg1'`, and
 `FastPCA`’s randomized method all match very well up to the 100 PCs
 returned.
 
-<img src="man/figures/README-eigenvalue_against_45-1.png" width="75%" style="display: block; margin: auto;" />
+<img src="man/figures/README-eigenvalue_against_45-1.png" alt="" width="75%" style="display: block; margin: auto;" />
 
 ## Example
 
@@ -189,3 +191,23 @@ left singular values by the
 ``` r
 torch_pc_scores = get_pc_scores(out_svd)
 ```
+
+# Community Guidelines
+
+Contributing to the improvements of `FastPCA` are welcome and
+encouraged.
+
+For issues, please report bugs and other problems at
+<https://github.com/ACSoupir/FastPCA/issues>. When submitting an issues,
+include minimal reproducible examples and as much information about your
+environment/session as possible. This will help us track down the source
+of the problem and fix it. Additionally, the Issues is a great place for
+feature requests (something that `FastPCA` doesn’t currently do but you
+would like to see it implemented).
+
+For providing fixes yourself, open a pull request with the
+changes/patches here: <https://github.com/ACSoupir/FastPCA/pulls>. We
+will review them before merging back to `FastPCA`. When opening a pull
+request, please include tests and documentation clearly describing what
+has is being fixed if tackling a bug, or the feature that is being
+added.

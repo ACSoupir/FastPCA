@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025) (preloaded format=xelatex 2025.3.8)  26 JAN 2026 08:41
+This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025) (preloaded format=xelatex 2025.3.8)  26 JAN 2026 18:39
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1236,7 +1236,7 @@ Package fancyhdr Warning: \headheight is too small (62.59596pt):
 (fancyhdr)                \addtolength{\topmargin}{-0.95425pt}.
 
 [4]
-Underfull \hbox (badness 1400) in paragraph at lines 641--645
+Underfull \hbox (badness 1400) in paragraph at lines 650--654
 []\TU/lmr/m/n/10 Li, Z., Meisner, J., & Albrechtsen, A. (2023). Fast and accura
 te out-of-core
  []
@@ -1277,16 +1277,16 @@ LaTeX2e <2024-11-01> patch level 2
 L3 programming layer <2025-01-18>
  ***********
 Package rerunfilecheck Info: File `paper.out' has not changed.
-(rerunfilecheck)             Checksum: CCB4AE479B3B5CFC72697212AE3DCEFD;757.
+(rerunfilecheck)             Checksum: 4B6B3F7471ED42C75B2765E38758841F;904.
 Package logreq Info: Writing requests to 'paper.run.xml'.
 \openout1 = `paper.run.xml'.
 
  ) 
 Here is how much of TeX's memory you used:
- 36945 strings out of 473832
- 755075 string characters out of 5729482
- 1641114 words of memory out of 5000000
- 59458 multiletter control sequences out of 15000+600000
+ 36946 strings out of 473832
+ 755097 string characters out of 5729482
+ 1641325 words of memory out of 5000000
+ 59459 multiletter control sequences out of 15000+600000
  565717 words of font info for 85 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
  84i,12n,87p,1194b,850s stack positions out of 10000i,1000n,20000p,200000b,200000s

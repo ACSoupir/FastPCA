@@ -1,5 +1,5 @@
 ---
-output: html
+output: html_document
 ---
 
 # @chrisarg
@@ -77,13 +77,13 @@ Thank you (and @chrisarg) for comments about dependencies. I have added a sectio
 
 ## Paper Feedback
 
-> Point 1: Change figure 2 to show error
+> Point 1: Change figure 2 to show error in values
 
 Thank you for the feed back. Due to it's lack of clarity from too many implementations being compared, we have decided to actually remove the figure and show two tables (Table 2 and Table 3) that demonstrate the agreement of FastPCA randomized singular value decomposition with other methods, namely the exact FastPCA implementation (with *libtorch* used through *pytorch*). Firstly, we demonstrate that the reconstruction error ratio (compared to truncating the exact `FastPCA` decomposition to the same dimensions as directly calculated by others) from the truncated decomposition methods are under 0.34% for all methods, with iterative methods like `irlba` indicating undetectable error at 6 decimal places (script here: docs_acs/paper/benchmarking_script.revision1.R)
 
 > Point 2: Why are they called "expressions" and why multiple points?
 
-In some functions (like `bench::mark`) the functions are called 'expressions'. The first argument of the function has a descriptor of "Expressions to benchmark, if named the `expression` column will be the name, otherwise it will be the deparsed expression." Because not only are functions (like in this manuscript) able to be tested as a whole but operations or expressions like how long it takes to compute `dat[dat$x > 300, ]` on a column. I have changed the word throughout the text to be "implementation" or "method" rather than "expression" since there are some implementations (like `FastPCA`, `bigstatsr`, and `BiocSingular`) that use the same method (randomized SVD).
+In some functions (like `bench::mark`) the functions are called 'expressions'. The first argument of `bench::mark` has a descriptor of "Expressions to benchmark, if named the `expression` column will be the name, otherwise it will be the deparsed expression." Because not only are functions (like in this manuscript) able to be tested as a whole but operations or expressions like how long it takes to compute `dat[dat$x > 300, ]` on a column. I have changed the word throughout the text to be "implementation" or "method" rather than "expression" since there are some implementations (like `FastPCA`, `bigstatsr`, and `BiocSingular`) that use the same method (randomized SVD).
 
 > Point 3: Standardize units in Table 1 and fix header capitalizations
 

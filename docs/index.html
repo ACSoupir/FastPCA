@@ -80,6 +80,7 @@
 
       </header><div class="row">
   <div class="contents col-md-9">
+
 <div class="section level1">
 <div class="page-header"><h1 id="fastpca">FastPCA<a class="anchor" aria-label="anchor" href="#fastpca"></a>
 </h1></div>
@@ -92,7 +93,7 @@
 <p>You can install the development version of <code>FastPCA</code> from <a href="https://github.com/ACSoupir/FastPCA" class="external-link">GitHub</a> with:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># install.packages("devtools")</span></span>
-<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"ACSoupir/FastPCA"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"ACSoupir/FastPCA"</span><span class="op">)</span></span></code></pre></div>
 <p>After installation, need to perform setup by either creating a conda environment with (py)torch and numpy installed, or by running <code><a href="reference/setup_py_env.html">FastPCA::setup_py_env()</a></code> which will attempt to create an environment and install the necessary packages. <!-- **I recommend using python 3.10 if you want to leverage `tinygrad` as have noticed issues with device support with python 3.9.** --></p>
 <p>There are some other packages that are in the “<a href="https://github.com/ACSoupir/FastPCA/blob/main/DESCRIPTION" class="external-link">Suggests</a>” to use vignettes but are not strictly required for using <code>FastPCA</code>. If wanting to run the vignettes, users can run this code block:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
@@ -104,7 +105,7 @@
 <p>On Mac if you run into issues, have had luck with installing <a href="https://mac.thecoatlessprofessor.com/macrtools/index.html" class="external-link"><code>macrtools</code></a> with:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># install.packages("remotes")</span></span>
-<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"coatless-mac/macrtools"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"coatless-mac/macrtools"</span><span class="op">)</span></span></code></pre></div>
 <p>Then, either installing it’s full set:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">macrtools</span><span class="fu">::</span><span class="fu">macos_rtools_install</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
@@ -194,7 +195,8 @@ Memory does appear to be greater when using `FastPCA` over `PCAone`, but `irlba`
 <h3 id="results">Results<a class="anchor" aria-label="anchor" href="#results"></a>
 </h3>
 <p>First exploring the eigenvalues calculated by all methods, on the high end they are all very similar as expected. <code>FastPCA</code> uses essentially the same method as <code>PCAone</code> uses for <code>'alg1'</code> so its logical that <code>PCAone</code> with <code>'alg1'</code> produces results much more similar to <code>FastPCA</code>. Interestingly, <code>FastPCA</code> without random projection and power iterations produces results more similar to <code>'alg1'</code> and <code>FastPCA</code>’s Randomized method. <code>irlba</code> also produces resutls very in line with those from the full output of <code>FastPCA</code>’s exact.</p>
-<p><img src="reference/figures/README-eigenvalue_against-1.png" width="75%" style="display: block; margin: auto;"></p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="co">#&gt; Warning: package 'ggplot2' was built under R version 4.4.3</span></span></code></pre></div>
+<p><img src="reference/figures/README-eigenvalue_against-1.png" alt="" width="75%" style="display: block; margin: auto;"></p>
 <p>The values start to deviate after ~50 dimensions between <code>PCAone</code>’s <code>'alg2'</code> compared to <code>FastPCA</code> and <code>irlba</code>.</p>
 <table style="width:100%;" class="table">
 <colgroup>
@@ -297,14 +299,14 @@ Memory does appear to be greater when using `FastPCA` over `PCAone`, but `irlba`
 </tbody>
 </table>
 <p>Visualizing PCs past 45, we can see the discrepancies better. <code>PCAone</code>’s <code>'alg2'</code> shows more deviation from all other methods. Compared to the Exact solution from <code>FastPCA</code>, <code>irlba</code>, <code>PCAone</code> with <code>'alg1'</code>, and <code>FastPCA</code>’s randomized method all match very well up to the 100 PCs returned.</p>
-<p><img src="reference/figures/README-eigenvalue_against_45-1.png" width="75%" style="display: block; margin: auto;"></p>
+<p><img src="reference/figures/README-eigenvalue_against_45-1.png" alt="" width="75%" style="display: block; margin: auto;"></p>
 </div>
 </div>
 <div class="section level2">
 <h2 id="example">Example<a class="anchor" aria-label="anchor" href="#example"></a>
 </h2>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/ACSoupir/FastPCA" class="external-link">FastPCA</a></span><span class="op">)</span></span>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">FastPCA</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="reference/setup_py_env.html">setup_py_env</a></span><span class="op">(</span>method <span class="op">=</span> <span class="st">"conda"</span>, envname <span class="op">=</span> <span class="st">"FastPCA"</span>, cuda <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span></span>
@@ -340,10 +342,18 @@ Memory does appear to be greater when using `FastPCA` over `PCAone`, but `irlba`
 <h2 id="outputs">Outputs<a class="anchor" aria-label="anchor" href="#outputs"></a>
 </h2>
 <p>Outputs are singular values. To convert to scores in R, multiply the left singular values by the</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">torch_pc_scores</span> <span class="op">=</span> <span class="fu"><a href="reference/get_pc_scores.html">get_pc_scores</a></span><span class="op">(</span><span class="va">out_svd</span><span class="op">)</span></span></code></pre></div>
 </div>
 </div>
+<div class="section level1">
+<h1 id="community-guidelines">Community Guidelines<a class="anchor" aria-label="anchor" href="#community-guidelines"></a>
+</h1>
+<p>Contributing to the improvements of <code>FastPCA</code> are welcome and encouraged.</p>
+<p>For issues, please report bugs and other problems at <a href="https://github.com/ACSoupir/FastPCA/issues" class="external-link uri">https://github.com/ACSoupir/FastPCA/issues</a>. When submitting an issues, include minimal reproducible examples and as much information about your environment/session as possible. This will help us track down the source of the problem and fix it. Additionally, the Issues is a great place for feature requests (something that <code>FastPCA</code> doesn’t currently do but you would like to see it implemented).</p>
+<p>For providing fixes yourself, open a pull request with the changes/patches here: <a href="https://github.com/ACSoupir/FastPCA/pulls" class="external-link uri">https://github.com/ACSoupir/FastPCA/pulls</a>. We will review them before merging back to <code>FastPCA</code>. When opening a pull request, please include tests and documentation clearly describing what has is being fixed if tackling a bug, or the feature that is being added.</p>
+</div>
+
   </div>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
@@ -391,7 +401,7 @@ Memory does appear to be greater when using `FastPCA` over `PCAone`, but `irlba`
 
 <div class="pkgdown">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
       </footer>

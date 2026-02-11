@@ -274,3 +274,12 @@ Outputs are singular values. To convert to scores in R, multiply the left singul
 ``` r
 torch_pc_scores = get_pc_scores(out_svd)
 ```
+
+# Community Guidelines
+
+Contributing to the improvements of `FastPCA` are welcome and encouraged. 
+
+For issues, please report bugs and other problems at https://github.com/ACSoupir/FastPCA/issues. When submitting an issues, include minimal reproducible examples and as much information about your environment/session as possible. This will help us track down the source of the problem and fix it. Additionally, the Issues is a great place for feature requests (something that `FastPCA` doesn't currently do but you would like to see it implemented).
+
+For providing fixes yourself, open a pull request with the changes/patches here: https://github.com/ACSoupir/FastPCA/pulls. We will review them before merging back to `FastPCA`. When opening a pull request, please include tests and documentation clearly describing what has is being fixed if tackling a bug, or the feature that is being added.
+
