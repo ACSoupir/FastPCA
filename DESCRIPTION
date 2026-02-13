@@ -1,6 +1,6 @@
 Package: FastPCA
 Title: FastPCA: Providing computationally efficient access to dimension reduction.
-Version: 0.0.3.1
+Version: 0.9.0.0
 Authors@R: 
     c(
       person("Alex", "Soupir", , "Alex.Soupir@moffitt.org", role = c("aut", "cre"))
