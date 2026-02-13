@@ -18,13 +18,13 @@ authors:
     affiliation: 3
   - name: Brooke L Fridley
     orcid: 0000-0001-7739-7956
-    affiliation: 4
+    affiliation: "4, 5"
   - name: Steven Eschrich
     orcid: 0000-0002-9833-2788
-    affiliation: 5
+    affiliation: 6
   - name: Alex C Soupir
     orcid: 0000-0003-1251-9179
-    affiliation: "2, 5" # (Multiple affiliations must be quoted)
+    affiliation: "2, 6" # (Multiple affiliations must be quoted)
 affiliations:
   - name: Department of Cutaneous Oncology, Moffitt Cancer Center
     index: 1
@@ -34,8 +34,10 @@ affiliations:
     index: 3
   - name: Health Services & Outcomes Research, Children's Mercy
     index: 4
-  - name: Department of Bioinformatics and Biostatistics, Moffitt Cancer Center
+  - name: Department of Pediatrics, University of Missouri-Kansas City School of Medicine
     index: 5
+  - name: Department of Bioinformatics and Biostatistics, Moffitt Cancer Center
+    index: 6
 citation_author: Ward et al
 date: "12 February, 2026"
 year: "2026"
