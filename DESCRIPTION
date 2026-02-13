@@ -1,6 +1,6 @@
 Package: FastPCA
 Title: FastPCA: Providing computationally efficient access to dimension reduction.
-Version: 0.0.3.0000
+Version: 0.0.3.1
 Authors@R: 
     c(
       person("Alex", "Soupir", , "Alex.Soupir@moffitt.org", role = c("aut", "cre"))
@@ -11,7 +11,7 @@ BugReports: https://github.com/ACSoupir/FastPCA/issues
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 Imports: 
     reticulate,
     irlba,

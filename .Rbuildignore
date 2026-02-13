@@ -5,6 +5,11 @@
 ^\.Rproj\.user$
 ^README\.Rmd$
 ^docs_acs$
+^docs$
+^paper$
+^tests$
+^man/figures$
+^\.github$
 
 #only online vignettes
 ^vignettes/SpatialTranscriptomics\.Rmd
