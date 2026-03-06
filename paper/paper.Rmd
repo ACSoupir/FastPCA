@@ -1,6 +1,6 @@
 ---
 # Example from https://joss.readthedocs.io/en/latest/submitting.html
-title: '`FastPCA`: An R package for fast singular value decomposition'
+title: 'FastPCA: An R package for fast singular value decomposition'
 tags:
   - R
   - Python
