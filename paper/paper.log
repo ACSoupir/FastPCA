@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025) (preloaded format=xelatex 2025.3.8)  12 FEB 2026 15:52
+This is XeTeX, Version 3.141592653-2.6-0.999997 (TeX Live 2025) (preloaded format=xelatex 2025.3.8)  6 MAR 2026 13:47
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1033,27 +1033,27 @@ Package: float 2001/11/08 v1.3d Float enhancements (AL)
 (./paper.aux)
 \openout1 = `paper.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 257.
-LaTeX Font Info:    ... okay on input line 257.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 257.
-LaTeX Font Info:    ... okay on input line 257.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 257.
-LaTeX Font Info:    ... okay on input line 257.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 257.
-LaTeX Font Info:    ... okay on input line 257.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 257.
-LaTeX Font Info:    ... okay on input line 257.
-LaTeX Font Info:    Checking defaults for TU/lmr/m/n on input line 257.
-LaTeX Font Info:    ... okay on input line 257.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 257.
-LaTeX Font Info:    ... okay on input line 257.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 257.
-LaTeX Font Info:    ... okay on input line 257.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 257.
-LaTeX Font Info:    ... okay on input line 257.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 257.
-LaTeX Font Info:    ... okay on input line 257.
-Package hyperref Info: Link coloring ON on input line 257.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 259.
+LaTeX Font Info:    ... okay on input line 259.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 259.
+LaTeX Font Info:    ... okay on input line 259.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 259.
+LaTeX Font Info:    ... okay on input line 259.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 259.
+LaTeX Font Info:    ... okay on input line 259.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 259.
+LaTeX Font Info:    ... okay on input line 259.
+LaTeX Font Info:    Checking defaults for TU/lmr/m/n on input line 259.
+LaTeX Font Info:    ... okay on input line 259.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 259.
+LaTeX Font Info:    ... okay on input line 259.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 259.
+LaTeX Font Info:    ... okay on input line 259.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 259.
+LaTeX Font Info:    ... okay on input line 259.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 259.
+LaTeX Font Info:    ... okay on input line 259.
+Package hyperref Info: Link coloring ON on input line 259.
 (./paper.out) (./paper.out)
 \@outlinefile=\write5
 \openout5 = `paper.out'.
@@ -1079,8 +1079,8 @@ Package biblatex Info: Automatic encoding selection.
 Package biblatex Info: Trying to load bibliographic data...
 Package biblatex Info: ... file 'paper.bbl' not found.
 No file paper.bbl.
-Package biblatex Info: Reference section=0 on input line 257.
-Package biblatex Info: Reference segment=0 on input line 257.
+Package biblatex Info: Reference section=0 on input line 259.
+Package biblatex Info: Reference segment=0 on input line 259.
 *geometry* driver: auto-detecting
 *geometry* detected driver: xetex
 *geometry* verbose mode - [ preamble ] result:
@@ -1115,13 +1115,13 @@ Package biblatex Info: Reference segment=0 on input line 257.
 * \@reversemargintrue
 * (1in=72.27pt=25.4mm, 1cm=28.453pt)
 
-LaTeX Info: Redefining \microtypecontext on input line 257.
-Package microtype Info: Applying patch `item' on input line 257.
-Package microtype Info: Applying patch `toc' on input line 257.
-Package microtype Info: Applying patch `eqnum' on input line 257.
-Package microtype Info: Applying patch `footnote' on input line 257.
-Package microtype Info: Applying patch `verbatim' on input line 257.
-LaTeX Info: Redefining \microtypesetup on input line 257.
+LaTeX Info: Redefining \microtypecontext on input line 259.
+Package microtype Info: Applying patch `item' on input line 259.
+Package microtype Info: Applying patch `toc' on input line 259.
+Package microtype Info: Applying patch `eqnum' on input line 259.
+Package microtype Info: Applying patch `footnote' on input line 259.
+Package microtype Info: Applying patch `verbatim' on input line 259.
+LaTeX Info: Redefining \microtypesetup on input line 259.
 Package microtype Info: Character protrusion enabled (level 2).
 Package microtype Info: Using protrusion set `basicmath'.
 Package microtype Info: No adjustment of tracking.
@@ -1140,14 +1140,14 @@ Package microtype Info: Loading generic protrusion settings for font family
 File: mt-cmr.cfg 2013/05/19 v2.2 microtype config. file: Computer Modern Roman 
 (RS)
 )
-LaTeX Font Info:    Trying to load font information for U+msa on input line 258
+LaTeX Font Info:    Trying to load font information for U+msa on input line 260
 .
 (/usr/local/texlive/2025/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 ) (/usr/local/texlive/2025/texmf-dist/tex/latex/microtype/mt-msa.cfg
 File: mt-msa.cfg 2006/02/04 v1.1 microtype config. file: AMS symbols (a) (RS)
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 258
+LaTeX Font Info:    Trying to load font information for U+msb on input line 260
 .
 (/usr/local/texlive/2025/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
@@ -1155,23 +1155,23 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 File: mt-msb.cfg 2005/06/01 v1.0 microtype config. file: AMS symbols (b) (RS)
 )
 
-Package hyperref Warning: Suppressing link with empty target on input line 284.
+Package hyperref Warning: Suppressing link with empty target on input line 286.
 
 
 
-Package hyperref Warning: Suppressing link with empty target on input line 284.
+Package hyperref Warning: Suppressing link with empty target on input line 286.
 
 
 
-Package hyperref Warning: Suppressing link with empty target on input line 284.
+Package hyperref Warning: Suppressing link with empty target on input line 286.
 
 
 
 
-File: /Users/4471592/Library/Caches/org.R-project.R/R/renv/cache/v5/macos/R-4.5
+File: /Users/4471592/Library/Caches/org.R-project.R/R/renv/cache/v5/macos/R-4.4
 /aarch64-apple-darwin20/rticles/0.27/1a05d2cc06f9fb360d2dc15f99293dfe/rticles/r
 markdown/templates/joss/resources/JOSS-logo.png Graphic file (type bmp)
-</Users/4471592/Library/Caches/org.R-project.R/R/renv/cache/v5/macos/R-4.5/aarc
+</Users/4471592/Library/Caches/org.R-project.R/R/renv/cache/v5/macos/R-4.4/aarc
 h64-apple-darwin20/rticles/0.27/1a05d2cc06f9fb360d2dc15f99293dfe/rticles/rmarkd
 own/templates/joss/resources/JOSS-logo.png>
 
@@ -1182,15 +1182,15 @@ Package fancyhdr Warning: \headheight is too small (62.59596pt):
 (fancyhdr)                \addtolength{\topmargin}{-0.95425pt}.
 
 LaTeX Font Info:    Font shape `TU/lmss/m/it' in size <8> not available
-(Font)              Font shape `TU/lmss/m/sl' tried instead on input line 343.
+(Font)              Font shape `TU/lmss/m/sl' tried instead on input line 345.
 [1
 
 ]
 
-File: /Users/4471592/Library/Caches/org.R-project.R/R/renv/cache/v5/macos/R-4.5
+File: /Users/4471592/Library/Caches/org.R-project.R/R/renv/cache/v5/macos/R-4.4
 /aarch64-apple-darwin20/rticles/0.27/1a05d2cc06f9fb360d2dc15f99293dfe/rticles/r
 markdown/templates/joss/resources/JOSS-logo.png Graphic file (type bmp)
-</Users/4471592/Library/Caches/org.R-project.R/R/renv/cache/v5/macos/R-4.5/aarc
+</Users/4471592/Library/Caches/org.R-project.R/R/renv/cache/v5/macos/R-4.4/aarc
 h64-apple-darwin20/rticles/0.27/1a05d2cc06f9fb360d2dc15f99293dfe/rticles/rmarkd
 own/templates/joss/resources/JOSS-logo.png>
 
@@ -1205,10 +1205,10 @@ File: images/figure1.png Graphic file (type bmp)
 <images/figure1.png>
 
 
-File: /Users/4471592/Library/Caches/org.R-project.R/R/renv/cache/v5/macos/R-4.5
+File: /Users/4471592/Library/Caches/org.R-project.R/R/renv/cache/v5/macos/R-4.4
 /aarch64-apple-darwin20/rticles/0.27/1a05d2cc06f9fb360d2dc15f99293dfe/rticles/r
 markdown/templates/joss/resources/JOSS-logo.png Graphic file (type bmp)
-</Users/4471592/Library/Caches/org.R-project.R/R/renv/cache/v5/macos/R-4.5/aarc
+</Users/4471592/Library/Caches/org.R-project.R/R/renv/cache/v5/macos/R-4.4/aarc
 h64-apple-darwin20/rticles/0.27/1a05d2cc06f9fb360d2dc15f99293dfe/rticles/rmarkd
 own/templates/joss/resources/JOSS-logo.png>
 
@@ -1220,10 +1220,10 @@ Package fancyhdr Warning: \headheight is too small (62.59596pt):
 
 [3]
 
-File: /Users/4471592/Library/Caches/org.R-project.R/R/renv/cache/v5/macos/R-4.5
+File: /Users/4471592/Library/Caches/org.R-project.R/R/renv/cache/v5/macos/R-4.4
 /aarch64-apple-darwin20/rticles/0.27/1a05d2cc06f9fb360d2dc15f99293dfe/rticles/r
 markdown/templates/joss/resources/JOSS-logo.png Graphic file (type bmp)
-</Users/4471592/Library/Caches/org.R-project.R/R/renv/cache/v5/macos/R-4.5/aarc
+</Users/4471592/Library/Caches/org.R-project.R/R/renv/cache/v5/macos/R-4.4/aarc
 h64-apple-darwin20/rticles/0.27/1a05d2cc06f9fb360d2dc15f99293dfe/rticles/rmarkd
 own/templates/joss/resources/JOSS-logo.png>
 
@@ -1234,17 +1234,17 @@ Package fancyhdr Warning: \headheight is too small (62.59596pt):
 (fancyhdr)                \addtolength{\topmargin}{-0.95425pt}.
 
 [4]
-Underfull \hbox (badness 1400) in paragraph at lines 639--643
+Underfull \hbox (badness 1400) in paragraph at lines 641--645
 []\TU/lmr/m/n/10 Li, Z., Meisner, J., & Albrechtsen, A. (2023). Fast and accura
 te out-of-core
  []
 
 
 
-File: /Users/4471592/Library/Caches/org.R-project.R/R/renv/cache/v5/macos/R-4.5
+File: /Users/4471592/Library/Caches/org.R-project.R/R/renv/cache/v5/macos/R-4.4
 /aarch64-apple-darwin20/rticles/0.27/1a05d2cc06f9fb360d2dc15f99293dfe/rticles/r
 markdown/templates/joss/resources/JOSS-logo.png Graphic file (type bmp)
-</Users/4471592/Library/Caches/org.R-project.R/R/renv/cache/v5/macos/R-4.5/aarc
+</Users/4471592/Library/Caches/org.R-project.R/R/renv/cache/v5/macos/R-4.4/aarc
 h64-apple-darwin20/rticles/0.27/1a05d2cc06f9fb360d2dc15f99293dfe/rticles/rmarkd
 own/templates/joss/resources/JOSS-logo.png>
 
@@ -1256,10 +1256,10 @@ Package fancyhdr Warning: \headheight is too small (62.59596pt):
 
 [5]
 
-File: /Users/4471592/Library/Caches/org.R-project.R/R/renv/cache/v5/macos/R-4.5
+File: /Users/4471592/Library/Caches/org.R-project.R/R/renv/cache/v5/macos/R-4.4
 /aarch64-apple-darwin20/rticles/0.27/1a05d2cc06f9fb360d2dc15f99293dfe/rticles/r
 markdown/templates/joss/resources/JOSS-logo.png Graphic file (type bmp)
-</Users/4471592/Library/Caches/org.R-project.R/R/renv/cache/v5/macos/R-4.5/aarc
+</Users/4471592/Library/Caches/org.R-project.R/R/renv/cache/v5/macos/R-4.4/aarc
 h64-apple-darwin20/rticles/0.27/1a05d2cc06f9fb360d2dc15f99293dfe/rticles/rmarkd
 own/templates/joss/resources/JOSS-logo.png>
 
@@ -1283,7 +1283,7 @@ Package logreq Info: Writing requests to 'paper.run.xml'.
 Here is how much of TeX's memory you used:
  36945 strings out of 473832
  755339 string characters out of 5729482
- 1641209 words of memory out of 5000000
+ 1642394 words of memory out of 5000000
  59458 multiletter control sequences out of 15000+600000
  565717 words of font info for 85 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
