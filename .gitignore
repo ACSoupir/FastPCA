@@ -1,0 +1,13 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+*_mem.rds
+*_res.rds
+*_time.rds
+testing_script.R
+test.txt
+-MLJYCDK2R6CT.Rhistory
+inst/doc
+docs_acs/paper/paper_results.rds
+.Rprofile

@@ -1,0 +1,18 @@
+^renv$
+^renv\.lock$
+^LICENSE\.md$
+^FastPCA\.Rproj$
+^\.Rproj\.user$
+^README\.Rmd$
+^docs_acs$
+^docs$
+^paper$
+^tests$
+^man/figures$
+^\.github$
+
+#only online vignettes
+^vignettes/SpatialTranscriptomics\.Rmd
+^vignettes/references\.bib
+^data-raw$
+^data$
