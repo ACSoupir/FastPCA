@@ -145,22 +145,27 @@ p=10, q_iter=2:
 
 | matrix | baseline steady | native tg steady | speed-up | baseline peak RSS | native tg peak RSS |
 |---|---|---|---|---|---|
-| 2000 × 500   | 28.9 ms | **12.9 ms** | **2.24×** | 0.296 GB | **0.165 GB** |
-| 4000 × 1000  | 45.1 ms | **19.9 ms** | **2.27×** | 0.317 GB | **0.225 GB** |
-| 8000 × 3000  | 135.6 ms | **53.4 ms** | **2.54×** | 0.657 GB | **0.598 GB** |
-| 15000 × 2000 | 157.9 ms | **73.3 ms** | **2.15×** | 0.808 GB | **0.715 GB** |
+| 2000 × 500   | 28.4 ms | **13.0 ms** | **2.19×** | 0.254 GB | **0.163 GB** |
+| 4000 × 1000  | 44.1 ms | **19.5 ms** | **2.26×** | 0.292 GB | **0.210 GB** |
+| 8000 × 3000  | 134.1 ms | **53.2 ms** | **2.52×** | 0.670 GB | **0.571 GB** |
+| 15000 × 2000 | 156.0 ms | **72.7 ms** | **2.15×** | 0.797 GB | **0.698 GB** |
 
 * Accuracy matches: reconstruction error is identical to 5 decimals, top-10
   singular values agree to ~1e-7 (the float32 limit) and the leading subspaces
   align to ≤0.0001° (`TESTING/tinygrad_validate.py`). The one large angle in the
   `shifted` spectrum is between *near-degenerate tail* directions, not a real
   discrepancy — reconstruction and singular values still match.
-* Peak RSS is **9–44% lower** than the baseline at every size (fresh process,
+* Peak RSS is **12–36% lower** than the baseline at every size (fresh process,
   matrix pre-loaded).
 * **Caveat — cold start.** The first call for a new shape pays the `TinyJit`
   trace, ≈0.64–0.69 s vs the baseline's 31–165 ms first call; every later call is
-  13–73 ms. Call `warmup(m, n)` once at startup (≈0.62 s) to move that cost into
-  initialisation, exactly as a torch import is paid today.
+  13–73 ms. Most of that is fixed backend cost: `import tinygrad` alone is 0.25 s
+  and only ~0.1 s of the trace scales with `ns_steps`. Measured as **total** cold
+  time in a fresh process (interpreter + numpy + library import + load A +
+  6 SVDs) the two backends are 0.68 s vs 1.11 s at 2000×500, but **1.49 s vs
+  1.44 s** at 15000×2000 — cold-start parity from medium sizes up, plus the
+  2.1–2.5× steady-state win everywhere. Call `warmup(m, n)` once at startup to
+  move the trace into initialisation.
 * **20 GB memory safeguard:** `check_shape()` refuses a shape whose projected
   working set would exceed the cap *before* allocating, and `check_mem()`
   re-checks peak RSS at each stage. The cap is `FASTPCA_TG_MEM_GB` (default 20).

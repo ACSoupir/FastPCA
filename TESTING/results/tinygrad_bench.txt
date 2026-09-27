@@ -6,36 +6,36 @@ ready /Users/4471592/Documents/share/lab_soupir/projects/FastPCA/TESTING/.cache/
 ready /Users/4471592/Documents/share/lab_soupir/projects/FastPCA/TESTING/.cache/A_15000x2000.npy 240 MB
 
 == numerical validation ==
-decay seed=0: recon base=0.04895 tg=0.04895 | top10 sv_relerr base=2.1e-15 tg=8.5e-08 | U angle(top10)=0.0000 deg
-decay seed=1: recon base=0.04887 tg=0.04887 | top10 sv_relerr base=1.7e-15 tg=1.7e-07 | U angle(top10)=0.0001 deg
-shifted seed=0: recon base=0.09061 tg=0.09058 | top10 sv_relerr base=4.4e-02 tg=4.5e-02 | U angle(top10)=80.5330 deg
+decay seed=0: recon base=0.04894 tg=0.04895 | top10 sv_relerr base=2.3e-15 tg=8.5e-08 | U angle(top10)=0.0000 deg
+decay seed=1: recon base=0.04888 tg=0.04887 | top10 sv_relerr base=1.3e-15 tg=1.7e-07 | U angle(top10)=0.0001 deg
+shifted seed=0: recon base=0.09061 tg=0.09058 | top10 sv_relerr base=4.3e-02 tg=4.5e-02 | U angle(top10)=81.7564 deg
 
 == speed and peak RSS (fresh process per backend/size) ==
 -- 2000x500 --
-[baseline] after load peak=0.031
-[baseline] after 1st SVD peak=0.230 first=31.97ms
-[baseline] after 6 SVDs peak=0.262 steady=28.87ms
-[tinygrad] after load peak=0.031
-[tinygrad] after 1st SVD peak=0.126 first=634.48ms
-[tinygrad] after 6 SVDs peak=0.164 steady=13.09ms
+[baseline] after load peak=0.030
+[baseline] after 1st SVD peak=0.226 first=31.17ms
+[baseline] after 6 SVDs peak=0.254 steady=28.37ms cold_total=0.68s
+[tinygrad] after load peak=0.030
+[tinygrad] after 1st SVD peak=0.123 first=622.03ms
+[tinygrad] after 6 SVDs peak=0.163 steady=12.96ms cold_total=1.11s
 -- 4000x1000 --
-[baseline] after load peak=0.055
-[baseline] after 1st SVD peak=0.279 first=48.94ms
-[baseline] after 6 SVDs peak=0.292 steady=44.33ms
-[tinygrad] after load peak=0.055
-[tinygrad] after 1st SVD peak=0.180 first=643.41ms
-[tinygrad] after 6 SVDs peak=0.223 steady=19.73ms
+[baseline] after load peak=0.054
+[baseline] after 1st SVD peak=0.278 first=47.76ms
+[baseline] after 6 SVDs peak=0.292 steady=44.14ms cold_total=0.80s
+[tinygrad] after load peak=0.054
+[tinygrad] after 1st SVD peak=0.180 first=612.36ms
+[tinygrad] after 6 SVDs peak=0.210 steady=19.50ms cold_total=1.12s
 -- 8000x3000 --
-[baseline] after load peak=0.215
-[baseline] after 1st SVD peak=0.618 first=142.40ms
-[baseline] after 6 SVDs peak=0.667 steady=134.01ms
+[baseline] after load peak=0.214
+[baseline] after 1st SVD peak=0.615 first=139.60ms
+[baseline] after 6 SVDs peak=0.670 steady=134.09ms cold_total=1.35s
 [tinygrad] after load peak=0.214
-[tinygrad] after 1st SVD peak=0.520 first=644.12ms
-[tinygrad] after 6 SVDs peak=0.589 steady=53.45ms
+[tinygrad] after 1st SVD peak=0.522 first=630.50ms
+[tinygrad] after 6 SVDs peak=0.571 steady=53.17ms cold_total=1.34s
 -- 15000x2000 --
-[baseline] after load peak=0.263
-[baseline] after 1st SVD peak=0.722 first=163.90ms
-[baseline] after 6 SVDs peak=0.801 steady=158.35ms
-[tinygrad] after load peak=0.263
-[tinygrad] after 1st SVD peak=0.622 first=661.62ms
-[tinygrad] after 6 SVDs peak=0.723 steady=73.61ms
+[baseline] after load peak=0.262
+[baseline] after 1st SVD peak=0.736 first=162.40ms
+[baseline] after 6 SVDs peak=0.797 steady=155.98ms cold_total=1.49s
+[tinygrad] after load peak=0.262
+[tinygrad] after 1st SVD peak=0.623 first=633.69ms
+[tinygrad] after 6 SVDs peak=0.698 steady=72.70ms cold_total=1.44s

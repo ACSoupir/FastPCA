@@ -10,6 +10,10 @@ import resource
 import sys
 import time
 
+# Captured before numpy/backend imports so "cold" includes everything a fresh
+# process pays: interpreter + numpy + torch/tinygrad import + first SVD.
+_T0 = time.perf_counter()
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
 CACHE = os.path.join(HERE, ".cache")
@@ -50,4 +54,5 @@ print(f"[{mode}] after 1st SVD peak={peak():.3f} first={first*1e3:.2f}ms", flush
 ts = []
 for _ in range(5):
     t0 = time.perf_counter(); call(); ts.append(time.perf_counter() - t0)
-print(f"[{mode}] after 6 SVDs peak={peak():.3f} steady={min(ts)*1e3:.2f}ms", flush=True)
+print(f"[{mode}] after 6 SVDs peak={peak():.3f} steady={min(ts)*1e3:.2f}ms "
+      f"cold_total={(time.perf_counter() - _T0):.2f}s", flush=True)
