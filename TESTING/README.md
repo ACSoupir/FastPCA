@@ -99,10 +99,42 @@ the loader in `R/utils.R` at `torch_svd_func_optim.py`, and the R call site in
 `R/FastPCA.R:81` keeps working unchanged (`randomized_svd_py(...)` signature is
 identical). Nothing outside `TESTING/` has been modified yet.
 
+## tinygrad (status: experimental, not yet a win)
+
+tinygrad is **not** in `/opt/anaconda3/envs/FastPCA`. A workspace venv is used
+instead (gitignored):
+
+```bash
+/opt/anaconda3/envs/FastPCA/bin/python -m venv --system-site-packages TESTING/.venv-tg
+TESTING/.venv-tg/bin/python -m pip install tinygrad        # 0.11.0
+# tinygrad caches kernels under ~/.cache (read-only in this sandbox):
+export XDG_CACHE_HOME="$PWD/TESTING/.cache"
+```
+
+Findings on this machine (macOS arm64, tinygrad 0.11):
+
+* `inst/python/tinygrad_svd_func.py` does **not run as shipped**:
+  * its CPU path shells out to a cross-compiler
+    (`--target=arm64-none-unknown-elf`) that the conda `cc` rejects;
+  * its GPU path selects OpenCL (`ops_gpu.py`) and dies with
+    `OpenCL Error -48: CL_INVALID_KERNEL`. Only tinygrad's native **METAL**
+    device works.
+* A pure-tinygrad kernel is not obviously worthwhile: its bundled Householder
+  QR / Jacobi SVD are Python-graph heavy (hundreds of tiny kernels) and lose to
+  LAPACK, and Metal matmuls are ~4–5 ms each for the shapes here.
+* `tinygrad_rsvd.py` is a **hybrid** (Metal matmuls + numpy for the small QR /
+  SVD). Measured against torch-CPU `stable`: 79.8 ms vs 21.5 ms (4000×1000) and
+  255 ms vs 114.5 ms (15000×2000) — i.e. currently *slower*. Getting a real win
+  would mean native Metal kernels for the orthonormalisation/SVD and eliminating
+  host round-trips, which is a much larger piece of work.
+
+So the tinygrad backend needs design/effort before it can be called an
+optimisation; the PyTorch kernels are where the concrete speed-up is today.
+
 ## Next steps
 
-- tinygrad kernel (tinygrad is not installed in `/opt/anaconda3/envs/FastPCA`;
-  needs a workspace venv or an install into that env).
-- Wire the best kernel behind `R/utils.R` / `FastPCA()`.
+- Decide whether to invest in native-Metal tinygrad kernels (large) or leave the
+  backend disabled.
+- Wire `stable` behind `R/utils.R` / `FastPCA()`.
 - Add a low-precision (float32) option to the R API so users can opt into the
   ~3–5× path.

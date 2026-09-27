@@ -1,2 +1,6 @@
 __pycache__/
 *.pyc
+_tmp/
+.venv*/
+tinygrad_env/
+.cache/
