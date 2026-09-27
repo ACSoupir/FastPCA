@@ -42,7 +42,10 @@ try:
 except ImportError as exc:  # pragma: no cover
     raise SystemExit("tinygrad required; run with TESTING/.venv-tg/bin/python") from exc
 
-MEM_LIMIT_BYTES = 20 * (1024 ** 3)
+# Peak-memory safeguard. Override with FASTPCA_TG_MEM_GB if a machine has more
+# headroom; the default keeps a runaway shape from taking 36 GB of RAM down.
+MEM_LIMIT_GB = float(os.environ.get("FASTPCA_TG_MEM_GB", "20"))
+MEM_LIMIT_BYTES = int(MEM_LIMIT_GB * (1024 ** 3))
 
 # Quintic Newton-Schulz polar-iteration coefficients. a + b + c == 1, so after
 # Frobenius normalisation every non-zero singular value converges to 1.
@@ -60,6 +63,26 @@ def check_mem(where: str = "") -> None:
         raise MemoryError(
             f"peak RSS {used / 1e9:.2f} GB exceeds the "
             f"{MEM_LIMIT_BYTES / 1e9:.0f} GB safeguard ({where})"
+        )
+
+
+def _estimate_bytes(m: int, n: int, b: int) -> int:
+    """Upper-bound working set of one call (float32 buffers, in bytes).
+
+    Counts the input A plus Omega/W/NS temporaries and Y/Q/B, all of which are
+    real allocations; used to refuse a shape *before* it is allocated.
+    """
+    return 4 * (m * n + m * b * 3 + n * b * 10 + b * b * 8)
+
+
+def check_shape(m: int, n: int, b: int) -> None:
+    """Refuse a shape whose projected working set exceeds the memory limit."""
+    est = _estimate_bytes(m, n, b)
+    if est > MEM_LIMIT_BYTES:
+        raise MemoryError(
+            f"projected working set {est / 1e9:.2f} GB for {m}x{n}, b={b} "
+            f"exceeds the {MEM_LIMIT_GB:.0f} GB safeguard "
+            f"(set FASTPCA_TG_MEM_GB to raise)"
         )
 
 
@@ -126,6 +149,7 @@ def randomized_svd_tg(A_np, k, p=10, q_iter=2, seed=None, ns_steps=16,
     b = min(int(k) + int(p), m, n)
     if b <= 0:
         raise ValueError("k + p must be positive and no larger than min(m, n)")
+    check_shape(m, n, b)
 
     A = Tensor(A_np.astype(np.float32), device=device).realize()
     Omega = Tensor(

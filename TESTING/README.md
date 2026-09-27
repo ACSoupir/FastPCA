@@ -161,8 +161,9 @@ p=10, q_iter=2:
   trace, ≈0.64–0.69 s vs the baseline's 31–165 ms first call; every later call is
   13–73 ms. Call `warmup(m, n)` once at startup (≈0.62 s) to move that cost into
   initialisation, exactly as a torch import is paid today.
-* **20 GB memory safeguard:** every entry point checks peak RSS via
-  `check_mem()` and raises before the machine can thrash.
+* **20 GB memory safeguard:** `check_shape()` refuses a shape whose projected
+  working set would exceed the cap *before* allocating, and `check_mem()`
+  re-checks peak RSS at each stage. The cap is `FASTPCA_TG_MEM_GB` (default 20).
 
 `randomized_svd_py_tg(...)` is a signature-compatible drop-in for the disabled
 `inst/python/tinygrad_svd_func.py`, and `randomized_svd_tg(...)` returns the
