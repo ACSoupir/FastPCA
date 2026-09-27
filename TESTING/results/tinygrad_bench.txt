@@ -1,0 +1,41 @@
+# native-Metal tinygrad vs package torch baseline
+# interpreter: /Users/4471592/Documents/share/lab_soupir/projects/FastPCA/TESTING/.venv-tg/bin/python (has both torch and tinygrad)
+ready /Users/4471592/Documents/share/lab_soupir/projects/FastPCA/TESTING/.cache/A_2000x500.npy 8 MB
+ready /Users/4471592/Documents/share/lab_soupir/projects/FastPCA/TESTING/.cache/A_4000x1000.npy 32 MB
+ready /Users/4471592/Documents/share/lab_soupir/projects/FastPCA/TESTING/.cache/A_8000x3000.npy 192 MB
+ready /Users/4471592/Documents/share/lab_soupir/projects/FastPCA/TESTING/.cache/A_15000x2000.npy 240 MB
+
+== numerical validation ==
+decay seed=0: recon base=0.04895 tg=0.04895 | top10 sv_relerr base=2.1e-15 tg=8.5e-08 | U angle(top10)=0.0000 deg
+decay seed=1: recon base=0.04887 tg=0.04887 | top10 sv_relerr base=1.7e-15 tg=1.7e-07 | U angle(top10)=0.0001 deg
+shifted seed=0: recon base=0.09061 tg=0.09058 | top10 sv_relerr base=4.4e-02 tg=4.5e-02 | U angle(top10)=80.5330 deg
+
+== speed and peak RSS (fresh process per backend/size) ==
+-- 2000x500 --
+[baseline] after load peak=0.031
+[baseline] after 1st SVD peak=0.230 first=31.97ms
+[baseline] after 6 SVDs peak=0.262 steady=28.87ms
+[tinygrad] after load peak=0.031
+[tinygrad] after 1st SVD peak=0.126 first=634.48ms
+[tinygrad] after 6 SVDs peak=0.164 steady=13.09ms
+-- 4000x1000 --
+[baseline] after load peak=0.055
+[baseline] after 1st SVD peak=0.279 first=48.94ms
+[baseline] after 6 SVDs peak=0.292 steady=44.33ms
+[tinygrad] after load peak=0.055
+[tinygrad] after 1st SVD peak=0.180 first=643.41ms
+[tinygrad] after 6 SVDs peak=0.223 steady=19.73ms
+-- 8000x3000 --
+[baseline] after load peak=0.215
+[baseline] after 1st SVD peak=0.618 first=142.40ms
+[baseline] after 6 SVDs peak=0.667 steady=134.01ms
+[tinygrad] after load peak=0.214
+[tinygrad] after 1st SVD peak=0.520 first=644.12ms
+[tinygrad] after 6 SVDs peak=0.589 steady=53.45ms
+-- 15000x2000 --
+[baseline] after load peak=0.263
+[baseline] after 1st SVD peak=0.722 first=163.90ms
+[baseline] after 6 SVDs peak=0.801 steady=158.35ms
+[tinygrad] after load peak=0.263
+[tinygrad] after 1st SVD peak=0.622 first=661.62ms
+[tinygrad] after 6 SVDs peak=0.723 steady=73.61ms

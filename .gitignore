@@ -11,3 +11,5 @@ test.txt
 inst/doc
 docs_acs/paper/paper_results.rds
 .Rprofile
+__pycache__/
+*.py[cod]
