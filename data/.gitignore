@@ -4,3 +4,5 @@
 gex.rds
 prepped_gex_fbm.rds
 prepped_gex_fbm.bk
+seurat_object.Rds
+seurat_object_v5.rds
