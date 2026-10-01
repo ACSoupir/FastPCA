@@ -1,5 +1,11 @@
 # FastPCA (development version)
 
+* Detect an already-loaded OpenMP runtime (e.g. via data.table/Seurat) and clamp
+  `cores` to 1 for OpenMP-backed backends (pytorch, rtorch) before it can crash
+  the session. Reporting is configurable with `options(FastPCA.openmp_warning = )`.
+* Coerce and validate the user-supplied `cores` in all entry points, fixing a
+  "set_num_threads expects an int" error for double-valued input.
+
 ## Version 0.0.3
 
 * Added tests

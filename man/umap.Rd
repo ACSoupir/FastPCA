@@ -32,7 +32,9 @@ umap(
 
 \item{min_dist}{Numeric: minimum distance to consider}
 
-\item{cores}{Integer: Number of cores to use for UMAP calculation}
+\item{cores}{Integer: Number of cores to use for UMAP calculation. On the
+'umap-learn' method this is clamped to 1 for the call when an OpenMP runtime
+conflict is detected in the session.}
 
 \item{seed}{Integer: reproducibility seed. If cores > 1 or seed equals \code{-1}, seed will be ignored.}
 

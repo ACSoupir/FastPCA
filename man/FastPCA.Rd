@@ -32,7 +32,9 @@ transpose this for the PyTorch or Tinygrad SVD based on the original Python scri
 \item{backend}{Character. which backend to use, either r, rtorch, pytorch, or irlba. \strong{Tinygrad is not implemented. Waiting on tinygrad maturation}
 See details for informaiotn about backends.}
 
-\item{cores}{Integer. number of CPU cores to use with the backend}
+\item{cores}{Integer. Number of CPU cores to use with the backend.
+Clamped to 1 for this call when an OpenMP runtime conflict is detected in the
+session (for example after loading \pkg{data.table} or Seurat).}
 
 \item{...}{other parameters to pass to irlba when \code{backend} is either \code{'r'} or \code{'irlba'}}
 }

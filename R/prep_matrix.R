@@ -6,7 +6,8 @@
 #' @param transpose Boolean. Whether the matrix needs to be transposed. If starting with samples as columns, set to `TRUE`. Default is `FALSE`
 #' @param scale Boolean. Whether to center and scale the matrix. Default to `TRUE`
 #' @param backend Character. The backend which to use for performing transformations. Default is "rtorch". Options are "r", "rtorch", or "pytorch". See details for information about the pytorch/conda environments
-#' @param cores Numeric. The number of cores to use.
+#' @param cores Numeric. The number of cores to use. Clamped to 1 for this call
+#'   when an OpenMP runtime conflict is detected in the session.
 #'
 #' @return A matrix that has been rotated (transposed) and scaled if needed
 #'
@@ -51,8 +52,8 @@ prep_matrix <- function(mat,
   #validation
   backend_device = validate_backend(backend, device)
 
-  #convert cores to integer
-  cores = as.integer(cores)
+  # clamp to a single thread when an OpenMP runtime conflict is present (R/openmp.R)
+  cores <- .resolve_cores(cores, openmp = .backend_uses_openmp(backend))
 
 
   if(backend == "pytorch"){

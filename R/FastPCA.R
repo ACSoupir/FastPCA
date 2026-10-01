@@ -12,7 +12,9 @@
 #' @param exact Boolean. Whether to compute the exact matrix or not. Only works with pytorch backend
 #' @param backend Character. which backend to use, either r, rtorch, pytorch, or irlba. **Tinygrad is not implemented. Waiting on tinygrad maturation**
 #' See details for informaiotn about backends.
-#' @param cores Integer. number of CPU cores to use with the backend
+#' @param cores Integer. Number of CPU cores to use with the backend.
+#'   Clamped to 1 for this call when an OpenMP runtime conflict is detected in the
+#'   session (for example after loading \pkg{data.table} or Seurat).
 #' @param ... other parameters to pass to irlba when `backend` is either `'r'` or `'irlba'`
 #'
 #' @return A list containing:
@@ -63,7 +65,8 @@ FastPCA <- function(input_r_matrix,
   k <- as.integer(k)
   p <- as.integer(p)
   q_iter <- as.integer(q_iter)
-  cores = as.integer(cores)
+  # clamp to a single thread when an OpenMP runtime conflict is present (R/openmp.R)
+  cores <- .resolve_cores(cores, openmp = .backend_uses_openmp(backend))
 
   if(is.data.frame(input_r_matrix)) stop("Input data must be in matrix format.")
 

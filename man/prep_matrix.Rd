@@ -23,7 +23,8 @@ prep_matrix(
 
 \item{backend}{Character. The backend which to use for performing transformations. Default is "rtorch". Options are "r", "rtorch", or "pytorch". See details for information about the pytorch/conda environments}
 
-\item{cores}{Numeric. The number of cores to use.}
+\item{cores}{Numeric. The number of cores to use. Clamped to 1 for this call
+when an OpenMP runtime conflict is detected in the session.}
 }
 \value{
 A matrix that has been rotated (transposed) and scaled if needed

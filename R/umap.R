@@ -6,7 +6,9 @@
 #' @param method Character: The backend method for calculating UMAP (either 'uwot' or 'umap-learn'). Default is 'uwot'.
 #' @param metric Character: How to calculate similarity. See details below for more informaation.
 #' @param min_dist Numeric: minimum distance to consider
-#' @param cores Integer: Number of cores to use for UMAP calculation
+#' @param cores Integer: Number of cores to use for UMAP calculation. On the
+#'   'umap-learn' method this is clamped to 1 for the call when an OpenMP runtime
+#'   conflict is detected in the session.
 #' @param seed Integer: reproducibility seed. If cores > 1 or seed equals `-1`, seed will be ignored.
 #' @param densemap Boolean: whether to use DensMAP for local densities
 #' @param dense_lambda Numeric: value to apply for local density. Default: 2. higher values prioritize local density while low values are closer to typical UMAP
@@ -59,7 +61,8 @@ umap = function(pc_scores,
   method = match.arg(method)
   n_neighbors = as.integer(n_neighbors)
   n_components = as.integer(n_components)
-  cores = as.integer(cores)
+  # only the Python (umap-learn) path runs OpenMP-backed code; uwot uses TBB
+  cores <- .resolve_cores(cores, openmp = identical(method, "umap-learn"))
   seed = as.integer(seed)
 
   if(method == "umap-learn"){
