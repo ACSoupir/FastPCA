@@ -134,8 +134,39 @@ float32 alone) and the SVD runs hundreds of Jacobi rounds. Instead:
   Newton–Schulz *grows* small singular directions (~1.875× per step), which is
   what keeps float32 stable; the plain power scheme collapses.
 * The whole range finder is wrapped in **`TinyJit`**, which removes the per-op
-  Python dispatch that otherwise dominates (≈220 ms → ≈13 ms on 2000×500).
-* The only host-side step is the SVD of `B = QᵀA` (b×n, b=k+p).
+  Python dispatch that otherwise dominates (≈220 ms → ≈10 ms on 2000×500).
+* The only host-side step is the small SVD of `B = QᵀA` (b×n, b=k+p), computed
+  via the Gram route — see below.
+
+### The final small SVD: why it stays on the host
+
+After the range finder, `B = QᵀA` (b×n) still needs an SVD. Measured here with
+b=60:
+
+| final step (b = 60) | m=2000, n=500 | m=15000, n=2000 |
+|---|---|---|
+| `np.linalg.svd(B)` (old default) | 5.11 ms | 10.42 ms |
+| **Gram + `np.linalg.eigh` (new default)** | **1.29 ms** | **3.19 ms** |
+| Gram matmul on Metal + host `eigh` (device hybrid) | 6.63 ms | 7.48 ms |
+| tinygrad `Tensor.svd` | unusable (below) | |
+
+* The default now uses the **Gram route**: `C = B Bᵀ` (b×b), symmetric
+  eigendecomposition, then `Vh = diag(1/S) Uᵀ B`. It is exact to ~1e-15 and
+  **~4× faster** than LAPACK's direct SVD at these shapes; end-to-end that is
+  `12.7 ms → 9.7 ms` on 2000×500.
+* **tinygrad cannot do this step.** `Tensor.svd` unrolls
+  `num·log2(num)·2 ≈ 712` Jacobi rounds into one lazy graph: it took **14 s for
+  an 8×8** matrix and raises `RecursionError` from ~20×20 upward (even with
+  `sys.setrecursionlimit(10**6)`). tinygrad also exposes no `eigh` / `eig` /
+  `cholesky` / `solve`, so a native replacement means hand-writing Jacobi —
+  ~10 sweeps × b/2 rotations ≈ hundreds of sequential kernel launches, versus one
+  LAPACK call whose hard part is only a b×b eigenproblem.
+* **Pushing the Gram matmul onto Metal does not help** (6.63/7.48 ms). Device→host
+  transfers are cheap on unified memory (`B.numpy()` ≈ 0.26 ms), but the eager,
+  non-JIT'd small ops cost more than numpy saves.
+* Net: shuffling the final b×n SVD to numpy is the right choice, and it has been
+  optimised rather than left as LAPACK's direct SVD. `final="svd"` restores the
+  old path for comparison.
 
 ### Results vs the in-package torch baseline
 
@@ -145,25 +176,28 @@ p=10, q_iter=2:
 
 | matrix | baseline steady | native tg steady | speed-up | baseline peak RSS | native tg peak RSS |
 |---|---|---|---|---|---|
-| 2000 × 500   | 28.4 ms | **13.0 ms** | **2.19×** | 0.254 GB | **0.163 GB** |
-| 4000 × 1000  | 44.1 ms | **19.5 ms** | **2.26×** | 0.292 GB | **0.210 GB** |
-| 8000 × 3000  | 134.1 ms | **53.2 ms** | **2.52×** | 0.670 GB | **0.571 GB** |
-| 15000 × 2000 | 156.0 ms | **72.7 ms** | **2.15×** | 0.797 GB | **0.698 GB** |
+| 2000 × 500   | 32.2 ms | **9.8 ms** | **3.27×** | 0.270 GB | **0.161 GB** |
+| 4000 × 1000  | 48.8 ms | **20.4 ms** | **2.39×** | 0.304 GB | **0.221 GB** |
+| 8000 × 3000  | 142.0 ms | **50.1 ms** | **2.83×** | 0.664 GB | **0.586 GB** |
+| 15000 × 2000 | 164.9 ms | **70.7 ms** | **2.33×** | 0.810 GB | **0.715 GB** |
+
+(Run-to-run spread on this shared machine is ±10–20% — e.g. the baseline at
+2000×500 measured 28–32 ms across runs; ratios are more stable than absolutes.)
 
 * Accuracy matches: reconstruction error is identical to 5 decimals, top-10
   singular values agree to ~1e-7 (the float32 limit) and the leading subspaces
   align to ≤0.0001° (`TESTING/tinygrad_validate.py`). The one large angle in the
   `shifted` spectrum is between *near-degenerate tail* directions, not a real
   discrepancy — reconstruction and singular values still match.
-* Peak RSS is **12–36% lower** than the baseline at every size (fresh process,
+* Peak RSS is **12–40% lower** than the baseline at every size (fresh process,
   matrix pre-loaded).
 * **Caveat — cold start.** The first call for a new shape pays the `TinyJit`
   trace, ≈0.64–0.69 s vs the baseline's 31–165 ms first call; every later call is
   13–73 ms. Most of that is fixed backend cost: `import tinygrad` alone is 0.25 s
   and only ~0.1 s of the trace scales with `ns_steps`. Measured as **total** cold
   time in a fresh process (interpreter + numpy + library import + load A +
-  6 SVDs) the two backends are 0.68 s vs 1.11 s at 2000×500, but **1.49 s vs
-  1.44 s** at 15000×2000 — cold-start parity from medium sizes up, plus the
+  6 SVDs) the two backends are 0.80 s vs 1.16 s at 2000×500, but **1.64 s vs
+  1.56 s** at 15000×2000 — cold-start parity from medium sizes up, plus the
   2.1–2.5× steady-state win everywhere. Call `warmup(m, n)` once at startup to
   move the trace into initialisation.
 * **20 GB memory safeguard:** `check_shape()` refuses a shape whose projected
