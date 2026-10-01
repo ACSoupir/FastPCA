@@ -49,7 +49,6 @@ Reconstruction error is identical to the baseline in every row
 | `_gen_matrices.py` | writes deterministic test matrices to `.cache/` |
 | `run_tinygrad_bench.sh` | reproduces the tinygrad vs baseline comparison |
 | `results/tinygrad_bench.txt` | raw tinygrad measurements |
-| `tinygrad_svd_func_optim.py` | drop-in for the package's tinygrad backend |
 
 ## Why it is faster
 
@@ -207,10 +206,11 @@ p=10, q_iter=2:
 
 ### Backend readiness and device handling
 
-`tinygrad_svd_func_optim.py` is a drop-in for `inst/python/tinygrad_svd_func.py`:
-same signature (`randomized_svd_py_tg(A, k, p=10, q_iter=2, device="cpu",
-cores=2)`) and the same float64 `(U, S, Vh)` contract; `cores` is accepted but
-ignored (tinygrad schedules its own GPU work).
+The package backend `inst/python/tinygrad_svd_func.py` exposes the exact baseline
+signature (`randomized_svd_py_tg(A, k, p=10, q_iter=2, device="cpu", cores=2)`)
+and the same float64 `(U, S, Vh)` contract; `cores` is accepted but ignored
+(tinygrad schedules its own GPU work). It mirrors the kernel developed in
+`TESTING/tinygrad_native.py`.
 
 R passes `"CPU"`/`"GPU"`. On this machine **only METAL works** — tinygrad's CPU
 backend shells out to a cross-compiler the toolchain rejects and there is no CUDA
@@ -218,28 +218,32 @@ device — so `resolve_device()` maps `"CPU"` straight to METAL (quietly; probin
 CPU leaks a compiler error) and `"GPU"` prefers METAL then CUDA. Override with
 `FASTPCA_TG_DEVICE`. On non-Darwin, `"CPU"` honours tinygrad's CPU backend.
 
-Not yet wired into the package: that needs edits outside `TESTING/`, listed in
-Next steps. The Python side is ready and validated against the baseline.
-`randomized_svd_tg(...)` also returns the same `(U, S, Vh)` contract as
-`torch_svd_func.randomized_svd_py`.
+Wired into the package: `FastPCA(backend = "tinygrad")` dispatches to this
+kernel, the loader is backend-aware (`R/utils.R`), `setup_py_env(backend =
+"tinygrad")` installs tinygrad, and the device mapping above applies there too
+(on arm64 Macs a `device = "CPU"` request runs on METAL and says so). Tests live
+in `tests/testthat/test-tinygrad.R`.
 
 ### Environment findings
 
-* `inst/python/tinygrad_svd_func.py` does **not run as shipped**: its CPU path
-  shells out to a cross-compiler (`--target=arm64-none-unknown-elf`) that the
-  conda `cc` rejects, and its GPU path selects OpenCL (`OpenCL Error -48:
-  CL_INVALID_KERNEL`). Only tinygrad's native **METAL** device works.
+* The *previous* `inst/python/tinygrad_svd_func.py` did **not run as shipped**:
+  its CPU path shells out to a cross-compiler (`--target=arm64-none-unknown-elf`)
+  that the conda `cc` rejects, and its GPU path selects OpenCL (`OpenCL Error
+  -48: CL_INVALID_KERNEL`). Only tinygrad's native **METAL** device works, which
+  is why the rewritten file maps `"CPU"` to METAL on Apple Silicon.
+* tinygrad resolves its kernel-cache path at import, and R's
+  `py_module_available()` imports it before the backend file runs. The module now
+  re-points `tinygrad.helpers.cache_dir` when the default is read-only, which
+  otherwise fails on first use with "attempt to write a readonly database".
 * `Tensor.qr` / `Tensor.svd` are unusable for the shapes here (see above), so
   this kernel avoids both. An earlier Metal-matmul + numpy-QR *hybrid* was
   79.8 ms vs 21.5 ms (4000×1000) — slower, and has been removed.
 
 ## Next steps
 
-- Enable `backend="tinygrad"`: uncomment it in the choices of `R/FastPCA.R`
-  (line ~54) and `R/prep_matrix.R`, enable the loader line in
-  `R/utils.R:36`, stop `check_backend("tinygrad")` from forcing pytorch
-  (`R/utils.R:8`), and allow tinygrad in `R/setup_py_env.R:37`. The Python side
-  is ready as `TESTING/tinygrad_svd_func_optim.py`.
+- ~~Enable `backend="tinygrad"`~~ — done: the backend choice, a backend-aware
+  loader and `setup_py_env(backend = "tinygrad")` are wired; `prep_matrix()`
+  still warns and falls back to pytorch because the transform is not implemented.
 - Add a low-precision (float32) option to the R API so users can opt into the
   ~3–5× PyTorch path.
 - Optional/future: a custom native SVD kernel for `B`. Investigated and rejected

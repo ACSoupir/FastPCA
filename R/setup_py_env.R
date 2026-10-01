@@ -10,8 +10,9 @@
 #'   Defaults to "FastPCA".
 #' @param python_version Character string. The Python version to use (e.g., "3.9").
 #'   Defaults to "3.9". It's recommended to stick to well-supported versions.
-#' @param backend character string of the backend to use. Either 'torch', 'tinygrad', or 'all'.
-#'   Defaults to 'all' to install all packages into the environment. **Currently only pytorch. Flag is ignored**
+#' @param backend character string of the backend to use: 'pytorch', 'tinygrad',
+#'   or 'all'. Defaults to 'pytorch'. Use 'tinygrad' (or 'all') on Apple Silicon
+#'   to install the native Metal backend.
 #' @param cuda boolean for whether to install cuda toolkit to leverage the cuda backend
 #' @param ... Additional arguments passed to `reticulate::virtualenv_create()`
 #'   or `reticulate::conda_create()`.
@@ -29,19 +30,14 @@
 setup_py_env <- function(method = c("conda", "virtualenv"),
                          envname = "FastPCA",
                          python_version = "3.10",
-                         backend = c("pytorch"), #, "tinygrad", "all" #future when tinygrad has better impolementations
+                         backend = c("pytorch", "tinygrad", "all"),
                          cuda = FALSE,
                          ...) {
   #so much prefer conda
   #https://github.com/ACSoupir/cuda_conda
-  if(backend == "tinygrad"){
-    warning("Falling back to pytorch - current implementations of SVD in tinygrad are slow and memory hungry.")
-    backend <- "pytorch"#match.arg(backend)
-  }
   method <- match.arg(method)
-  if(backend == "pytorch") backend = 'torch' #think it works with either for conda but not pip?
-  #expand backend
-  if(backend == "all") backend = c("torch", "tinygrad") #is a way to get around the lock above
+  # install the packages for the selected backend
+  backend = .resolve_setup_backend(backend)
   backend = c("numpy", "umap-learn", "nomkl", backend)
   #if cuda, need conda
   if(cuda){

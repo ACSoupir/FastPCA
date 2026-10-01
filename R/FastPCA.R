@@ -10,7 +10,10 @@
 #' @param p Integer. Oversampling parameter (default: 10).
 #' @param q_iter Integer. Number of power iterations (default: 2).
 #' @param exact Boolean. Whether to compute the exact matrix or not. Only works with pytorch backend
-#' @param backend Character. which backend to use, either r, rtorch, pytorch, or irlba. **Tinygrad is not implemented. Waiting on tinygrad maturation**
+#' @param backend Character. which backend to use: "r", "rtorch", "pytorch",
+#'   "irlba" or "tinygrad". The "tinygrad" backend runs the randomized SVD on
+#'   Apple Metal; note that on arm64 Macs a `device = "CPU"` request still runs
+#'   on the GPU because tinygrad's CPU codegen is unavailable there.
 #' See details for informaiotn about backends.
 #' @param cores Integer. Number of CPU cores to use with the backend.
 #'   Clamped to 1 for this call when an OpenMP runtime conflict is detected in the
@@ -51,7 +54,7 @@ FastPCA <- function(input_r_matrix,
                     p = 10,
                     q_iter = 2,
                     exact = FALSE,
-                    backend = c("r", "rtorch", "pytorch", "irlba"), #, "tinygrad"
+                    backend = c("r", "rtorch", "pytorch", "irlba", "tinygrad"),
                     device = c("CPU","GPU"), cores = 4,
                     ...) {
   dots = list(...)
@@ -89,7 +92,7 @@ FastPCA <- function(input_r_matrix,
       rm(.globals)
     }
   } else if(backend == "tinygrad") {
-    .globals = python_functions()
+    .globals = python_functions("tinygrad")
     py_results <- .globals$tinygrad_random_svd$randomized_svd_py_tg(input_r_matrix, k = k, p = p, q_iter = q_iter, device = device, cores = cores)
     U_r <- py_results[[1]][,1:k]  # (Features x k)
     S_r <- py_results[[2]][1:k]  # (k,) vector

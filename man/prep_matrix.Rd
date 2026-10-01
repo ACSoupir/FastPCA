@@ -21,7 +21,10 @@ prep_matrix(
 
 \item{scale}{Boolean. Whether to center and scale the matrix. Default to \code{TRUE}}
 
-\item{backend}{Character. The backend which to use for performing transformations. Default is "rtorch". Options are "r", "rtorch", or "pytorch". See details for information about the pytorch/conda environments}
+\item{backend}{Character. The backend which to use for performing transformations.
+Options are "r", "rtorch", or "pytorch". A request for the "tinygrad" backend
+warns and falls back to "pytorch", because tinygrad transformations are not
+implemented yet. See details for information about the pytorch/conda environments}
 
 \item{cores}{Numeric. The number of cores to use. Clamped to 1 for this call
 when an OpenMP runtime conflict is detected in the session.}

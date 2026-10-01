@@ -8,7 +8,7 @@ setup_py_env(
   method = c("conda", "virtualenv"),
   envname = "FastPCA",
   python_version = "3.10",
-  backend = c("pytorch"),
+  backend = c("pytorch", "tinygrad", "all"),
   cuda = FALSE,
   ...
 )
@@ -23,8 +23,9 @@ Defaults to "FastPCA".}
 \item{python_version}{Character string. The Python version to use (e.g., "3.9").
 Defaults to "3.9". It's recommended to stick to well-supported versions.}
 
-\item{backend}{character string of the backend to use. Either 'torch', 'tinygrad', or 'all'.
-Defaults to 'all' to install all packages into the environment. \strong{Currently only pytorch. Flag is ignored}}
+\item{backend}{character string of the backend to use: 'pytorch', 'tinygrad',
+or 'all'. Defaults to 'pytorch'. Use 'tinygrad' (or 'all') on Apple Silicon
+to install the native Metal backend.}
 
 \item{cuda}{boolean for whether to install cuda toolkit to leverage the cuda backend}
 

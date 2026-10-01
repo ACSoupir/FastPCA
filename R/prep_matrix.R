@@ -5,7 +5,10 @@
 #' @param mat A numeric R matrix.
 #' @param transpose Boolean. Whether the matrix needs to be transposed. If starting with samples as columns, set to `TRUE`. Default is `FALSE`
 #' @param scale Boolean. Whether to center and scale the matrix. Default to `TRUE`
-#' @param backend Character. The backend which to use for performing transformations. Default is "rtorch". Options are "r", "rtorch", or "pytorch". See details for information about the pytorch/conda environments
+#' @param backend Character. The backend which to use for performing transformations.
+#'   Options are "r", "rtorch", or "pytorch". A request for the "tinygrad" backend
+#'   warns and falls back to "pytorch", because tinygrad transformations are not
+#'   implemented yet. See details for information about the pytorch/conda environments
 #' @param cores Numeric. The number of cores to use. Clamped to 1 for this call
 #'   when an OpenMP runtime conflict is detected in the session.
 #'
@@ -41,12 +44,12 @@ prep_matrix <- function(mat,
                         log2 = TRUE,
                         transpose = FALSE,
                         scale = TRUE,
-                        backend = c("r", "rtorch", "pytorch"), #, "tinygrad"
+                        backend = c("r", "rtorch", "pytorch"),
                         cores = 2,
                         device = c("CPU", "GPU")) {
 
-  #tranformation backends
-  backend = match.arg(backend)
+  #tranformation backends; tinygrad falls back to pytorch (see helper)
+  backend = .resolve_transform_backend(backend)
   #devices
   device = match.arg(device)
   #validation

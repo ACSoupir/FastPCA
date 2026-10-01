@@ -5,6 +5,6 @@ test_that("environment setup works", {
   #can take a bit
   expect_warning(suppressMessages(setup_py_env(method = "conda", envname = "FastPCA", python_version = 3.10, cuda = TRUE)))
 
-  #asking for a tinygrad backend shouldn't fail but rather
-  expect_warning(suppressMessages(setup_py_env(method = "conda", envname = "FastPCA", python_version = 3.10, backend = "tinygrad")))
+  #'tinygrad' is now a supported backend choice (it installs the Metal SVD path)
+  expect_setequal(eval(formals(setup_py_env)$backend), c("pytorch", "tinygrad", "all"))
 })

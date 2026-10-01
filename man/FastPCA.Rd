@@ -10,7 +10,7 @@ FastPCA(
   p = 10,
   q_iter = 2,
   exact = FALSE,
-  backend = c("r", "rtorch", "pytorch", "irlba"),
+  backend = c("r", "rtorch", "pytorch", "irlba", "tinygrad"),
   device = c("CPU", "GPU"),
   cores = 4,
   ...
@@ -29,7 +29,10 @@ transpose this for the PyTorch or Tinygrad SVD based on the original Python scri
 
 \item{exact}{Boolean. Whether to compute the exact matrix or not. Only works with pytorch backend}
 
-\item{backend}{Character. which backend to use, either r, rtorch, pytorch, or irlba. \strong{Tinygrad is not implemented. Waiting on tinygrad maturation}
+\item{backend}{Character. which backend to use: "r", "rtorch", "pytorch",
+"irlba" or "tinygrad". The "tinygrad" backend runs the randomized SVD on
+Apple Metal; note that on arm64 Macs a \code{device = "CPU"} request still runs
+on the GPU because tinygrad's CPU codegen is unavailable there.
 See details for informaiotn about backends.}
 
 \item{cores}{Integer. Number of CPU cores to use with the backend.
