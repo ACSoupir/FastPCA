@@ -49,6 +49,7 @@ Reconstruction error is identical to the baseline in every row
 | `_gen_matrices.py` | writes deterministic test matrices to `.cache/` |
 | `run_tinygrad_bench.sh` | reproduces the tinygrad vs baseline comparison |
 | `results/tinygrad_bench.txt` | raw tinygrad measurements |
+| `tinygrad_svd_func_optim.py` | drop-in for the package's tinygrad backend |
 
 ## Why it is faster
 
@@ -204,9 +205,23 @@ p=10, q_iter=2:
   working set would exceed the cap *before* allocating, and `check_mem()`
   re-checks peak RSS at each stage. The cap is `FASTPCA_TG_MEM_GB` (default 20).
 
-`randomized_svd_py_tg(...)` is a signature-compatible drop-in for the disabled
-`inst/python/tinygrad_svd_func.py`, and `randomized_svd_tg(...)` returns the
-same `(U, S, Vh)` contract as `torch_svd_func.randomized_svd_py`.
+### Backend readiness and device handling
+
+`tinygrad_svd_func_optim.py` is a drop-in for `inst/python/tinygrad_svd_func.py`:
+same signature (`randomized_svd_py_tg(A, k, p=10, q_iter=2, device="cpu",
+cores=2)`) and the same float64 `(U, S, Vh)` contract; `cores` is accepted but
+ignored (tinygrad schedules its own GPU work).
+
+R passes `"CPU"`/`"GPU"`. On this machine **only METAL works** — tinygrad's CPU
+backend shells out to a cross-compiler the toolchain rejects and there is no CUDA
+device — so `resolve_device()` maps `"CPU"` straight to METAL (quietly; probing
+CPU leaks a compiler error) and `"GPU"` prefers METAL then CUDA. Override with
+`FASTPCA_TG_DEVICE`. On non-Darwin, `"CPU"` honours tinygrad's CPU backend.
+
+Not yet wired into the package: that needs edits outside `TESTING/`, listed in
+Next steps. The Python side is ready and validated against the baseline.
+`randomized_svd_tg(...)` also returns the same `(U, S, Vh)` contract as
+`torch_svd_func.randomized_svd_py`.
 
 ### Environment findings
 
@@ -220,10 +235,13 @@ same `(U, S, Vh)` contract as `torch_svd_func.randomized_svd_py`.
 
 ## Next steps
 
-- Wire `stable` (and/or the tinygrad kernel) behind `R/utils.R` / `FastPCA()`;
-  the tinygrad loader already calls `randomized_svd_py_tg(...)`, so only the
-  module path needs pointing at `TESTING/tinygrad_native.py`.
+- Enable `backend="tinygrad"`: uncomment it in the choices of `R/FastPCA.R`
+  (line ~54) and `R/prep_matrix.R`, enable the loader line in
+  `R/utils.R:36`, stop `check_backend("tinygrad")` from forcing pytorch
+  (`R/utils.R:8`), and allow tinygrad in `R/setup_py_env.R:37`. The Python side
+  is ready as `TESTING/tinygrad_svd_func_optim.py`.
 - Add a low-precision (float32) option to the R API so users can opt into the
   ~3–5× PyTorch path.
-- Optional: remove the last host-side step by replacing numpy's SVD of `B`
-  (b×n) with a TinyJit'd native Metal Jacobi SVD.
+- Optional/future: a custom native SVD kernel for `B`. Investigated and rejected
+  for now (see "The final small SVD"): tinygrad's `Tensor.svd` is unusable and it
+  exposes no eigh/eig/cholesky/solve, so numpy's Gram+eigh is the fastest route.

@@ -88,6 +88,48 @@ def check_shape(m: int, n: int, b: int) -> None:
         )
 
 
+_DEVICE_OK: dict = {}
+
+
+def _device_works(dev: str) -> bool:
+    """Probe a tinygrad device once with a trivial kernel."""
+    if dev not in _DEVICE_OK:
+        try:
+            (Tensor([1.0, 2.0], device=dev) + 1).realize().numpy()
+            _DEVICE_OK[dev] = True
+        except Exception:
+            _DEVICE_OK[dev] = False
+    return _DEVICE_OK[dev]
+
+
+def resolve_device(device=None) -> str:
+    """Map an R-style device request ('CPU'/'GPU') to a working tinygrad device.
+
+    On this machine only METAL works -- tinygrad's CPU backend shells out to a
+    cross-compiler the toolchain rejects, and there is no CUDA device -- so an
+    explicit 'CPU' request falls back to METAL (Apple unified memory) rather than
+    failing.  Override with FASTPCA_TG_DEVICE.
+    """
+    req = str(device or os.environ.get("FASTPCA_TG_DEVICE", "")).upper().strip()
+    if req in ("GPU", "CUDA"):
+        candidates = ["METAL", "CUDA"]
+    elif req == "CPU":
+        # Darwin: tinygrad's CPU codegen is broken with this toolchain, so going
+        # straight to METAL also avoids leaking a compiler error to the console.
+        candidates = ["METAL"] if sys.platform == "darwin" else ["CPU", "CUDA"]
+    elif req in ("METAL",):
+        candidates = ["METAL"]
+    else:
+        candidates = ["METAL", "CUDA", "CPU"]
+    for cand in candidates:
+        if _device_works(cand):
+            return cand
+    raise RuntimeError(
+        f"no working tinygrad device among {candidates}; "
+        "set FASTPCA_TG_DEVICE to a supported backend"
+    )
+
+
 def _ns_orth(X: Tensor, steps: int) -> Tensor:
     """Orthogonal polar factor of X (p x b), matmul-only.
 
@@ -102,25 +144,26 @@ def _ns_orth(X: Tensor, steps: int) -> Tensor:
     return X
 
 
-def warmup(m, n, k=50, p=10, q_iter=2, ns_steps=16):
+def warmup(m, n, k=50, p=10, q_iter=2, ns_steps=16, device=None):
     """Pre-trace the JIT graph for one shape so later calls skip compilation."""
     b = min(int(k) + int(p), m, n)
-    A = Tensor(np.zeros((m, n), dtype=np.float32), device="METAL").realize()
-    Omega = Tensor(np.zeros((n, b), dtype=np.float32), device="METAL").realize()
-    _get_jit(m, n, b, q_iter, ns_steps)(A, Omega)
+    dev = resolve_device(device)
+    A = Tensor(np.zeros((m, n), dtype=np.float32), device=dev).realize()
+    Omega = Tensor(np.zeros((n, b), dtype=np.float32), device=dev).realize()
+    _get_jit(dev, m, n, b, q_iter, ns_steps)(A, Omega)
     del A, Omega
 
 
 _JIT_CACHE: dict = {}
 
 
-def _get_jit(m, n, b, q_iter: int, ns_steps: int):
+def _get_jit(device, m, n, b, q_iter: int, ns_steps: int):
     """Return a TinyJit'd range finder specialised for one exact shape/config.
 
-    tinygrad's TinyJit asserts on input-shape changes, so each (shape, config)
-    needs its own jitted callable.
+    tinygrad's TinyJit asserts on input-shape changes, so each (device, shape,
+    config) needs its own jitted callable.
     """
-    key = (int(m), int(n), int(b), int(q_iter), int(ns_steps))
+    key = (str(device), int(m), int(n), int(b), int(q_iter), int(ns_steps))
     fn = _JIT_CACHE.get(key)
     if fn is None:
         qi, nst = int(q_iter), int(ns_steps)
@@ -168,7 +211,7 @@ def _small_svd(B: np.ndarray, mode: str = "gram"):
 
 
 def randomized_svd_tg(A_np, k, p=10, q_iter=2, seed=None, ns_steps=16,
-                      device="METAL", final: str = "gram"):
+                      device=None, final: str = "gram"):
     """Randomized SVD matching the package baseline's output contract.
 
     Returns numpy (U, S, Vh) with U m x b, S length b, Vh b x n and
@@ -183,13 +226,14 @@ def randomized_svd_tg(A_np, k, p=10, q_iter=2, seed=None, ns_steps=16,
         raise ValueError("k + p must be positive and no larger than min(m, n)")
     check_shape(m, n, b)
 
-    A = Tensor(A_np.astype(np.float32), device=device).realize()
+    dev = resolve_device(device)
+    A = Tensor(A_np.astype(np.float32), device=dev).realize()
     Omega = Tensor(
         np.random.default_rng(seed).standard_normal((n, b)).astype(np.float32),
-        device=device,
+        device=dev,
     ).realize()
 
-    B_t, Q_t = _get_jit(m, n, b, q_iter, ns_steps)(A, Omega)
+    B_t, Q_t = _get_jit(dev, m, n, b, q_iter, ns_steps)(A, Omega)
     check_mem("range-finder")
 
     B = B_t.numpy().astype(np.float64)          # b x n (small)
