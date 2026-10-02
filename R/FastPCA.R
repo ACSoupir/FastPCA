@@ -84,7 +84,8 @@ FastPCA <- function(input_r_matrix,
 
   #call python
   if(backend == "pytorch"){
-    .globals = python_functions()
+    .globals = python_functions(
+      scripts = if (exact) "torch_exact_svd" else "torch_random_svd")
     if(exact){
       py_results <- .globals$torch_exact_svd$exact_svd_py(input_r_matrix, device = device, cores = cores)
       U_r <- py_results[[1]]  # (Features x k)

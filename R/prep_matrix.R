@@ -67,7 +67,7 @@ prep_matrix <- function(mat,
 
 
   if(backend == "pytorch"){
-    .globals = python_functions()
+    .globals = python_functions(scripts = "torch_tranformation")
     # Call the Python function.
     #reticulate automatically converts mat (R matrix) to a numpy array.
     out <- .globals$torch_tranformation$transform_py(

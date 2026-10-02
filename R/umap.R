@@ -73,7 +73,7 @@ umap = function(pc_scores,
       stop("Python environment not initialized. Please run `FastPCA::start_FastPCA_env()` first.")
     }
 
-    .globals = python_functions()
+    .globals = python_functions(scripts = "umap_calculation")
     out = .globals$umap_calculation$umap_learn_py(pc_scores,
                                                   n_neighbors = n_neighbors,
                                                   n_components = n_components,

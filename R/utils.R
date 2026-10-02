@@ -44,14 +44,29 @@ get_python_files = function(backend = NULL){
 }
 
 #load python files
-python_functions = function(backend = NULL){
+#
+# Only the requested scripts are loaded. This avoids importing heavyweight or
+# unrelated modules (for example umap/numba) when only the SVD backend is used.
+python_functions = function(backend = NULL,
+                            scripts = names(get_python_files(backend))){
   #utilities
   .globals <- new.env(parent = emptyenv())
 
   #get files (tinygrad selects only its own module)
   script_paths = get_python_files(backend)
 
-  .globals = lapply(script_paths, function(f){
+  #limit to the scripts actually needed by this call
+  scripts <- match.arg(scripts, names(script_paths), several.ok = TRUE)
+
+  # numba (used by umap-learn) needs a writable cache directory when Python is
+  # embedded via reticulate, otherwise importing umap aborts with a locator error.
+  if (!nzchar(Sys.getenv("NUMBA_CACHE_DIR"))) {
+    numba_cache <- file.path(tempdir(), "fastpca-numba")
+    dir.create(numba_cache, showWarnings = FALSE, recursive = TRUE)
+    Sys.setenv(NUMBA_CACHE_DIR = numba_cache)
+  }
+
+  .globals = lapply(script_paths[scripts], function(f){
     reticulate::py_run_file(f)
   })
 

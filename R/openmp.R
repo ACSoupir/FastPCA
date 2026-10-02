@@ -37,6 +37,16 @@
   mode
 }
 
+# Force the process-wide OpenMP thread pool to a single thread.
+#
+# This must run *before* an OpenMP-backed library (torch) is imported: torch
+# builds its thread pool at import time, so clamping afterwards through
+# torch.set_num_threads() is too late and the process can still segfault.
+.cap_openmp_threads <- function(threads = 1L) {
+  Sys.setenv(OMP_NUM_THREADS = as.character(threads))
+  invisible(as.integer(threads))
+}
+
 # Emit the conflict warning according to FastPCA.openmp_warning.
 .warn_openmp_conflict <- function(offenders) {
   mode <- .openmp_warning_mode()
@@ -63,6 +73,11 @@
   if (length(cores) != 1L || is.na(cores) || cores < 1L) {
     stop("'cores' must be a single integer greater than or equal to 1.",
          call. = FALSE)
+  }
+  if (isTRUE(openmp) && length(offenders)) {
+    # cap the thread pool before any OpenMP-backed library is imported, even
+    # when the caller already asked for a single core.
+    .cap_openmp_threads()
   }
   if (isTRUE(openmp) && cores > 1L && length(offenders)) {
     .warn_openmp_conflict(offenders)
