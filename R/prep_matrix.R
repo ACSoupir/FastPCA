@@ -6,9 +6,9 @@
 #' @param transpose Boolean. Whether the matrix needs to be transposed. If starting with samples as columns, set to `TRUE`. Default is `FALSE`
 #' @param scale Boolean. Whether to center and scale the matrix. Default to `TRUE`
 #' @param backend Character. The backend which to use for performing transformations.
-#'   Options are "r", "rtorch", or "pytorch". A request for the "tinygrad" backend
-#'   warns and falls back to "pytorch", because tinygrad transformations are not
-#'   implemented yet. See details for information about the pytorch/conda environments
+#'   Options are "r", "rtorch", "pytorch" or "tinygrad". The "tinygrad" backend
+#'   runs on Apple Metal (float32) and matches the others to ~1e-6. See details
+#'   for information about the pytorch/conda environments
 #' @param cores Numeric. The number of cores to use. Clamped to 1 for this call
 #'   when an OpenMP runtime conflict is detected in the session.
 #'
@@ -44,12 +44,12 @@ prep_matrix <- function(mat,
                         log2 = TRUE,
                         transpose = FALSE,
                         scale = TRUE,
-                        backend = c("r", "rtorch", "pytorch"),
+                        backend = c("r", "rtorch", "pytorch", "tinygrad"),
                         cores = 2,
                         device = c("CPU", "GPU")) {
 
-  #tranformation backends; tinygrad falls back to pytorch (see helper)
-  backend = .resolve_transform_backend(backend)
+  #tranformation backends (tinygrad uses inst/python/tinygrad_transform.py)
+  backend = match.arg(backend)
   #devices
   device = match.arg(device)
   #validation
@@ -74,6 +74,7 @@ prep_matrix <- function(mat,
     colnames(out) = row.names(mat)#clearn environment
     rm(.globals)
   } else if(backend == "tinygrad") {
+    .globals = python_functions("tinygrad")
     out <- .globals$tinygrad_tranformation$transform_py_tg(
       mat,
       log2 = ifelse(log2 == FALSE, 0, 1),

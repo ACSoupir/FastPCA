@@ -9,7 +9,7 @@ prep_matrix(
   log2 = TRUE,
   transpose = FALSE,
   scale = TRUE,
-  backend = c("r", "rtorch", "pytorch"),
+  backend = c("r", "rtorch", "pytorch", "tinygrad"),
   cores = 2,
   device = c("CPU", "GPU")
 )
@@ -22,9 +22,9 @@ prep_matrix(
 \item{scale}{Boolean. Whether to center and scale the matrix. Default to \code{TRUE}}
 
 \item{backend}{Character. The backend which to use for performing transformations.
-Options are "r", "rtorch", or "pytorch". A request for the "tinygrad" backend
-warns and falls back to "pytorch", because tinygrad transformations are not
-implemented yet. See details for information about the pytorch/conda environments}
+Options are "r", "rtorch", "pytorch" or "tinygrad". The "tinygrad" backend
+runs on Apple Metal (float32) and matches the others to ~1e-6. See details
+for information about the pytorch/conda environments}
 
 \item{cores}{Numeric. The number of cores to use. Clamped to 1 for this call
 when an OpenMP runtime conflict is detected in the session.}

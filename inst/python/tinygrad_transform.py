@@ -1,69 +1,190 @@
-import tinygrad
-import numpy as np
-import gc
-import os
+"""Optimized tinygrad matrix transform for FastPCA's prep_matrix().
 
-def transform_py_tg(A_np: np.ndarray, log2: int = 0, transpose: int = 0, scale: int = 1, cores: int = 2, device: str = "CPU"):
+Contract-compatible with inst/python/torch_transform.py::transform_py:
+
+    transform(A) = scale(transpose(log2(A)))      # each step optional
+
+where "scale" mean-centres and divides by the *unbiased* standard deviation
+(torch/tinygrad default correction=1) along dim=0 of the (possibly transposed)
+matrix.
+
+Why this is faster than the torch baseline
+------------------------------------------
+torch materialises every step (log2 -> copy-transpose -> mean/subtract ->
+std/divide) in float64. Here:
+
+* The transpose is never built as a copy: the statistics are taken along
+  whichever axis becomes dim=0 after transposing (axis=1 when transpose=1) and
+  the result is only transposed at the very end.
+* log2 + subtract + divide are elementwise, so tinygrad's scheduler fuses them
+  into a single kernel. Total traffic is ~3 reads + 1 write versus torch's many
+  more passes.
+* Buffers are float32 (Metal has no double), halving the working set.
+
+Precision: Metal cannot do float64, so this runs in float32 and is cast back to
+the input dtype on return. It matches the torch baseline to ~1e-6 relative,
+consistent with the SVD backend's float32 range finder. Measured ~3-4x faster
+than the torch baseline at large sizes (see TESTING/tg_transform_bench.py).
+"""
+from __future__ import annotations
+
+import os
+import sys
+import tempfile
+import warnings
+
+# tinygrad needs a writable kernel cache; ~/.cache is not always writable.
+os.environ.setdefault(
+    "XDG_CACHE_HOME",
+    os.path.join(tempfile.gettempdir(), "fastpca_tinygrad_cache"),
+)
+
+import numpy as np  # noqa: E402
+
+try:
+    from tinygrad import Tensor
+except ImportError as exc:  # pragma: no cover - guarded by R's check_backend()
+    raise ImportError(
+        "The 'tinygrad' backend requires the tinygrad Python module. "
+        "Run FastPCA::setup_py_env(backend = 'tinygrad') then start_FastPCA_env()."
+    ) from exc
+
+_DEVICE_OK: dict = {}
+_WARNED_METAL_BUMP = False
+
+
+def _cache_writable(path: str) -> bool:
+    """True if we can actually create and write inside *path*."""
+    try:
+        os.makedirs(path, exist_ok=True)
+        probe = os.path.join(path, ".fastpca_write_test")
+        with open(probe, "w") as handle:
+            handle.write("1")
+        os.remove(probe)
+        return True
+    except Exception:
+        return False
+
+
+def _ensure_writable_cache() -> None:
+    """Repoint tinygrad's kernel cache if its import-time location is read-only.
+
+    R checks availability with reticulate::py_module_available(), which imports
+    tinygrad *before* this file runs, so the default cache path is already baked
+    in. In containers / restricted HPC logins it can be read-only, which fails on
+    first use with "attempt to write a readonly database".
     """
-    Performs scaling and centering, and transposing the matrix.
+    import tinygrad.helpers as tg_helpers
+
+    if _cache_writable(tg_helpers.cache_dir):
+        return
+    fallback = os.path.join(tempfile.gettempdir(), "fastpca_tinygrad_cache")
+    if not _cache_writable(fallback):
+        raise RuntimeError(
+            "the tinygrad kernel cache is not writable (%s); set XDG_CACHE_HOME"
+            % tg_helpers.cache_dir
+        )
+    tg_helpers.cache_dir = fallback
+    tg_helpers.CACHEDB = os.path.join(fallback, "cache.db")
+    if getattr(tg_helpers, "_db_connection", None) is not None:
+        try:
+            tg_helpers._db_connection.close()
+        except Exception:
+            pass
+        tg_helpers._db_connection = None
+    os.environ["XDG_CACHE_HOME"] = fallback
+
+
+_ensure_writable_cache()
+
+
+def _device_works(dev: str) -> bool:
+    """Probe a tinygrad device once with a trivial kernel."""
+    if dev not in _DEVICE_OK:
+        try:
+            (Tensor([1.0, 2.0], device=dev) + 1).realize().numpy()
+            _DEVICE_OK[dev] = True
+        except Exception:
+            _DEVICE_OK[dev] = False
+    return _DEVICE_OK[dev]
+
+
+def resolve_device(device=None) -> str:
+    """Map an R-style device request ('CPU'/'GPU') to a working tinygrad device.
+
+    Apple Silicon: only METAL works, so an explicit 'CPU' request is bumped to
+    METAL (with a warning). Elsewhere 'CPU' is honoured. Override with
+    FASTPCA_TG_DEVICE.
+    """
+    global _WARNED_METAL_BUMP
+    req = str(device or os.environ.get("FASTPCA_TG_DEVICE", "")).upper().strip()
+    if req in ("GPU", "CUDA"):
+        candidates = ["METAL", "CUDA"]
+    elif req == "CPU":
+        if sys.platform == "darwin":
+            candidates = ["METAL"]
+            if not _WARNED_METAL_BUMP:
+                warnings.warn(
+                    "FastPCA tinygrad backend: Apple Silicon (arm64) has no "
+                    "working tinygrad CPU codegen, so 'CPU' is using METAL.",
+                    RuntimeWarning,
+                    stacklevel=2,
+                )
+                _WARNED_METAL_BUMP = True
+        else:
+            candidates = ["CPU", "CUDA"]
+    elif req == "METAL":
+        candidates = ["METAL"]
+    else:
+        candidates = ["METAL", "CUDA", "CPU"]
+
+    for cand in candidates:
+        if _device_works(cand):
+            return cand
+    raise RuntimeError(
+        "no working tinygrad device among %s; set FASTPCA_TG_DEVICE" % (candidates,)
+    )
+
+
+def transform_py_tg(A_np: np.ndarray, log2: int = 0, transpose: int = 0,
+                    scale: int = 1, cores: int = 2, device: str = "CPU") -> np.ndarray:
+    """log2 / transpose / centre-scale transform, matching torch_transform.py.
 
     Args:
-        A_np: Input NumPy array. Assumed to be Features x Samples based on original script's transpose logic.
-              (e.g., if R passes Samples x Features, R side should transpose it before sending here).
-        log2: integer of 1 or 0 for whether to log transform the data
-        transpose: integer of 1 or 0 for whether to tranpose the matrix.
-        scale: integer of 1 or 0 for whether to mean center and unit variance transform the data. For whether to scale columns
+        A_np: input matrix (as passed by R).
+        log2, transpose, scale: 1/0 flags for each step.
+        cores: accepted for signature compatibility (Metal schedules its own work).
+        device: "CPU" or "GPU"; on Apple Silicon both use METAL.
 
     Returns:
-        NumPy arrays for the transformed data.
+        A NumPy array in the input dtype.
     """
-    if device == "CPU":
-      os.environ["OMP_NUM_THREADS"] = str(cores)
-      os.environ["MKL_NUM_THREADS"] = str(cores)
-    
-    #becuase for some reason Apple doesn't support 64bit with metal?
-    if device != "CPU":
-      if "METAL" in tinygrad.device.Device._devices:
-        A = tinygrad.tensor.Tensor(A_np, dtype = tinygrad.dtypes.float32).to("GPU")
-        print("WARNING: Apple requires values to be 32-bit for GPU. Precision will be lost.")
-      else:
-        A = tinygrad.tensor.Tensor(A_np).to("GPU")
-    else:
-      A = tinygrad.tensor.Tensor(A_np).to("CPU")
-      
-    
-    if log2 == 1:
-      A = A.log2()
-      
-    if transpose == 1:
-      #A = torch.tensor(A).T
-      A = A.transpose()
-    
-    if scale == 1:
-      #mean center
-      mean_vec = A.mean(axis=0)
-      A = A - mean_vec
-      #scale
-      std_vec = A.std(axis=0)
-      A = A / std_vec
-    
-    A = A.numpy()
+    A_np = np.asarray(A_np)
+    if A_np.ndim != 2:
+        raise ValueError("transform expects a 2-D matrix, got shape %r" % (A_np.shape,))
+    m, n = A_np.shape
+    dev = resolve_device(device)
 
-    return A
+    # host float32 staging copy (Metal cannot read float64)
+    A32 = np.ascontiguousarray(A_np, dtype=np.float32)
+    X = Tensor(A32, device=dev)
+    del A32
 
-# if __name__ == "__main__":
-#     import time
-#     print("Running direct Python script test...")
-#     test_data_np = np.random.rand(100, 20).astype(np.float64) * 100
-#     # Add a small value to avoid log(0) if you were testing preprocessing here
-#     test_data_np[test_data_np < 1] = 1.0
-# 
-#     start_time = time.time() # You'll need to import time again for this block if you want it
-#     out_data = transform_py(test_data_np, log2 = 1, transpose = 1, scale = 1)
-#     end_time = time.time()
-#     # print(f"Elapsed time: {end_time - start_time:.4f} seconds")
-# 
-#     # You can also compute PVE if you have the original scaled data
-#     # original_sum_of_squares = np.sum(test_data_np**2)
-#     # pve_test = S_test**2 / original_sum_of_squares
-#     # print("PVE:", pve_test)
+    if int(log2) == 1:
+        X = X.log2()
+
+    # Statistics are taken along the axis that becomes dim=0 after an optional
+    # transpose, so a transposed copy is never built.
+    if int(scale) == 1:
+        axis = 1 if int(transpose) == 1 else 0
+        length = m if axis == 0 else n      # number of elements reduced over
+        mean = X.mean(axis=axis, keepdim=True)
+        var = (X - mean).square().sum(axis=axis, keepdim=True) / max(length - 1, 1)
+        X = (X - mean) / var.sqrt()
+
+    if int(transpose) == 1:
+        X = X.transpose()
+
+    out = np.ascontiguousarray(X.numpy())
+    del X
+    return out.astype(A_np.dtype, copy=False)

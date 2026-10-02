@@ -1,5 +1,6 @@
-test_that("tinygrad is an accepted FastPCA backend", {
+test_that("tinygrad is an accepted backend for FastPCA and prep_matrix", {
   expect_true("tinygrad" %in% eval(formals(FastPCA)$backend))
+  expect_true("tinygrad" %in% eval(formals(prep_matrix)$backend))
 })
 
 test_that("setup_py_env resolves the backend choice", {
@@ -10,13 +11,23 @@ test_that("setup_py_env resolves the backend choice", {
   expect_error(.resolve_setup_backend("not-a-backend"))
 })
 
-test_that("prep_matrix falls back from tinygrad to pytorch", {
-  # the transform side is not implemented for tinygrad yet, so it warns and
-  # falls back rather than erroring in match.arg()
-  expect_warning(.resolve_transform_backend("tinygrad"), "does not implement")
-  expect_identical(suppressWarnings(.resolve_transform_backend("tinygrad")), "pytorch")
-  expect_identical(suppressWarnings(.resolve_transform_backend("r")), "r")
-  expect_identical(suppressWarnings(.resolve_transform_backend("pytorch")), "pytorch")
+test_that("prep_matrix tinygrad transform agrees with the r backend", {
+  skip_if_not(reticulate::py_available(initialize = FALSE), "Python is not initialized")
+  skip_if_not(reticulate::py_module_available("tinygrad"), "tinygrad is not installed")
+
+  set.seed(11)
+  M <- matrix(abs(rnorm(400 * 120)) + 1, nrow = 200)
+
+  for (tp in c(FALSE, TRUE)) {
+    ref <- prep_matrix(M, log2 = TRUE, transpose = tp, scale = TRUE, backend = "r")
+    got <- suppressMessages(
+      prep_matrix(M, log2 = TRUE, transpose = tp, scale = TRUE,
+                  backend = "tinygrad", device = "GPU")
+    )
+    expect_equal(dim(got), dim(ref))
+    # float32 transform, so compare on a relative scale
+    expect_lt(max(abs(got - ref)) / max(abs(ref)), 1e-4)
+  }
 })
 
 test_that("FastPCA tinygrad backend agrees with the r backend", {

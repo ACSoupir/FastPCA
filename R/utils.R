@@ -23,7 +23,8 @@ get_python_files = function(backend = NULL){
   # require torch to be installed in the same environment.
   if(identical(backend, "tinygrad")){
     file_list = list(
-      tinygrad_random_svd = system.file("python", "tinygrad_svd_func.py", package = "FastPCA")
+      tinygrad_random_svd = system.file("python", "tinygrad_svd_func.py", package = "FastPCA"),
+      tinygrad_tranformation = system.file("python", "tinygrad_transform.py", package = "FastPCA")
     )
   } else {
     file_list = list(
@@ -134,17 +135,6 @@ validate_backend = function(backend = c("r", "rtorch", "pytorch", "irlba", "tiny
     grepl("arm64|aarch64", unname(info[["machine"]]))
 }
 
-# tinygrad matrix transformations are not implemented yet, so selecting that
-# backend for prep_matrix() warns and falls back instead of erroring.
-.resolve_transform_backend = function(backend){
-  backend = match.arg(backend, c("r", "rtorch", "pytorch", "tinygrad"))
-  if(identical(backend, "tinygrad")){
-    warning("The 'tinygrad' backend does not implement matrix transformations yet; ",
-            "falling back to 'pytorch'.", call. = FALSE)
-    backend = "pytorch"
-  }
-  return(backend)
-}
 
 # map setup_py_env()'s backend choice onto the packages to install
 .resolve_setup_backend = function(backend = c("pytorch", "tinygrad", "all")){

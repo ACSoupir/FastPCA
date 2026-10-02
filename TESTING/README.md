@@ -49,6 +49,8 @@ Reconstruction error is identical to the baseline in every row
 | `_gen_matrices.py` | writes deterministic test matrices to `.cache/` |
 | `run_tinygrad_bench.sh` | reproduces the tinygrad vs baseline comparison |
 | `results/tinygrad_bench.txt` | raw tinygrad measurements |
+| `tinygrad_transform_optim.py` | optimized tinygrad prep_matrix transform (log2/transpose/scale) |
+| `tg_transform_bench.py` | transform correctness + speed/memory benchmark |
 
 ## Why it is faster
 
@@ -224,6 +226,33 @@ kernel, the loader is backend-aware (`R/utils.R`), `setup_py_env(backend =
 (on arm64 Macs a `device = "CPU"` request runs on METAL and says so). Tests live
 in `tests/testthat/test-tinygrad.R`.
 
+### Matrix transform (prep_matrix)
+
+`inst/python/tinygrad_transform.py` implements log2 / transpose / centre-scale.
+The torch baseline materialises every step in float64 (log2, a copy-transpose,
+mean+subtract, std+divide). The tinygrad version:
+
+* never builds a transposed copy -- it takes the statistics along whichever axis
+  becomes dim=0 after the transpose and only transposes at the end;
+* lets tinygrad's scheduler fuse log2 + subtract + divide into one kernel
+  (~3 reads + 1 write of the data);
+* uses float32 buffers (Metal has no double), casting back to the input dtype on
+  return, and matches torch to ~1e-6 relative.
+
+Measured with `tg_transform_bench.py` (median of 3, same interpreter; the
+optimization was developed as `TESTING/tinygrad_transform_optim.py`):
+
+| shape | config | torch | tinygrad | speedup |
+|---|---|---|---|---|
+| 6000x1500 | log2, scale | 74.8 ms | **25.2 ms** | 3.0x |
+| 6000x1500 | log2, transpose, scale | 74.1 ms | **22.0 ms** | 3.4x |
+| 15000x2500 | log2, scale | 314.3 ms | **82.7 ms** | 3.8x |
+| 15000x2500 | log2, transpose, scale | 309.3 ms | **77.8 ms** | 4.0x |
+
+Correctness vs a float64 NumPy reference is ~3e-7..9e-7 (float32). Whole-process
+peak RSS is comparable to torch -- lower at medium sizes, marginally higher at the
+largest because of the float32 staging copy plus device and host output buffers.
+
 ### Environment findings
 
 * The *previous* `inst/python/tinygrad_svd_func.py` did **not run as shipped**:
@@ -241,9 +270,8 @@ in `tests/testthat/test-tinygrad.R`.
 
 ## Next steps
 
-- ~~Enable `backend="tinygrad"`~~ — done: the backend choice, a backend-aware
-  loader and `setup_py_env(backend = "tinygrad")` are wired; `prep_matrix()`
-  still warns and falls back to pytorch because the transform is not implemented.
+- ~~Enable `backend="tinygrad"`~~ — done for both `FastPCA()` and
+  `prep_matrix()`, including the optimized matrix transform.
 - Add a low-precision (float32) option to the R API so users can opt into the
   ~3–5× PyTorch path.
 - Optional/future: a custom native SVD kernel for `B`. Investigated and rejected
