@@ -17,7 +17,11 @@ test_that("prep matrix", {
 
 
   #now python
-  expect_error(prep_matrix(X+1, log2 = TRUE, transpose = TRUE, scale = TRUE, cores = 1, backend = "pytorch"))
+  #the pytorch backend needs an initialized interpreter; only expect that error
+  #when Python has not already been started by another test file.
+  if (!reticulate::py_available(initialize = FALSE)) {
+    expect_error(prep_matrix(X+1, log2 = TRUE, transpose = TRUE, scale = TRUE, cores = 1, backend = "pytorch"))
+  }
   suppressMessages(start_FastPCA_env())
   expect_identical(class(prep_matrix(X+1, log2 = TRUE, transpose = TRUE, scale = TRUE, cores = 1, backend = "pytorch")), c("matrix", "array"))
 })

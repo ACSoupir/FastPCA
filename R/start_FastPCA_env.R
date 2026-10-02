@@ -31,6 +31,8 @@ start_FastPCA_env = function(method = c("conda", "virtualenv"),
                           envname = "FastPCA",
                           required = TRUE){
   #Sys.setenv(KMP_DUPLICATE_LIB_OK = TRUE)
+  #make sure numba/umap can import before the module check below
+  .ensure_numba_cache_dir()
   #match method
   method <- match.arg(method)
   #for conda
@@ -41,11 +43,10 @@ start_FastPCA_env = function(method = c("conda", "virtualenv"),
                            print(w)
                            stop("Conda produced a warning")
                          })
-    conda_envs = conda_res %>%
-      grep(gsub("\\/(bin|condabin).*", "", conda_loc), ., value = TRUE) %>%
-      read.table(text = ., header = FALSE)
+    conda_root = gsub("\\/(bin|condabin).*", "", conda_loc)
+    env_names = .conda_env_names(conda_res, conda_root)
 
-    if (!envname %in% conda_envs[[1]]) {
+    if (!envname %in% env_names) {
       stop("Environment is not available through through conda",
            "\nPlease run `FastPCA::setup_py_env()`.")
     }
@@ -75,3 +76,15 @@ start_FastPCA_env = function(method = c("conda", "virtualenv"),
   }
   message("Successfully loaded and identified umap module..")
 }
+
+# Environment names from `conda env list` output.
+#
+# conda prints "<name> [*] <path>" for named environments and a bare path for
+# unnamed ones, so the number of whitespace-separated fields varies from line to
+# line (the active environment also gains a "*"). Comparing only the first token
+# avoids read.table()'s "did not have N elements" failure on that format.
+.conda_env_names = function(conda_res, conda_root){
+  env_lines = grep(conda_root, conda_res, value = TRUE, fixed = TRUE)
+  trimws(sub("^\\s*([^[:space:]]+).*$", "\\1", env_lines))
+}
+

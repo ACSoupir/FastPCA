@@ -43,6 +43,27 @@ get_python_files = function(backend = NULL){
   return(file_list)
 }
 
+# numba (used by umap-learn) needs a writable cache directory when Python is
+# embedded via reticulate, otherwise importing umap aborts with a locator error.
+#
+# The variable has to be visible inside the Python process, so it is also
+# mirrored into os.environ when an interpreter has already been started.
+.ensure_numba_cache_dir <- function() {
+  cache_dir <- Sys.getenv("NUMBA_CACHE_DIR")
+  if (!nzchar(cache_dir)) {
+    cache_dir <- file.path(tempdir(), "fastpca-numba")
+  }
+  dir.create(cache_dir, showWarnings = FALSE, recursive = TRUE)
+  Sys.setenv(NUMBA_CACHE_DIR = cache_dir)
+
+  if (reticulate::py_available(initialize = FALSE)) {
+    try(reticulate::py_run_string(
+      paste0("import os\nos.environ['NUMBA_CACHE_DIR'] = '", cache_dir, "'")),
+      silent = TRUE)
+  }
+  invisible(cache_dir)
+}
+
 #load python files
 #
 # Only the requested scripts are loaded. This avoids importing heavyweight or
@@ -58,13 +79,7 @@ python_functions = function(backend = NULL,
   #limit to the scripts actually needed by this call
   scripts <- match.arg(scripts, names(script_paths), several.ok = TRUE)
 
-  # numba (used by umap-learn) needs a writable cache directory when Python is
-  # embedded via reticulate, otherwise importing umap aborts with a locator error.
-  if (!nzchar(Sys.getenv("NUMBA_CACHE_DIR"))) {
-    numba_cache <- file.path(tempdir(), "fastpca-numba")
-    dir.create(numba_cache, showWarnings = FALSE, recursive = TRUE)
-    Sys.setenv(NUMBA_CACHE_DIR = numba_cache)
-  }
+  .ensure_numba_cache_dir()
 
   .globals = lapply(script_paths[scripts], function(f){
     reticulate::py_run_file(f)
