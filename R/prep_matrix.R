@@ -21,6 +21,13 @@
 #' resulted in the environment being loaded by the python libraries/modules are not available. Unless absolutely needed
 #' and for testing, would stick with 'rtorch'
 #'
+#' @section Downstream spectra:
+#' `prep_matrix()` itself is a deterministic transform, but centre-scaling data
+#' with little structure can leave the result with nearly equal top singular
+#' values. The randomized SVD backends are ill-conditioned in that case, so use
+#' `backend = "r"` or `"irlba"` in [FastPCA()] when the top components must be
+#' exact.
+#'
 #' @export
 #' @examples
 #' \dontrun{

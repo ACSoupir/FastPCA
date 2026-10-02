@@ -59,6 +59,17 @@ Once one is used in a session, the other will fail. Even testing using 'rtorch' 
 resulted in the environment being loaded by the python libraries/modules are not available. Unless absolutely needed
 and for testing, would stick with 'rtorch'.
 }
+\section{Near-degenerate (flat) spectra}{
+
+The randomized backends (\code{"pytorch"} and \code{"tinygrad"}) estimate the leading
+subspace from a random sketch. When the top singular values are nearly equal --
+as can happen after \code{\link[=prep_matrix]{prep_matrix()}} centre-scales data with little structure --
+that subspace is ill-conditioned, and \emph{any} randomized method (including the
+PyTorch baseline) can be well away from exact. On a flat spectrum we measured
+roughly 7\% error in the top singular values for both. Use \code{backend = "r"} or
+\code{"irlba"}, which are near-exact, when the top components must be precise.
+}
+
 \examples{
 \dontrun{
 

@@ -21,6 +21,10 @@ Design notes
   bumped to METAL with a warning. Override with FASTPCA_TG_DEVICE.
 * Peak RSS is capped at FASTPCA_TG_MEM_GB (default 20 GB) by a pre-flight
   estimate and staged checks, so a bad shape cannot take the machine down.
+* Accuracy caveat: for near-degenerate (flat) spectra every randomized method,
+  including torch_svd_func.randomized_svd_py, is ill-conditioned. Both were
+  measured ~7% off the exact top singular values there; that is a property of the
+  random sketch, not this kernel. Use an exact solver when precision matters.
 """
 from __future__ import annotations
 

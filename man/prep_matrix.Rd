@@ -42,6 +42,15 @@ Once one is used in a session, the other will fail. Even testing using 'rtorch' 
 resulted in the environment being loaded by the python libraries/modules are not available. Unless absolutely needed
 and for testing, would stick with 'rtorch'
 }
+\section{Downstream spectra}{
+
+\code{prep_matrix()} itself is a deterministic transform, but centre-scaling data
+with little structure can leave the result with nearly equal top singular
+values. The randomized SVD backends are ill-conditioned in that case, so use
+\code{backend = "r"} or \code{"irlba"} in \code{\link[=FastPCA]{FastPCA()}} when the top components must be
+exact.
+}
+
 \examples{
 \dontrun{
   #need to have environment first

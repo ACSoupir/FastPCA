@@ -253,6 +253,11 @@ Correctness vs a float64 NumPy reference is ~3e-7..9e-7 (float32). Whole-process
 peak RSS is comparable to torch -- lower at medium sizes, marginally higher at the
 largest because of the float32 staging copy plus device and host output buffers.
 
+On a flat / near-degenerate spectrum *every* randomized method is ill-conditioned:
+the torch baseline and this kernel were both ~7% off the exact top singular values
+(tinygrad 6.66%, torch 6.90%). That is a property of the random sketch, not a
+backend regression -- use an exact solver (`r`/`irlba`) when it matters.
+
 ### Environment findings
 
 * The *previous* `inst/python/tinygrad_svd_func.py` did **not run as shipped**:

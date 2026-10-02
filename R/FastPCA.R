@@ -33,6 +33,15 @@
 #' resulted in the environment being loaded by the python libraries/modules are not available. Unless absolutely needed
 #' and for testing, would stick with 'rtorch'.
 #'
+#' @section Near-degenerate (flat) spectra:
+#' The randomized backends (`"pytorch"` and `"tinygrad"`) estimate the leading
+#' subspace from a random sketch. When the top singular values are nearly equal --
+#' as can happen after [prep_matrix()] centre-scales data with little structure --
+#' that subspace is ill-conditioned, and *any* randomized method (including the
+#' PyTorch baseline) can be well away from exact. On a flat spectrum we measured
+#' roughly 7% error in the top singular values for both. Use `backend = "r"` or
+#' `"irlba"`, which are near-exact, when the top components must be precise.
+#'
 #' @export
 #' @examples
 #' \dontrun{
