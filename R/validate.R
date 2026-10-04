@@ -5,6 +5,9 @@
 
 .fastpca_backends <- c("r", "rtorch", "pytorch", "irlba", "tinygrad")
 .prep_matrix_backends <- c("r", "rtorch", "pytorch", "tinygrad")
+# NIPALS has no sketch, so it gets its own backend vector: irlba is absent (it
+# needs complete data) and "nipals" names the CRAN reference package.
+.nipals_backends <- c("r", "rtorch", "pytorch", "nipals", "tinygrad")
 .fastpca_devices <- c("CPU", "GPU")
 
 # Resolve a backend/device pair exactly once per call.
@@ -32,9 +35,21 @@ resolve_backend_device <- function(backend, device,
   value
 }
 
-# Numeric-matrix input check shared by FastPCA() and prep_matrix(). Sparse Matrix
-# objects are only accepted where the backend can consume them.
-.check_matrix_input <- function(x, name = "input_r_matrix", allow_sparse = FALSE) {
+# Single numeric-scalar validator (tolerance and proportion arguments).
+.check_scalar_num <- function(x, name, min = -Inf, max = Inf) {
+  value <- suppressWarnings(as.numeric(x))
+  if (length(value) != 1L || is.na(value) || value < min || value > max) {
+    stop(sprintf("`%s` must be a single number between %s and %s.",
+                 name, format(min), format(max)), call. = FALSE)
+  }
+  value
+}
+
+# Numeric-matrix input check shared by FastPCA(), NIPALS() and prep_matrix().
+# Sparse Matrix objects are only accepted where the backend can consume them,
+# and missing values only where the solver supports them (NIPALS).
+.check_matrix_input <- function(x, name = "input_r_matrix", allow_sparse = FALSE,
+                                allow_na = FALSE) {
   sparse <- inherits(x, "Matrix")
   if (sparse && !allow_sparse) {
     stop("`", name, "` must be a dense numeric matrix for this backend; ",
@@ -48,9 +63,9 @@ resolve_backend_device <- function(backend, device,
   if (!sparse && !is.numeric(x)) {
     stop("`", name, "` must be numeric.", call. = FALSE)
   }
-  if (anyNA(x)) {
-    stop("`", name, "` contains missing values; FastPCA requires complete data.",
-         call. = FALSE)
+  if (anyNA(x) && !allow_na) {
+    stop("`", name, "` contains missing values; FastPCA requires complete data. ",
+         "Use NIPALS() for matrices with missing values.", call. = FALSE)
   }
   invisible(TRUE)
 }
@@ -76,6 +91,29 @@ resolve_backend_device <- function(backend, device,
                  k + p, smallest), call. = FALSE)
   }
   list(k = k, p = p, q_iter = q_iter)
+}
+
+# ncomp / tol / maxit / max_na_prop validation for NIPALS(). Returns coerced
+# values so the caller does not re-coerce them. There is no sketch, so unlike
+# FastPCA() the only size constraint is that ncomp cannot exceed the smallest
+# dimension.
+.check_nipals_args <- function(A, ncomp = 10L, tol = 1e-6,
+                               maxit = 500L, max_na_prop = 1) {
+  dims <- dim(A)
+  if (length(dims) != 2L || anyNA(dims)) {
+    stop("`input_r_matrix` must be two-dimensional.", call. = FALSE)
+  }
+  smallest <- min(dims)
+  ncomp <- .check_scalar_int(ncomp, "ncomp", 1L)
+  if (ncomp > smallest) {
+    stop(sprintf("`ncomp` (%d) cannot exceed the smallest matrix dimension (%d).",
+                 ncomp, smallest), call. = FALSE)
+  }
+  tol <- .check_scalar_num(tol, "tol", min = 0)
+  if (tol <= 0) stop("`tol` must be greater than 0.", call. = FALSE)
+  maxit <- .check_scalar_int(maxit, "maxit", 1L)
+  max_na_prop <- .check_scalar_num(max_na_prop, "max_na_prop", min = 0, max = 1)
+  list(ncomp = ncomp, tol = tol, maxit = maxit, max_na_prop = max_na_prop)
 }
 
 # Total variance (sum of squared entries) used for percent-variation-explained.
