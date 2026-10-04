@@ -1,0 +1,51 @@
+======== F199112_na00 (m=978, n=199112), best of 2 ========
+--- threads=1 ---
+[torch] repeat 1: 21.36s iters=[15, 22, 12, 26, 28, 84, 16, 88, 30, 55]
+[torch] repeat 2: 21.82s iters=[15, 22, 12, 26, 28, 84, 16, 88, 30, 55]
+[torch] best=21.360s peakRSS=4.961GB eig[:5]=[5052050.5258, 3522264.5985, 2536716.1874, 1828624.1501, 1482896.9703]
+peakRSS_time_l=4.961 GB
+cpu        44.44 real        41.41 user         3.40 sys
+--- threads=2 ---
+[torch] repeat 1: 21.31s iters=[15, 22, 12, 26, 28, 84, 16, 88, 30, 55]
+[torch] repeat 2: 20.63s iters=[15, 22, 12, 26, 28, 84, 16, 88, 30, 55]
+[torch] best=20.630s peakRSS=4.956GB eig[:5]=[5052050.5258, 3522264.5985, 2536716.1874, 1828624.1501, 1482896.9703]
+peakRSS_time_l=4.956 GB
+cpu        42.92 real        42.74 user         3.85 sys
+--- threads=4 ---
+[torch] repeat 1: 20.24s iters=[15, 22, 12, 26, 28, 84, 16, 88, 30, 55]
+[torch] repeat 2: 19.80s iters=[15, 22, 12, 26, 28, 84, 16, 88, 30, 55]
+[torch] best=19.799s peakRSS=4.96GB eig[:5]=[5052050.5258, 3522264.5985, 2536716.1874, 1828624.1501, 1482896.9703]
+peakRSS_time_l=4.960 GB
+cpu        41.03 real        43.47 user         4.31 sys
+--- threads=8 ---
+[torch] repeat 1: 20.13s iters=[15, 22, 12, 26, 28, 84, 16, 88, 30, 55]
+[torch] repeat 2: 19.35s iters=[15, 22, 12, 26, 28, 84, 16, 88, 30, 55]
+[torch] best=19.346s peakRSS=4.962GB eig[:5]=[5052050.5258, 3522264.5985, 2536716.1874, 1828624.1501, 1482896.9703]
+peakRSS_time_l=4.962 GB
+cpu        40.48 real        46.84 user         6.91 sys
+======== F199112_na05 (m=978, n=199112), best of 2 ========
+--- threads=1 ---
+[torch] repeat 1: 44.99s iters=[13, 22, 12, 27, 29, 84, 16, 91, 30, 54]
+[torch] repeat 2: 45.28s iters=[13, 22, 12, 27, 29, 84, 16, 91, 30, 54]
+[torch] best=44.989s peakRSS=9.909GB eig[:5]=[5059230.8011, 3529838.9887, 2542035.2149, 1836362.4579, 1487867.1205]
+peakRSS_time_l=9.909 GB
+cpu        91.48 real        83.43 user         7.98 sys
+--- threads=2 ---
+[torch] repeat 1: 42.61s iters=[13, 22, 12, 27, 29, 84, 16, 91, 30, 54]
+[torch] repeat 2: 41.42s iters=[13, 22, 12, 27, 29, 84, 16, 91, 30, 54]
+[torch] best=41.420s peakRSS=10.23GB eig[:5]=[5059230.8011, 3529838.9887, 2542035.2149, 1836362.4579, 1487867.1205]
+peakRSS_time_l=10.230 GB
+cpu        85.30 real        85.12 user         8.16 sys
+--- threads=4 ---
+[torch] repeat 1: 39.71s iters=[13, 22, 12, 27, 29, 84, 16, 91, 30, 54]
+[torch] repeat 2: 40.48s iters=[13, 22, 12, 27, 29, 84, 16, 91, 30, 54]
+[torch] best=39.705s peakRSS=10.228GB eig[:5]=[5059230.8011, 3529838.9887, 2542035.2149, 1836362.4579, 1487867.1205]
+peakRSS_time_l=10.228 GB
+cpu        81.47 real        88.56 user         9.65 sys
+--- threads=8 ---
+[torch] repeat 1: 41.97s iters=[13, 22, 12, 27, 29, 84, 16, 91, 30, 54]
+[torch] repeat 2: 40.75s iters=[13, 22, 12, 27, 29, 84, 16, 91, 30, 54]
+[torch] best=40.747s peakRSS=10.23GB eig[:5]=[5059230.8011, 3529838.9887, 2542035.2149, 1836362.4579, 1487867.1205]
+peakRSS_time_l=10.230 GB
+cpu        83.96 real       102.32 user        15.91 sys
+CLEAN_SWEEP_DONE

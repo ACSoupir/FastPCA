@@ -1,0 +1,19 @@
+======== F199112_na00 single run ========
+threads=1	best=21.722speakRSS=3.383 GB
+  time        23.00 real        21.30 user         1.74 sys
+threads=2	best=20.660speakRSS=3.385 GB
+  time        21.65 real        21.44 user         1.93 sys
+threads=4	best=20.010speakRSS=3.381 GB
+  time        21.03 real        22.06 user         2.22 sys
+threads=8	best=19.939speakRSS=3.382 GB
+  time        20.94 real        23.91 user         3.26 sys
+======== F199112_na05 single run ========
+threads=1	best=42.508speakRSS=8.651 GB
+  time        43.73 real        40.38 user         3.60 sys
+threads=2	best=41.692speakRSS=8.649 GB
+  time        42.85 real        42.72 user         4.14 sys
+threads=4	best=41.686speakRSS=8.651 GB
+  time        42.79 real        46.40 user         4.88 sys
+threads=8	best=40.586speakRSS=8.652 GB
+  time        41.71 real        51.13 user         7.28 sys
+SINGLE_DONE

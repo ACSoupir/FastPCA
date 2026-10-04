@@ -26,6 +26,23 @@ on the full 199112-feature matrix at all -- it allocates an O(n^2) Gram-Schmidt
 matrix (~295 GB), which the harness reports as N/A rather than crashing. No
 package code has changed yet; the pytorch implementation is `TESTING/nipals_torch.py`.
 
+**Thread scaling on the full matrix (978 x 199112, ncomp = 10).**
+`torch.set_num_threads(N)` with `OMP_NUM_THREADS=N`, one run each:
+
+| torch threads | complete s | peak RSS GB | 5% MCAR s | peak RSS GB |
+|---|---|---|---|---|
+| 1 | 21.7 | 3.38 | 42.5 | 8.65 |
+| 2 | 20.7 | 3.39 | 41.7 | 8.65 |
+| 4 | 20.0 | 3.38 | 41.7 | 8.65 |
+| 8 | 19.9 | 3.38 | 40.6 | 8.65 |
+
+A best-of-two repeat agreed within ~5%. Extra threads buy only **~5-10%**: the
+inner loop is BLAS `gemv`/`ger`, and on this macOS build process CPU time stays
+near wall (~1.3-1.4x at 8 threads), so almost no parallelism is extracted and the
+run stays core-bound. Peak RSS does not move with thread count, so the single-core
+figures elsewhere are an honest comparison rather than a memory trade. Raw logs:
+`TESTING/results/nipals_threads_f.txt`, `..._single.txt`.
+
 ## Iterative / converging SVD
 
 The randomized backends use a fixed number of power iterations. A future
