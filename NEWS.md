@@ -7,13 +7,19 @@
   quantifications are routine in proteomics and metabolomics). It returns the
   same `"fastpca"` object as `FastPCA()`, so `print()`, `summary()`, `pve()`,
   `get_pc_scores()`/`scores()` and `plot()` work unchanged. Backends are base R
-  (`"r"`), the CRAN `nipals` package, native torch (`"rtorch"`) and PyTorch
-  through reticulate (`"pytorch"`); `backend = "tinygrad"` is accepted but stops
-  with an explicit not-implemented message. Note that `backend = "nipals"`
+  (`"r"`), the CRAN `nipals` package, native torch (`"rtorch"`), PyTorch
+  through reticulate (`"pytorch"`) and TinyJit-compiled tinygrad
+  (`"tinygrad"`, float32 on Metal or CUDA). Note that `backend = "nipals"`
   names the *package* and runs it as the reference implementation; because that
   package allocates an O(max(nrow, ncol)^2) Gram-Schmidt matrix it refuses
   shapes that would exceed `options(FastPCA.memory_limit)` and cannot handle
   all-NA rows or zero-variance columns.
+* `backend = "tinygrad"` compiles the inner NIPALS loop with TinyJit and runs
+  it in float32 on Metal or CUDA. It is the fastest backend for large matrices
+  and uses about half the memory of PyTorch once a mask is present, at roughly
+  1e-5 relative agreement on singular values. It needs the Python `tinygrad`
+  module (`setup_py_env(backend = "tinygrad")`) and honours the
+  `FASTPCA_TG_MEM_GB` working-set limit (20 GB by default).
 * Missing-value semantics follow the reference implementation: observed-only
   means and unbiased standard deviations, zero-filled products with
   observed-only denominators, and masked rank-one deflation. Columns that are

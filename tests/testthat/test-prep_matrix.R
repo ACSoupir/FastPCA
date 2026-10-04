@@ -3,8 +3,18 @@ test_that("prep matrix", {
   expect_no_error(prep_matrix(X+1, log2 = TRUE, transpose = TRUE, scale = TRUE, cores = 1))
   expect_no_error(prep_matrix(X+1, log2 = FALSE, transpose = FALSE, scale = FALSE, cores = 1))
   expect_no_error(prep_matrix(X, log2 = FALSE, transpose = FALSE, scale = FALSE, cores = 1))
-  #prep matrix doesn't accept tinygrad yet
-  expect_error(prep_matrix(X, log2 = FALSE, transpose = FALSE, scale = FALSE, cores = 1, backend = 'tinygrad'))
+  # tinygrad is available only when its Python module can be loaded, otherwise
+  # prep_matrix must fail cleanly rather than silently falling back
+  if (reticulate::py_available(initialize = FALSE) &&
+      reticulate::py_module_available("tinygrad")) {
+    res_tg = suppressMessages(prep_matrix(X, log2 = FALSE, transpose = FALSE,
+                                          scale = FALSE, cores = 1,
+                                          backend = 'tinygrad'))
+    expect_equal(dim(res_tg), c(n_features, n_samples))
+  } else {
+    expect_error(prep_matrix(X, log2 = FALSE, transpose = FALSE, scale = FALSE,
+                             cores = 1, backend = 'tinygrad'))
+  }
   expect_warning(suppressMessages(prep_matrix(X, log2 = FALSE, transpose = FALSE, scale = FALSE, cores = 1, device = 'GPU')))
   expect_error(prep_matrix(X, log2 = FALSE, transpose = FALSE, scale = FALSE, cores = 1, device = 'GL'))
 

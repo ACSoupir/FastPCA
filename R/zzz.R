@@ -1,3 +1,10 @@
+.onLoad <- function(libname, pkgname) {
+  # tinygrad opens its cache database the moment it is imported. Point
+  # XDG_CACHE_HOME at a writable directory before anything can import it, since
+  # the default location is read-only in some sandboxed/reticulate sessions.
+  try(.ensure_tinygrad_cache_dir(), silent = TRUE)
+}
+
 .onAttach <- function(libname, pkgname) {
   packageStartupMessage(
     "Thank you for using FastPCA!\n",

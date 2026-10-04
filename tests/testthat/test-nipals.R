@@ -127,8 +127,15 @@ test_that("NIPALS argument validation gives actionable errors", {
   expect_error(NIPALS(m, ncomp = 2L, maxit = 0L, backend = "r"), "maxit")
   expect_error(NIPALS(m, ncomp = 2L, max_na_prop = 1.5, backend = "r"), "max_na_prop")
   expect_error(NIPALS(as.data.frame(m), ncomp = 2L, backend = "r"), "data frame")
-  expect_error(NIPALS(m, ncomp = 2L, backend = "tinygrad"), "not implemented")
+  # tinygrad is implemented, but needs its Python module; without one the error
+  # must still point at setup_py_env() rather than fail deep inside dispatch
+  if (!reticulate::py_available(initialize = FALSE) ||
+      !reticulate::py_module_available("tinygrad")) {
+    expect_error(NIPALS(m, ncomp = 2L, backend = "tinygrad"),
+                 "Python is not available|requires the Python module")
+  }
   expect_true("nipals" %in% eval(formals(NIPALS)$backend))
+  expect_true("tinygrad" %in% eval(formals(NIPALS)$backend))
 })
 
 test_that("max_na_prop rejects columns that are too sparse", {
@@ -173,6 +180,28 @@ test_that("the rtorch backend agrees with the base R implementation", {
   expect_identical(attr(got, "backend"), "rtorch")
   expect_equal(as.numeric(got$S), as.numeric(ref$S), tolerance = 1e-8)
   expect_equal(unname(abs(got$Vh)), unname(abs(ref$Vh)), tolerance = 1e-8)
+})
+
+test_that("the tinygrad backend agrees with the base R implementation", {
+  skip_if_not(reticulate::py_available(initialize = FALSE), "Python is not initialized")
+  skip_if_not(reticulate::py_module_available("tinygrad"), "tinygrad is not available")
+
+  # a well-separated spectrum: float32 cannot resolve components whose singular
+  # values are close, and at tol = 1e-6 neither can the float64 backends
+  set.seed(23)
+  U <- matrix(rnorm(60 * 3), nrow = 60)
+  V <- qr.Q(qr(matrix(rnorm(12 * 3), nrow = 12)))
+  m <- U %*% (c(20, 8, 2) * t(V)) + matrix(rnorm(60 * 12, sd = 0.02), nrow = 60)
+  m[sample(length(m), floor(0.15 * length(m)))] <- NA
+
+  ref <- NIPALS(m, ncomp = 3L, backend = "r")
+  got <- suppressMessages(NIPALS(m, ncomp = 3L, backend = "tinygrad",
+                                 device = "CPU", cores = 1L))
+
+  expect_identical(attr(got, "backend"), "tinygrad")
+  # float32 arithmetic: singular values agree tightly and vectors on a relative scale
+  expect_equal(as.numeric(got$S), as.numeric(ref$S), tolerance = 1e-3)
+  expect_equal(unname(abs(got$Vh)), unname(abs(ref$Vh)), tolerance = 1e-2)
 })
 
 test_that("the pytorch backend agrees with the base R implementation", {

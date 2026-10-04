@@ -33,7 +33,8 @@
 #' @param backend Character. One of \code{"r"} (base R, no Python),
 #'   \code{"rtorch"} (\pkg{torch}), \code{"pytorch"} (PyTorch through
 #'   \pkg{reticulate}), \code{"nipals"} (the CRAN \pkg{nipals} package) or
-#'   \code{"tinygrad"}. The default is the base R implementation.
+#'   \code{"tinygrad"} (TinyJit-compiled NIPALS). The default is the base R
+#'   implementation.
 #'
 #'   Note that \code{backend = "nipals"} names a *package*: it runs
 #'   \code{nipals::nipals()} as the reference implementation. It is accurate but
@@ -42,11 +43,16 @@
 #'   by default) and cannot handle all-NA rows or zero-variance columns. Use the
 #'   \code{"r"}, \code{"rtorch"} or \code{"pytorch"} backends for large data.
 #'
-#'   The \code{"tinygrad"} backend is accepted but not implemented yet; it stops
-#'   with an explicit message.
-#' @param device Character, either \code{"CPU"} (default) or \code{"GPU"}. Only
-#'   the torch backends act on it; \code{"r"} and \code{"nipals"} are always CPU
-#'   (a GPU request warns and falls back).
+#'   The \code{"tinygrad"} backend runs the same loop as \pkg{pytorch} but in
+#'   float32 on Metal or CUDA, so it is the fastest and smallest-memory option
+#'   for large matrices; expect relative singular-value agreement with the
+#'   float64 backends of roughly \code{1e-5}. It requires the Python
+#'   \pkg{tinygrad} module (see [setup_py_env()]).
+#' @param device Character, either \code{"CPU"} (default) or \code{"GPU"}. The
+#'   torch and tinygrad backends act on it; \code{"r"} and \code{"nipals"} are
+#'   always CPU (a GPU request warns and falls back). For tinygrad, \code{"GPU"}
+#'   selects Metal or CUDA while \code{"CPU"} uses its C codegen, which is much
+#'   slower.
 #' @param cores Integer. Number of CPU threads for the torch backends, clamped
 #'   to 1 when an OpenMP runtime conflict is detected (see [FastPCA()]).
 #' @param max_na_prop Numeric in \code{[0, 1]}. Maximum allowed proportion of
@@ -122,13 +128,7 @@ NIPALS <- function(input_r_matrix,
                    cores = 1L,
                    max_na_prop = 1,
                    verbose = FALSE) {
-  # tinygrad is a placeholder and must be reported as such before backend
-  # resolution, which would otherwise fail on the missing Python module first
   backend <- match.arg(backend, .nipals_backends)
-  if (identical(backend, "tinygrad")) {
-    stop("The 'tinygrad' backend is not implemented for NIPALS yet. ",
-         "Use backend = 'pytorch', 'rtorch' or 'r'.", call. = FALSE)
-  }
 
   # resolve the backend/device pair once and use the returned values: a request
   # may be downgraded (for example nipals -> r) and dispatching on the original
@@ -173,6 +173,9 @@ NIPALS <- function(input_r_matrix,
     pytorch = .nipals_pytorch(prepared$X, ncomp = ncomp, tol = tol,
                               maxit = maxit, gramschmidt = isTRUE(gramschmidt),
                               device = device, cores = cores),
+    tinygrad = .nipals_tinygrad(prepared$X, ncomp = ncomp, tol = tol,
+                                maxit = maxit, gramschmidt = isTRUE(gramschmidt),
+                                device = device, cores = cores),
     nipals = .nipals_package(prepared$X, ncomp = ncomp, tol = tol,
                              maxit = maxit, gramschmidt = isTRUE(gramschmidt))
   )
@@ -458,6 +461,36 @@ NIPALS <- function(input_r_matrix,
   .globals <- python_functions(backend = "nipals")
   on.exit(rm(.globals), add = TRUE)
   out <- .globals$nipals_func$nipals_py(
+    X,
+    ncomp = as.integer(ncomp),
+    tol = as.numeric(tol),
+    maxit = as.integer(maxit),
+    gramschmidt = isTRUE(gramschmidt),
+    device = toupper(as.character(device)),
+    cores = as.integer(cores)
+  )
+  scores <- as.matrix(out$scores)
+  loadings <- as.matrix(out$loadings)
+  rownames(scores) <- rownames(X)
+  colnames(scores) <- .pc_names(ncol(scores))
+  rownames(loadings) <- colnames(X)
+  list(eig = as.numeric(out$eig),
+       loadings = loadings,
+       scores = scores,
+       iterations = as.integer(unlist(out$iters)),
+       converged = as.logical(unlist(out$converged)))
+}
+
+# tinygrad through reticulate --------------------------------------------------
+#
+# Same loop as the PyTorch backend, but compiled by TinyJit and run in float32.
+# The Python module handles device resolution (Metal/CUDA/CPU) and enforces the
+# FASTPCA_TG_MEM_GB working-set limit.
+.nipals_tinygrad <- function(X, ncomp, tol, maxit, gramschmidt = TRUE,
+                             device = "CPU", cores = 1L) {
+  .globals <- python_functions(backend = "nipals_tinygrad")
+  on.exit(rm(.globals), add = TRUE)
+  out <- .globals$nipals_tinygrad_func$nipals_py(
     X,
     ncomp = as.integer(ncomp),
     tol = as.numeric(tol),

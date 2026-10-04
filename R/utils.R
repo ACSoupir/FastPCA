@@ -6,6 +6,9 @@ check_backend = function(backend = c("tinygrad", "pytorch")){
          "\nSave your work if needed, and restart R (this is a reticulate requirement).",
          "\nPlease run `FastPCA::setup_py_env()` and `FastPCA::start_FastPCA_env()`.")
   }
+  if(backend == "tinygrad"){
+    .ensure_tinygrad_cache_dir()
+  }
   #check the modules the selected backend actually needs
   required = if(backend == "tinygrad") c("numpy", "tinygrad") else c("torch", "numpy")
   missing = required[!vapply(required, reticulate::py_module_available, logical(1))]
@@ -25,6 +28,11 @@ get_python_files = function(backend = NULL){
   if(identical(backend, "nipals")){
     file_list = list(
       nipals_func = system.file("python", "nipals_func.py", package = "FastPCA")
+    )
+  } else if(identical(backend, "nipals_tinygrad")){
+    file_list = list(
+      nipals_tinygrad_func = system.file("python", "nipals_tinygrad_func.py",
+                                         package = "FastPCA")
     )
   } else if(identical(backend, "tinygrad")){
     file_list = list(
@@ -64,6 +72,29 @@ get_python_files = function(backend = NULL){
   if (reticulate::py_available(initialize = FALSE)) {
     try(reticulate::py_run_string(
       paste0("import os\nos.environ['NUMBA_CACHE_DIR'] = '", cache_dir, "'")),
+      silent = TRUE)
+  }
+  invisible(cache_dir)
+}
+
+# tinygrad resolves its compile-cache location when it is first imported, and
+# reticulate's module-availability check imports it. Point XDG_CACHE_HOME at a
+# writable directory before that happens, or the cache opens read-only and every
+# kernel fails with "attempt to write a readonly database".
+.ensure_tinygrad_cache_dir <- function() {
+  cache_dir <- Sys.getenv("XDG_CACHE_HOME")
+  writable <- nzchar(cache_dir) && dir.exists(cache_dir) &&
+    file.access(cache_dir, 2L) == 0L
+  if (!writable) {
+    cache_dir <- file.path(tempdir(), "fastpca-tinygrad")
+  }
+  dir.create(cache_dir, showWarnings = FALSE, recursive = TRUE)
+  Sys.setenv(XDG_CACHE_HOME = cache_dir)
+
+  if (reticulate::py_available(initialize = FALSE)) {
+    try(reticulate::py_run_string(
+      paste0("import os
+os.environ['XDG_CACHE_HOME'] = '", cache_dir, "'")),
       silent = TRUE)
   }
   invisible(cache_dir)
@@ -169,24 +200,12 @@ validate_backend = function(backend = c("r", "rtorch", "pytorch", "irlba",
   #tinygrad
   if(backend == 'tinygrad'){
     check_backend('tinygrad')
-    # tinygrad only has a working Metal backend on Apple Silicon, so be explicit
-    if(device == "CPU" && .on_arm64_mac()){
-      message("FastPCA: on Apple Silicon (arm64) the tinygrad backend runs on METAL; ",
-              "'device = \"CPU\"' is mapped to the GPU because tinygrad's CPU codegen ",
-              "is unavailable.")
-    }
+    # both devices work: GPU selects Metal/CUDA, CPU falls back to tinygrad's C
+    # codegen (roughly an order of magnitude slower, so GPU stays the advice)
   }
   return(list(backend = backend,
               device = device))
 }
-
-# TRUE on Apple Silicon Macs, where tinygrad only has a working Metal backend
-.on_arm64_mac = function(){
-  info = Sys.info()
-  identical(unname(info[["sysname"]]), "Darwin") &&
-    grepl("arm64|aarch64", unname(info[["machine"]]))
-}
-
 
 # map setup_py_env()'s backend choice onto the packages to install
 .resolve_setup_backend = function(backend = c("pytorch", "tinygrad", "all")){

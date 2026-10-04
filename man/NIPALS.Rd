@@ -47,7 +47,8 @@ implementation). This costs one projection per component.}
 \item{backend}{Character. One of \code{"r"} (base R, no Python),
 \code{"rtorch"} (\pkg{torch}), \code{"pytorch"} (PyTorch through
 \pkg{reticulate}), \code{"nipals"} (the CRAN \pkg{nipals} package) or
-\code{"tinygrad"}. The default is the base R implementation.
+\code{"tinygrad"} (TinyJit-compiled NIPALS). The default is the base R
+implementation.
 
 Note that \code{backend = "nipals"} names a \emph{package}: it runs
 \code{nipals::nipals()} as the reference implementation. It is accurate but
@@ -56,12 +57,17 @@ matrices that would exceed \code{getOption("FastPCA.memory_limit")} (20 GB
 by default) and cannot handle all-NA rows or zero-variance columns. Use the
 \code{"r"}, \code{"rtorch"} or \code{"pytorch"} backends for large data.
 
-The \code{"tinygrad"} backend is accepted but not implemented yet; it stops
-with an explicit message.}
+The \code{"tinygrad"} backend runs the same loop as \pkg{pytorch} but in
+float32 on Metal or CUDA, so it is the fastest and smallest-memory option
+for large matrices; expect relative singular-value agreement with the
+float64 backends of roughly \code{1e-5}. It requires the Python
+\pkg{tinygrad} module (see \code{\link[=setup_py_env]{setup_py_env()}}).}
 
-\item{device}{Character, either \code{"CPU"} (default) or \code{"GPU"}. Only
-the torch backends act on it; \code{"r"} and \code{"nipals"} are always CPU
-(a GPU request warns and falls back).}
+\item{device}{Character, either \code{"CPU"} (default) or \code{"GPU"}. The
+torch and tinygrad backends act on it; \code{"r"} and \code{"nipals"} are
+always CPU (a GPU request warns and falls back). For tinygrad, \code{"GPU"}
+selects Metal or CUDA while \code{"CPU"} uses its C codegen, which is much
+slower.}
 
 \item{cores}{Integer. Number of CPU threads for the torch backends, clamped
 to 1 when an OpenMP runtime conflict is detected (see \code{\link[=FastPCA]{FastPCA()}}).}
