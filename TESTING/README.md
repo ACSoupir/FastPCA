@@ -273,8 +273,94 @@ backend regression -- use an exact solver (`r`/`irlba`) when it matters.
   this kernel avoids both. An earlier Metal-matmul + numpy-QR *hybrid* was
   79.8 ms vs 21.5 ms (4000×1000) — slower, and has been removed.
 
+## NIPALS on missing-value data: pytorch vs R
+
+`FastPCA()` rejects `NA`: base R, irlba and every randomized backend need
+complete data. NIPALS is the usual way to handle missing quantification
+(metabolomics / proteomics) and, per `ROADMAP.md`, is planned as its own
+function rather than another `backend =`. This section measures what it costs.
+
+### Harness
+
+| file | purpose |
+|---|---|
+| `nipals_export.R` | transposes the example matrix to samples x features, subsamples features, writes raw float64 + a shared MCAR mask so R and pytorch see identical missingness |
+| `nipals_torch.py` | single-core pytorch NIPALS, a faithful port of the R package's algorithm |
+| `nipals_r.R` | base-R NIPALS, the vendored CRAN package, and an irlba reference |
+| `nipals_validate.py` | relative eigenvalue error + principal angles between loading subspaces |
+| `nipals_collect.py` | merges per-run JSON and peak RSS into one results file |
+| `run_nipals_bench.sh` | tiers s / m / f, one implementation per process under `/usr/bin/time -l` |
+| `vendor/nipals/` | vendored CRAN source (CRAN is unreachable from this sandbox) |
+
+Data: `data/prepped_gex.rds`, 199112 features x 978 samples, **zero NAs**. PCA
+orientation is samples x features (978 x F); all cells are kept and only
+*features* are subsampled, because that is the axis with room to spare. Peak RSS
+is measured identically for R and python by `/usr/bin/time -l`.
+
+### Tier m -- 978 x 20,000 features (10% of genes), ncomp = 10
+
+| implementation | complete s | peak RSS GB | 5% MCAR s | peak RSS GB |
+|---|---|---|---|---|
+| **pytorch fp64, 1 thread** | **2.12** | **0.53** | **4.36** | **1.06** |
+| base R NIPALS (deflation, O(k) Gram-Schmidt) | 13.75 | 1.25 | 26.41 | 2.20 |
+| `nipals` CRAN package (vendored) | 94.72 | 7.97 | 159.62 | **13.43** |
+| `irlba` (not NIPALS; complete-data yardstick) | 1.40 | 0.65 | -- | -- |
+
+pytorch is **6.5x** faster than careful base R and **45x** faster than the CRAN
+package; at 5% missing it is 6.1x / 37x and uses **12.7x** less peak RSS than the
+package.
+
+### Tier f -- the full 978 x 199,112 matrix, ncomp = 10
+
+| implementation | complete s | peak RSS GB | 5% MCAR s | peak RSS GB |
+|---|---|---|---|---|
+| **pytorch fp64, 1 thread** | **21.24** | **3.39** | **44.37** | 8.65 |
+| base R NIPALS | 130.87 | 11.30 | 262.72 | 12.92 |
+| `nipals` CRAN package | **N/A** (~295 GB allocation) | -- | N/A (~298 GB) | -- |
+| `irlba` (complete data only) | 10.52 | 4.78 | -- | -- |
+
+The CRAN package allocates `TTp <- matrix(0, nobs, nobs)` and
+`PPp <- matrix(0, nvar, nvar)` for its Gram-Schmidt step, so at 199112 features
+it cannot run in either orientation. `nipals_r.R` pre-checks the allocation and
+reports N/A rather than being OOM-killed.
+
+### Correctness
+
+* pytorch vs base R: identical eigenvalues **and** iteration counts at every tier
+  (max relative eigenvalue error 1.7e-14, subspace angle <=0.0004 deg).
+* pytorch vs the CRAN package: max relative eigenvalue error 6.8e-08 -- they agree
+  to the `tol = 1e-6` convergence tolerance.
+* Both are within ~2e-6 of `irlba`, the more converged solver.
+* The package reports **one extra iteration per component** (17 vs our 16):
+  upstream increments its counter after convergence is detected. Eigenvalues are
+  unaffected; `nipals_torch.py` reports the true count.
+
+### Missing-value behaviour
+
+The real dataset has zero NAs, so missingness is injected as MCAR at a fixed
+seed in `nipals_export.R` and the *same* mask is read by both languages. On
+tier m, 5% MCAR costs pytorch 2.1x the complete-data time and base R 1.9x, while
+the package pays in both time (1.7x) and memory (**+69% RSS**, 8.0 -> 13.4 GB),
+because its inner loop materialises a full nobs x nvar matrix every iteration.
+
+### Caveats
+
+* **R runs on reference BLAS here.** `extSoftVersion()["BLAS"]` is
+  `libRblas.0.dylib`, linked by absolute path; the framework also ships
+  `libRblas.vecLib.dylib`, but it cannot be selected without modifying the R
+  framework (outside this workspace). Part of pytorch's margin is therefore BLAS
+  quality, not algorithm. Raw single-thread power-iteration cost on the full
+  matrix: **R 341 ms vs torch fp64 53 ms** (fp32 26 ms).
+* Single thread throughout (`torch.set_num_threads(1)`, `OMP_NUM_THREADS=1`);
+  run-to-run spread on this machine is +/-10-20%.
+* `scale = FALSE` (centre only) everywhere, so every implementation does the same
+  work; `--scale=1` is available on both sides.
+* Missingness here is synthetic MCAR; the shipped example data has no NAs.
 ## Next steps
 
+- NIPALS is measured and validated here but **not yet in the package**: promote
+  `TESTING/nipals_torch.py` into its own function (see the NIPALS item in
+  `ROADMAP.md`) that returns a `"fastpca"`-compatible object.
 - ~~Enable `backend="tinygrad"`~~ — done for both `FastPCA()` and
   `prep_matrix()`, including the optimized matrix transform.
 - Add a low-precision (float32) option to the R API so users can opt into the

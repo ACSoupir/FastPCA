@@ -1,0 +1,242 @@
+{
+  "rows": [
+    {
+      "impl": "torch",
+      "tag": "F2000_na00",
+      "m": 978,
+      "n": 2000,
+      "dtype": "fp64",
+      "threads": 1,
+      "ncomp": 5,
+      "center": true,
+      "scale": false,
+      "tol": 1e-06,
+      "maxiter": 500,
+      "has_mask": false,
+      "load_s": 0.003,
+      "times_s": [
+        0.033
+      ],
+      "best_s": 0.033,
+      "iters": [
+        17,
+        16,
+        29,
+        31,
+        38
+      ],
+      "pc_times_s": [
+        0.0047,
+        0.004,
+        0.0065,
+        0.0072,
+        0.0082
+      ],
+      "eig": [
+        50319.51431263,
+        38248.42022078,
+        26807.86797014,
+        21275.33679088,
+        16521.71810825
+      ],
+      "peak_rss_gb": 0.23,
+      "wall_total_s": 0.04,
+      "peak_rss_time_l_gb": 0.244,
+      "label": "torch-F2000_na00"
+    },
+    {
+      "impl": "base",
+      "tag": "F2000_na00",
+      "m": 978,
+      "n": 2000,
+      "status": "ok",
+      "has_mask": false,
+      "ncomp": 5,
+      "scale": false,
+      "tol": 1e-06,
+      "maxiter": 500,
+      "load_s": 0.003,
+      "best_s": 0.5127,
+      "iters": [
+        17,
+        16,
+        29,
+        31,
+        38
+      ],
+      "eig": [
+        50319.51431,
+        38248.42023,
+        26807.86973,
+        21275.33535,
+        16521.71812
+      ],
+      "r_gc_maxused_gb": 0.839,
+      "peak_rss_time_l_gb": 0.19,
+      "label": "base-F2000_na00"
+    },
+    {
+      "impl": "nipals_pkg",
+      "tag": "F2000_na00",
+      "m": 978,
+      "n": 2000,
+      "status": "ok",
+      "has_mask": false,
+      "ncomp": 5,
+      "scale": false,
+      "tol": 1e-06,
+      "maxiter": 500,
+      "load_s": 0.003,
+      "best_s": 1.0047,
+      "iters": [
+        18,
+        17,
+        30,
+        32,
+        39
+      ],
+      "eig": [
+        50319.51431,
+        38248.42022,
+        26807.86797,
+        21275.33679,
+        16521.71811
+      ],
+      "r_gc_maxused_gb": 1.206,
+      "peak_rss_time_l_gb": 0.302,
+      "label": "nipals_pkg-F2000_na00"
+    },
+    {
+      "impl": "irlba",
+      "tag": "F2000_na00",
+      "m": 978,
+      "n": 2000,
+      "status": "ok",
+      "has_mask": false,
+      "ncomp": 5,
+      "scale": false,
+      "tol": 1e-06,
+      "maxiter": 500,
+      "load_s": 0.003,
+      "best_s": 0.7803,
+      "iters": [],
+      "eig": [
+        50319.61771,
+        38248.39717,
+        26807.90033,
+        21275.33019,
+        16521.7784
+      ],
+      "r_gc_maxused_gb": 0.475,
+      "peak_rss_time_l_gb": 0.227,
+      "label": "irlba-F2000_na00"
+    },
+    {
+      "impl": "torch",
+      "tag": "F2000_na05",
+      "m": 978,
+      "n": 2000,
+      "dtype": "fp64",
+      "threads": 1,
+      "ncomp": 5,
+      "center": true,
+      "scale": false,
+      "tol": 1e-06,
+      "maxiter": 500,
+      "has_mask": true,
+      "load_s": 0.004,
+      "times_s": [
+        0.1507
+      ],
+      "best_s": 0.1507,
+      "iters": [
+        16,
+        16,
+        30,
+        29,
+        39
+      ],
+      "pc_times_s": [
+        0.0183,
+        0.0182,
+        0.0325,
+        0.0318,
+        0.0421
+      ],
+      "eig": [
+        50531.50738656,
+        38625.95951837,
+        26996.50038999,
+        21468.25010233,
+        16767.23353086
+      ],
+      "peak_rss_gb": 0.283,
+      "wall_total_s": 0.16,
+      "peak_rss_time_l_gb": 0.297,
+      "label": "torch-F2000_na05"
+    },
+    {
+      "impl": "base",
+      "tag": "F2000_na05",
+      "m": 978,
+      "n": 2000,
+      "status": "ok",
+      "has_mask": true,
+      "ncomp": 5,
+      "scale": false,
+      "tol": 1e-06,
+      "maxiter": 500,
+      "load_s": 0.007,
+      "best_s": 1.027,
+      "iters": [
+        16,
+        16,
+        30,
+        29,
+        39
+      ],
+      "eig": [
+        50531.50739,
+        38625.95952,
+        26996.50039,
+        21468.2501,
+        16767.23353
+      ],
+      "r_gc_maxused_gb": 1.157,
+      "peak_rss_time_l_gb": 0.254,
+      "label": "base-F2000_na05"
+    },
+    {
+      "impl": "nipals_pkg",
+      "tag": "F2000_na05",
+      "m": 978,
+      "n": 2000,
+      "status": "ok",
+      "has_mask": true,
+      "ncomp": 5,
+      "scale": false,
+      "tol": 1e-06,
+      "maxiter": 500,
+      "load_s": 0.007,
+      "best_s": 3.1477,
+      "iters": [
+        17,
+        17,
+        31,
+        30,
+        40
+      ],
+      "eig": [
+        50531.50739,
+        38625.95952,
+        26996.50039,
+        21468.2501,
+        16767.23353
+      ],
+      "r_gc_maxused_gb": 2.058,
+      "peak_rss_time_l_gb": 0.72,
+      "label": "nipals_pkg-F2000_na05"
+    }
+  ],
+  "skipped": []
+}

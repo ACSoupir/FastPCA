@@ -1,0 +1,48 @@
+======== tier=s features=2000 na=0% ncomp=5 ========
+loaded data/prepped_gex.rds  199112 x 978  1.45 GiB  (1.1s)
+wrote /Users/4471592/Documents/share/lab_soupir/projects/FastPCA/TESTING/_tmp/X_F2000_na00.f64  (978 x 2000 = 0.01 GiB, mask NAs=0 [0%], features kept 2000/199112)
+TAG=F2000_na00
+--- torch-F2000_na00 ---
+[torch] loaded 978x2000 dtype=fp64 in 0.00s peakRSS=0.226GB
+[torch] repeat 1: 0.03s iters=[17, 16, 29, 31, 38]
+[torch] best=0.033s peakRSS=0.23GB eig[:5]=[50319.5143, 38248.4202, 26807.868, 21275.3368, 16521.7181]
+[torch] wrote TESTING/_tmp/torch_F2000_na00.npz
+--- base-F2000_na00 ---
+[R] loaded 978x2000 impl=base na=FALSE in 0.00s
+[R] base best=0.513s eig[:5]=50319.5143, 38248.4202, 26807.8697, 21275.3353, 16521.7181
+--- nipals_pkg-F2000_na00 ---
+[R] loaded 978x2000 impl=nipals_pkg na=FALSE in 0.00s
+[R] nipals_pkg best=1.005s eig[:5]=50319.5143, 38248.4202, 26807.868, 21275.3368, 16521.7181
+--- irlba-F2000_na00 ---
+[R] loaded 978x2000 impl=irlba na=FALSE in 0.00s
+[R] irlba best=0.780s eig[:5]=50319.6177, 38248.3972, 26807.9003, 21275.3302, 16521.7784
+n=5 max_rel_eig_err=6.794e-08 mean=2.690e-08 | max_angle=0.0000 deg mean=0.0000 deg
+VALIDATE_JSON {"n": 5, "max_rel_eig_err": 6.794383286140166e-08, "mean_rel_eig_err": 2.690366152264263e-08, "max_angle_deg": 4.4289379318747476e-05, "mean_angle_deg": 1.0472153556245218e-05}
+n=5 max_rel_eig_err=3.523e-15 mean=2.042e-15 | max_angle=0.0000 deg mean=0.0000 deg
+VALIDATE_JSON {"n": 5, "max_rel_eig_err": 3.5230997485918557e-15, "mean_rel_eig_err": 2.0423522613808274e-15, "max_angle_deg": 2.831646840510158e-06, "mean_angle_deg": 8.078130220471782e-07}
+======== tier=s features=2000 na=5% ncomp=5 ========
+loaded data/prepped_gex.rds  199112 x 978  1.45 GiB  (1.1s)
+wrote /Users/4471592/Documents/share/lab_soupir/projects/FastPCA/TESTING/_tmp/X_F2000_na05.f64  (978 x 2000 = 0.01 GiB, mask NAs=97800 [5%], features kept 2000/199112)
+TAG=F2000_na05
+--- torch-F2000_na05 ---
+[torch] loaded 978x2000 dtype=fp64 in 0.00s peakRSS=0.232GB
+[torch] repeat 1: 0.15s iters=[16, 16, 30, 29, 39]
+[torch] best=0.151s peakRSS=0.283GB eig[:5]=[50531.5074, 38625.9595, 26996.5004, 21468.2501, 16767.2335]
+[torch] wrote TESTING/_tmp/torch_F2000_na05.npz
+--- base-F2000_na05 ---
+[R] loaded 978x2000 impl=base na=TRUE in 0.01s
+[R] base best=1.027s eig[:5]=50531.5074, 38625.9595, 26996.5004, 21468.2501, 16767.2335
+--- nipals_pkg-F2000_na05 ---
+[R] loaded 978x2000 impl=nipals_pkg na=TRUE in 0.01s
+[R] nipals_pkg best=3.148s eig[:5]=50531.5074, 38625.9595, 26996.5004, 21468.2501, 16767.2335
+== collected results ==
+label                        best_s  peakRSS_GB iters_sum  eig1
+torch-F2000_na00              0.033       0.244       131  50319.5
+base-F2000_na00               0.513       0.190       131  50319.5
+nipals_pkg-F2000_na00         1.005       0.302       136  50319.5
+irlba-F2000_na00              0.780       0.227         0  50319.6
+torch-F2000_na05              0.151       0.297       130  50531.5
+base-F2000_na05               1.027       0.254       130  50531.5
+nipals_pkg-F2000_na05         3.148       0.720       135  50531.5
+
+wrote TESTING/results/nipals_bench_s.json
