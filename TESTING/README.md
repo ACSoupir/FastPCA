@@ -336,7 +336,7 @@ PATH and CC: the anaconda wrapper rejects tinygrad's `--target` flag. CPU is
 
 | implementation | complete s | peak RSS GB | 5% MCAR s | peak RSS GB |
 |---|---|---|---|---|
-| **tinygrad Metal fp32, block=8** | **0.94** | 0.51 | **1.39** | **0.73** |
+| **tinygrad Metal fp32, block=8** | **0.91** | 0.53 | **1.56** | **0.75** |
 | pytorch fp64, 1 thread | 2.02 | **0.53** | 4.13 | 1.06 |
 | base R NIPALS | 13.48 | 1.19 | 26.17 | 2.13 |
 | `nipals` CRAN package | 96.06 | 7.54 | 160.82 | 11.62 |
@@ -346,21 +346,31 @@ At the full 978 x 199,112 shape (fresh process per run):
 
 | implementation | complete s | peak RSS GB | 5% MCAR s | peak RSS GB |
 |---|---|---|---|---|
-| **tinygrad Metal fp32** | **12.75** | **3.17** | **18.41** | **4.53** |
-| pytorch fp64, 1 thread | 20.94 | 3.39 | 46.17 | 8.64 |
+| **tinygrad Metal fp32** | **16.22** | **3.17** | **19.30** | 4.53 |
+| pytorch fp64, 1 thread | 20.94 | 3.39 | 46.17 | **8.64** |
 
-tinygrad is ~2.1x / 3.0x faster than pytorch at tier m (complete / 5% MCAR) and
-1.6x / 2.5x at full size, using about half the RSS once a mask is involved; on
-complete data it only edges pytorch out (0.51 vs 0.53 GB at tier m). At the small
-F2000 shape it is *slower* (0.28 s vs 0.08 s) because kernel-launch latency
-dominates, though it still uses less memory (0.15 vs 0.26 GB).
+tinygrad is ~2.2x / 2.6x faster than pytorch at tier m (complete / 5% MCAR) and
+~1.3x / 2.4x at full size, using about half the RSS once a mask is involved
+(0.75 vs 1.06 GB at tier m, 4.53 vs 8.64 GB full); on complete data it only
+edges pytorch out (0.53 vs 0.55 GB at tier m). At the small F2000 shape it is
+*slower* (0.30 s vs 0.08 s) because kernel-launch latency dominates, though it
+still uses less memory (0.16 vs 0.23 GB).
 
-Accuracy is float32-limited: max relative eigenvalue error versus pytorch fp64 is
-3.3e-6 (complete) and 2.8e-5 (5% MCAR), with loading-subspace angles <=0.003 and
-<=0.77 degrees respectively. Because `tol = 1e-6` sits at the fp32 rounding floor,
-convergence is detected earlier than in fp64 (155 vs 391 total iterations at
-F2000), so a tighter `--tol` is needed if fp64-level iteration counts matter.
-Run-to-run spread on this machine remains +/-20%.
+Accuracy is float32-limited. Against the pytorch fp64 reference, at F2000
+(k=5) the max relative eigenvalue error is 3.4e-6 complete and 1.6e-5 at 5%
+MCAR, with loading-subspace angles <=0.41 and <=0.42 degrees; over all ten
+components at tier m it is 2.1e-5 / 4.1e-5 (angles <=0.45 / <=0.54 degrees) and
+at full size 1.8e-5 / 2.2e-5 (angles <=0.64 / <=0.66 degrees). Because
+`tol = 1e-6` sits at the fp32 rounding floor, the stopping test is noisier than
+in fp64: tinygrad spends slightly more iterations at F2000 (448 vs 386 complete,
+416 vs 379 with MCAR) without moving the eigenvalues further. Run-to-run spread
+on this machine remains +/-20%.
+
+These numbers were re-measured after the Gram-Schmidt buffers in
+`nipals_tinygrad.py` were corrected: on this tinygrad version `.assign()` is a
+no-op when applied to an indexed view, so Gram-Schmidt had silently been skipped.
+The timings barely move (the projection is O(nvar x k) per iteration), but the
+later components are now orthogonal to the earlier ones and agree with fp64.
 
 Results: `results/nipals_tinygrad_bench.json`.
 
@@ -398,9 +408,10 @@ because its inner loop materialises a full nobs x nvar matrix every iteration.
 * Missingness here is synthetic MCAR; the shipped example data has no NAs.
 ## Next steps
 
-- NIPALS is measured and validated here but **not yet in the package**: promote
-  `TESTING/nipals_torch.py` into its own function (see the NIPALS item in
-  `ROADMAP.md`) that returns a `"fastpca"`-compatible object.
+- ~~NIPALS is measured and validated here but not yet in the package~~ —
+  done: `NIPALS(backend = "tinygrad")` ships with its own module
+  (`inst/python/nipals_tinygrad_func.py`) and tests in
+  `tests/testthat/test-nipals.R`.
 - ~~Enable `backend="tinygrad"`~~ — done for both `FastPCA()` and
   `prep_matrix()`, including the optimized matrix transform.
 - Add a low-precision (float32) option to the R API so users can opt into the

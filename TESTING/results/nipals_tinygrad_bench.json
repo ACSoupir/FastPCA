@@ -14,16 +14,17 @@
     "rss_measured_with": "/usr/bin/time -l (maximum resident set size)",
     "note": "tinygrad times are the best of 3 runs inside one process (JIT compiled once); pytorch single-process numbers are quoted because its --repeats path clones the input inside the timer and inflates both time and RSS"
   },
+  "remeasured_after": "Gram-Schmidt buffer fix in TESTING/nipals_tinygrad.py: on this tinygrad version .assign() is a no-op when applied to an indexed view, so Gram-Schmidt had silently been skipped and the later components were contaminated by earlier ones. Timings barely change (the projection is O(nvar x k) per iteration); accuracy and iterations below are post-fix.",
   "tier_m_978x20000": {
     "complete": {
-      "tinygrad_metal_fp32_block8": {"best_s": 0.935, "first_run_s": 1.132, "peak_rss_gb": 0.51},
+      "tinygrad_metal_fp32_block8": {"best_s": 0.907, "peak_rss_gb": 0.53},
       "pytorch_fp64_1thread": {"best_s": 2.020, "peak_rss_gb": 0.53},
       "base_r_nipals": {"best_s": 13.483, "peak_rss_gb": 1.19},
       "nipals_cran_package": {"best_s": 96.062, "peak_rss_gb": 7.54},
       "tinygrad_cpu_fp32_block8": {"best_s": 13.810, "peak_rss_gb": 0.56}
     },
     "mcar_5pct": {
-      "tinygrad_metal_fp32_block8": {"best_s": 1.393, "first_run_s": 1.862, "peak_rss_gb": 0.73},
+      "tinygrad_metal_fp32_block8": {"best_s": 1.564, "peak_rss_gb": 0.75},
       "pytorch_fp64_1thread": {"best_s": 4.128, "peak_rss_gb": 1.06},
       "base_r_nipals": {"best_s": 26.171, "peak_rss_gb": 2.13},
       "nipals_cran_package": {"best_s": 160.821, "peak_rss_gb": 11.62},
@@ -32,28 +33,32 @@
   },
   "full_978x199112": {
     "complete": {
-      "tinygrad_metal_fp32_block8": {"best_s": 12.75, "peak_rss_gb": 3.17},
+      "tinygrad_metal_fp32_block8": {"best_s": 16.215, "peak_rss_gb": 3.17},
       "pytorch_fp64_1thread": {"best_s": 20.94, "peak_rss_gb": 3.39},
       "base_r_nipals_previous_run": {"best_s": 130.87, "peak_rss_gb": 11.30},
       "nipals_cran_package_previous_run": {"status": "N/A", "reason": "O(n^2) Gram-Schmidt allocation ~295 GB"}
     },
     "mcar_5pct": {
-      "tinygrad_metal_fp32_block8": {"best_s": 18.41, "peak_rss_gb": 4.53},
+      "tinygrad_metal_fp32_block8": {"best_s": 19.299, "peak_rss_gb": 4.53},
       "pytorch_fp64_1thread": {"best_s": 46.17, "peak_rss_gb": 8.64},
       "base_r_nipals_previous_run": {"best_s": 262.72, "peak_rss_gb": 12.92},
       "nipals_cran_package_previous_run": {"status": "N/A"}
     }
   },
   "correctness_vs_pytorch_fp64": {
-    "F2000_complete": {"max_rel_eig_err": 3.31e-06, "max_subspace_angle_deg": 0.00298},
-    "F2000_mcar5": {"max_rel_eig_err": 2.84e-05, "max_subspace_angle_deg": 0.77138},
-    "F20000_complete_eig1_rel_err": 3.6e-06,
-    "F20000_mcar5_eig1_rel_err": 2.0e-06,
-    "full_complete_eig1_rel_err": 6.4e-06,
-    "full_mcar5_eig1_rel_err": 4.0e-06
+    "F2000_complete_k5": {"max_rel_eig_err": 3.35e-06, "mean_rel_eig_err": 1.25e-06, "max_subspace_angle_deg": 0.4103},
+    "F2000_mcar5_k5": {"max_rel_eig_err": 1.59e-05, "mean_rel_eig_err": 7.63e-06, "max_subspace_angle_deg": 0.4152},
+    "tier_m_complete_k10": {"max_rel_eig_err": 2.11e-05, "mean_rel_eig_err": 7.91e-06, "max_subspace_angle_deg": 0.4484},
+    "tier_m_mcar5_k10": {"max_rel_eig_err": 4.06e-05, "mean_rel_eig_err": 9.50e-06, "max_subspace_angle_deg": 0.5371},
+    "full_complete_k10": {"max_rel_eig_err": 1.76e-05, "mean_rel_eig_err": 6.80e-06, "max_subspace_angle_deg": 0.6404},
+    "full_mcar5_k10": {"max_rel_eig_err": 2.16e-05, "mean_rel_eig_err": 7.53e-06, "max_subspace_angle_deg": 0.6551}
+  },
+  "iterations_f2000_ncomp10": {
+    "tinygrad_complete": 448, "pytorch_fp64_complete": 386,
+    "tinygrad_mcar5": 416, "pytorch_fp64_mcar5": 379
   },
   "caveats": [
-    "Metal has no fp64: tinygrad runs float32, so tol=1e-6 sits at the rounding floor and convergence is detected earlier than fp64 (F2000 complete: 155 vs 391 total iterations). Eigenvalues still agree with fp64 to ~3e-5 relative.",
+    "Metal has no fp64: tinygrad runs float32, so tol=1e-6 sits at the rounding floor and its stopping test is noisier than fp64 (F2000 complete: 448 vs 386 total iterations); eigenvalues still agree with the fp64 reference to ~2e-5 relative over ten components.",
     "Block size barely changes wall time at any tested shape; unrolling 8 steps costs ~1.2-1.8x redundant iterations but saves per-op dispatch.",
     "The CPU device only works when clang resolves to Apple's toolchain; the anaconda wrapper shadows it on PATH and via CC.",
     "Run-to-run spread is +/-20 percent; the F2000 tier favours pytorch because kernel-launch latency dominates."

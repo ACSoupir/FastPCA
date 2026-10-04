@@ -210,8 +210,10 @@ def run_prepared(x0_np, obs_np=None, has_na=False, ncomp=10, maxiter=500,
     x0 = Tensor(x0_np).to(dev).realize()
     obs = Tensor(obs_np).to(dev).realize() if has_na else None
 
-    PPp = Tensor.zeros(nvar, ncomp).to(dev).realize()
-    TTp = Tensor.zeros(nobs, ncomp).to(dev).realize()
+    # numpy zeros, not Tensor.zeros: the latter is an expanded view whose
+    # strides change once real values are written, which TinyJit rejects
+    PPp = Tensor(np.zeros((nvar, ncomp), dtype=np.float32)).to(dev).realize()
+    TTp = Tensor(np.zeros((nobs, ncomp), dtype=np.float32)).to(dev).realize()
     core = _get_jit(dev, nobs, nvar, ncomp, block, has_na, gramschmidt)
 
     eig = np.zeros(ncomp)
@@ -264,8 +266,13 @@ def run_prepared(x0_np, obs_np=None, has_na=False, ncomp=10, maxiter=500,
         pc_times.append(time.perf_counter() - tp)
 
         if gramschmidt:
-            PPp[:, h].assign(ph).realize()
-            TTp[:, h].assign(th / float(np.sqrt(max(eig[h], 1e-300)))).realize()
+            # NOTE: this tinygrad version silently ignores .assign() on a slice
+            # view, so the fixed-width buffers are updated functionally instead.
+            col = Tensor((np.arange(ncomp) == h).astype(np.float32),
+                         device=dev).reshape(1, -1)
+            PPp.assign(Tensor.where(col > 0.5, ph.reshape(-1, 1), PPp)).realize()
+            tvec = (th / float(np.sqrt(max(eig[h], 1e-300)))).reshape(-1, 1)
+            TTp.assign(Tensor.where(col > 0.5, tvec, TTp)).realize()
         if verbose:
             print(f"  PC{h+1}: iter={n_iter} eig={eig[h]:.4f}", flush=True)
         check_mem(f"PC{h+1}")
