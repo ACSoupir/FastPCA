@@ -4,17 +4,26 @@
 \alias{get_pc_scores}
 \title{Calculate the PC scores}
 \usage{
-get_pc_scores(fastpca_out)
+get_pc_scores(fastpca_out, reduction = "pca")
 }
 \arguments{
-\item{fastpca_out}{A \code{"fastpca"} object, i.e. the result of
-\code{\link[=FastPCA]{FastPCA()}}, with elements \code{U}, \code{S} and \code{Vh}.}
+\item{fastpca_out}{A \code{"fastpca"} object (the result of \code{\link[=FastPCA]{FastPCA()}} or
+\code{\link[=NIPALS]{NIPALS()}}), a list with \code{U} and \code{S}, or a Seurat object /
+\code{DimReduc}.}
+
+\item{reduction}{For a Seurat object, the reduction to read. Defaults to
+\code{"pca"}.}
 }
 \value{
 Matrix: contains the scores associated with each of the PCs
 }
 \description{
-Calculate the PC scores
+Returns the stored \code{scores} element of a \code{"fastpca"} object, which
+is always populated. For SVD results that element equals
+\code{U \%*\% diag(S)}; NIPALS stores its native score vectors, and \code{U}
+is defined as their unit-norm version so the same identity holds. A bare list
+with \code{U} and \code{S} is still accepted, as are a Seurat object or
+\code{DimReduc}, in which case the cell embeddings are returned.
 }
 \examples{
 set.seed(1)

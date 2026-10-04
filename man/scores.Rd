@@ -7,7 +7,7 @@
 scores(x)
 }
 \arguments{
-\item{x}{A \code{"fastpca"} object returned by \code{\link[=FastPCA]{FastPCA()}}.}
+\item{x}{A \code{"fastpca"} object returned by \code{\link[=FastPCA]{FastPCA()}} or \code{\link[=NIPALS]{NIPALS()}}.}
 }
 \value{
 A numeric matrix of scores, with rows as observations.
