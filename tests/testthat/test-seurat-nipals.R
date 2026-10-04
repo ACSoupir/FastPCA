@@ -31,6 +31,18 @@ test_that("RunNIPALS stores a Seurat-compatible reduction", {
   expect_length(SeuratObject::Stdev(dr), 5L)
 })
 
+test_that("RunNIPALS accepts the tinygrad backend", {
+  skip_if_not(reticulate::py_available(initialize = FALSE), "Python is not initialized")
+  skip_if_not(reticulate::py_module_available("tinygrad"), "tinygrad is not available")
+
+  obj <- make_scaled_seurat()
+  out <- suppressWarnings(RunNIPALS(obj, npcs = 3L, backend = "tinygrad",
+                                    cores = 1L, verbose = FALSE))
+  dr <- out[["nipals"]]
+  expect_equal(dim(SeuratObject::Embeddings(dr)), c(ncol(obj), 3L))
+  expect_length(SeuratObject::Stdev(dr), 3L)
+})
+
 test_that("RunNIPALS coexists with a RunFastPCA reduction", {
   obj <- make_scaled_seurat()
   out <- suppressWarnings(RunFastPCA(obj, npcs = 5L, p = 2L, q_iter = 1L,

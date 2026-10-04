@@ -11,7 +11,7 @@ RunNIPALS(
   npcs = 50L,
   reduction.name = "nipals",
   reduction.key = "NP_",
-  backend = c("r", "rtorch", "pytorch"),
+  backend = c("r", "rtorch", "pytorch", "nipals", "tinygrad"),
   device = c("CPU", "GPU"),
   cores = 1L,
   tol = 1e-06,
