@@ -18,5 +18,8 @@ __pycache__/
 FastPCA.Rcheck/
 *.tar.gz
 
+# testthat failure artifact (devtools::test)
+tests/testthat/testthat-problems.rds
+
 # local scratch (benchmark logs, generated matrices)
 TESTING/_logs/
