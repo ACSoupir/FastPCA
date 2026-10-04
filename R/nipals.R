@@ -331,7 +331,9 @@ NIPALS <- function(input_r_matrix,
       }
       if (gramschmidt && h > 1L) {
         P <- loadings[, seq_len(h - 1L), drop = FALSE]
-        ph <- ph - P %*% crossprod(P, ph)
+        # as.vector: %*% would otherwise return a one-column matrix, which the
+        # torch backends turn into a rank-2 tensor and break their shapes with
+        ph <- as.vector(ph - P %*% crossprod(P, ph))
       }
       nrm <- sqrt(sum(ph * ph))
       if (!is.finite(nrm) || nrm == 0) {
@@ -356,7 +358,7 @@ NIPALS <- function(input_r_matrix,
         Tprev <- scores[, seq_len(h - 1L), drop = FALSE]
         sv_prev <- sqrt(eig[seq_len(h - 1L)])
         Tn <- sweep(Tprev, 2L, sv_prev, "/")
-        th <- th - Tn %*% crossprod(Tn, th)
+        th <- as.vector(th - Tn %*% crossprod(Tn, th))
       }
       if (has_na) th[empty_rows] <- 0
 

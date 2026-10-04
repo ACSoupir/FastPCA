@@ -69,7 +69,9 @@
       }
       if (gramschmidt && h > 1L) {
         P <- loadings[, seq_len(h - 1L), drop = FALSE]
-        ph <- ph - P %*% crossprod(P, ph)
+        # as.vector: %*% would return a one-column matrix, which torch turns
+        # into a rank-2 tensor and the matvecs below then fail on shapes
+        ph <- as.vector(ph - P %*% crossprod(P, ph))
       }
       nrm <- sqrt(sum(ph * ph))
       if (!is.finite(nrm) || nrm == 0) {
@@ -93,9 +95,8 @@
         Tprev <- scores[, seq_len(h - 1L), drop = FALSE]
         sv_prev <- sqrt(eig[seq_len(h - 1L)])
         Tn <- sweep(Tprev, 2L, sv_prev, "/")
-        th <- th - Tn %*% crossprod(Tn, th)
+        th <- as.vector(th - Tn %*% crossprod(Tn, th))
       }
-      if (has_na) th[empty_rows] <- 0
 
       nn <- sqrt(sum(th * th))
       no <- sqrt(sum(th_old * th_old))

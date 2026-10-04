@@ -157,6 +157,24 @@ test_that("the nipals package backend refuses unsupported shapes", {
                "entirely missing")
 })
 
+test_that("the rtorch backend agrees with the base R implementation", {
+  # check Python first: merely loading torch in a session that already loaded
+  # reticulate/pytorch risks an libc10/libomp symbol clash, so skip before the
+  # torch namespace is touched at all
+  skip_if(reticulate::py_available(initialize = FALSE),
+          "Python is already initialized in this session")
+  skip_if_not_installed("torch")
+  skip_if_not(isTRUE(torch::torch_is_installed()), "LibTorch is not installed")
+
+  m <- small_missing(seed = 19)
+  ref <- NIPALS(m, ncomp = 3L, backend = "r")
+  got <- suppressMessages(NIPALS(m, ncomp = 3L, backend = "rtorch", cores = 1L))
+
+  expect_identical(attr(got, "backend"), "rtorch")
+  expect_equal(as.numeric(got$S), as.numeric(ref$S), tolerance = 1e-8)
+  expect_equal(unname(abs(got$Vh)), unname(abs(ref$Vh)), tolerance = 1e-8)
+})
+
 test_that("the pytorch backend agrees with the base R implementation", {
   skip_if_not(reticulate::py_available(initialize = FALSE), "Python is not initialized")
   skip_if_not(reticulate::py_module_available("torch"), "torch is not available")
