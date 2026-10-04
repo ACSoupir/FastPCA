@@ -37,31 +37,33 @@
 #' Run FastPCA on a Seurat object
 #'
 #' Computes principal components with [FastPCA()] and stores them as a Seurat
-#' code{DimReduc} so that downstream steps such as [Seurat::RunUMAP()] work
+#' \code{DimReduc} so that downstream steps such as [Seurat::RunUMAP()] work
 #' unchanged. The scaled data for the requested features is passed to FastPCA in
-#' its native code{features x cells} orientation; the returned singular vectors
-#' are converted into Seurat's code{cell embeddings}, code{feature loadings}
-#' and code{stdev} conventions.
+#' its native \code{features x cells} orientation; the returned singular vectors
+#' are converted into Seurat's \code{cell embeddings}, \code{feature loadings}
+#' and \code{stdev} conventions.
 #'
-#' @param object A Seurat object whose assay has a code{scale.data} layer for
+#' @param object A Seurat object whose assay has a \code{scale.data} layer for
 #'   the requested features (see [Seurat::ScaleData()]).
 #' @param assay Assay to use. Defaults to the object's default assay.
 #' @param features Features used for the PCA. Defaults to
-#'   code{VariableFeatures(object)}; if none are set, all assay features.
+#'   \code{VariableFeatures(object)}; if none are set, all assay features.
 #' @param npcs Number of principal components to compute and store. Default 50.
 #' @param p Oversampling parameter passed to [FastPCA()]. Default 10.
-#' @param q_iter Number of power iterations passed to [FastPCA()]. Default 2.
+#' @param q_iter Integer >= 1. Number of power iterations passed to [FastPCA()].
+#'   Default 2.
 #' @param reduction.name Name under which the reduction is stored. Default "pca".
-#' @param backend,device Passed to [FastPCA()]. Default pytorch/CPU.
+#' @param backend,device Passed to [FastPCA()]. The default is the base R
+#'   backend on CPU, which needs no Python.
 #' @param cores Number of CPU cores requested; automatically clamped to 1 when an
-#'   OpenMP runtime conflict is detected (see code{?FastPCA}).
+#'   OpenMP runtime conflict is detected (see [FastPCA()]).
 #' @param memory_limit Numeric GB ceiling for the call. Defaults to
-#'   code{getOption("FastPCA.memory_limit", 20)}. The dense conversion cost is
+#'   \code{getOption("FastPCA.memory_limit", 20)}. The dense conversion cost is
 #'   estimated up front and the call stops before exceeding the limit.
-#' @param verbose Print progress messages. Default code{TRUE}.
+#' @param verbose Print progress messages. Default \code{TRUE}.
 #'
 #' @return The Seurat object with the FastPCA reduction stored under
-#'   code{reduction.name}.
+#'   \code{reduction.name}.
 #'
 #' @export
 #' @examples
@@ -77,12 +79,12 @@ RunFastPCA <- function(object,
                        p = 10L,
                        q_iter = 2L,
                        reduction.name = "pca",
-                       backend = c("pytorch", "rtorch", "r"),
+                       backend = c("r", "rtorch", "pytorch"),
                        device = c("CPU", "GPU"),
                        cores = 4L,
                        memory_limit = getOption("FastPCA.memory_limit", 20),
                        verbose = TRUE) {
-  if (!inherits(object, "Seurat")) stop("`object` must be a Seurat object.", call. = FALSE)
+  if (!inherits(object, "Seurat")) stop("'object' must be a Seurat object.", call. = FALSE)
   for (pkg in c("Seurat", "SeuratObject")) {
     if (!requireNamespace(pkg, quietly = TRUE)) {
       stop("Package '", pkg, "' is required for RunFastPCA().", call. = FALSE)
@@ -91,7 +93,7 @@ RunFastPCA <- function(object,
   backend <- match.arg(backend)
   device <- match.arg(device)
   npcs <- as.integer(npcs)
-  if (is.na(npcs) || npcs < 1L) stop("`npcs` must be a positive integer.", call. = FALSE)
+  if (is.na(npcs) || npcs < 1L) stop("'npcs' must be a positive integer.", call. = FALSE)
 
   assay <- .fastpca_null_default(assay, SeuratObject::DefaultAssay(object))
   if (is.null(features)) features <- SeuratObject::VariableFeatures(object, assay = assay)
@@ -107,7 +109,7 @@ RunFastPCA <- function(object,
   mat <- SeuratObject::LayerData(object[[assay]], layer = "scale.data")
   features <- intersect(features, rownames(mat))
   if (length(features) < npcs) {
-    stop("Need at least `npcs` scaled features; found ", length(features), ".", call. = FALSE)
+    stop("Need at least 'npcs' scaled features; found ", length(features), ".", call. = FALSE)
   }
   if (!identical(features, rownames(mat))) mat <- mat[features, , drop = FALSE]
   if (!is.matrix(mat)) mat <- as.matrix(mat)
@@ -116,9 +118,9 @@ RunFastPCA <- function(object,
   current_gb <- .fastpca_rss_gb()
   if (!is.na(current_gb) && (current_gb + dense_gb * .fastpca_dense_overhead) > memory_limit) {
     stop(sprintf(paste0("RunFastPCA() would need about %.1f GB on top of the current ",
-                        "%.1f GB, exceeding the %.0f GB memory limit. Reduce `features` ",
-                        "or raise `memory_limit`."),
-                 dense_gb * 3, current_gb, memory_limit), call. = FALSE)
+                        "%.1f GB, exceeding the %.0f GB memory limit. Reduce 'features' ",
+                        "or raise 'memory_limit'."),
+                 dense_gb * .fastpca_dense_overhead, current_gb, memory_limit), call. = FALSE)
   }
   if (verbose) {
     message(sprintf("FastPCA: %d features x %d cells (~%.2f GB dense, %.0f GB limit).",
@@ -132,8 +134,9 @@ RunFastPCA <- function(object,
   # mat rows are features: U holds feature loadings (features x k) and Vh is
   # components x cells, so the cell embeddings are t(Vh) scaled by singular values.
   loadings <- res$U
-  emb <- t(res$Vh) %*% diag(res$S)
-  stdev <- as.numeric(res$S) / sqrt(ncol(object) - 1)
+  emb <- t(res$Vh) %*% diag(as.numeric(res$S), nrow = length(res$S))
+  # guard against a single cell, where the sample standard deviation is undefined
+  stdev <- as.numeric(res$S) / sqrt(max(ncol(object) - 1, 1))
   pc_names <- paste0("PC_", seq_len(length(res$S)))
   rownames(emb) <- colnames(object)
   rownames(loadings) <- features

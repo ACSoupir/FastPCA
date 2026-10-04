@@ -77,11 +77,11 @@ vignette.
 
 Using a matrix that contains 98,647 pixels with 2,925 MALDI peaks, I
 have run the
-[`PCAone`](https://cran.r-project.org/web/packages/pcaone/index.html)
+[`PCAone`](https://CRAN.R-project.org/package=pcaone)
 package with both of their algorithms. For each of the methods, I
 calculated 100 dimensions from the data using 10 oversampling dimensions
 as well as 10 power iterations. Additionally, I tested the commonly used
-[`irlba`](https://cran.r-project.org/web/packages/irlba/index.html)
+[`irlba`](https://CRAN.R-project.org/package=irlba)
 pacakge using `work=200` for a similar 200 dims in `FastPCA` and
 `PCAone`. The speed difference was:
 
@@ -95,7 +95,7 @@ pacakge using `work=200` for a similar 200 dims in `FastPCA` and
 | FastPCA Exact (CPU)      |        79.694 |          11.564 | **35.819**       |
 
 <!-- Because cannot figure out best way to assess memory usage
-Memory does appear to be greater when using `FastPCA` over `PCAone`, but `irlba` also has higher memory usage than both when estimating top dimensions (except with `FastPCA` estimating all dimensions; profiled with [`profmem`](https://cran.r-project.org/web/packages/profmem/)):
+Memory does appear to be greater when using `FastPCA` over `PCAone`, but `irlba` also has higher memory usage than both when estimating top dimensions (except with `FastPCA` estimating all dimensions; profiled with [`profmem`](https://CRAN.R-project.org/package=profmem)):
 &#10;
 &#10;|                         |Memory   |
 |:------------------------|:--------|

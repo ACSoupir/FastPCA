@@ -6,9 +6,16 @@
 #'   Defaults to "FastPCA".
 #' @param required boolean passed to `reticulate`
 #'
-#' @returns Invisibly returns `TRUE` if setup is successful, `FALSE` otherwise.
+#' @returns Invisibly returns `TRUE` when the environment is activated and its
+#'   modules can be imported.
 #'
 #' @details
+#' A FastPCA Python environment always installs `umap-learn` alongside the SVD
+#' backends, and this function verifies that `umap` is importable. That check
+#' runs even when you only intend to use the Python SVD backends, so an
+#' environment without `umap` is treated as incomplete (re-run
+#' [setup_py_env()] to repair it).
+#'
 #' Using a conda environment can allow for quick testing of new versions of pytorch and tinygrad.
 #' However, it should be used with some caution. For example, if you have already used the 'rtorch' backend
 #' in some other functions, not even necessarily part of this package, using `start_FastPCA_env` will attach
@@ -24,8 +31,8 @@
 #' \dontrun{
 #'   #for conda
 #'   setup_py_env(method = "conda", envname = "FastPCA",
-#'     python_version = "3.9", backend = "all", cuda = FALSE)
-#'   start_fpca_env
+#'     python_version = "3.10", backend = "all", cuda = FALSE)
+#'   start_FastPCA_env()
 #' }
 start_FastPCA_env = function(method = c("conda", "virtualenv"),
                           envname = "FastPCA",
@@ -38,6 +45,10 @@ start_FastPCA_env = function(method = c("conda", "virtualenv"),
   #for conda
   if(method == "conda"){
     conda_loc = Sys.which("conda")
+    if (!nzchar(conda_loc)) {
+      stop("Conda was not found on the PATH.\n",
+           "Install conda or use method = 'virtualenv'.")
+    }
     conda_res = tryCatch(system2(conda_loc, c("env", "list"), stdout = TRUE),
                          warning = function(w){
                            print(w)
@@ -47,7 +58,7 @@ start_FastPCA_env = function(method = c("conda", "virtualenv"),
     env_names = .conda_env_names(conda_res, conda_root)
 
     if (!envname %in% env_names) {
-      stop("Environment is not available through through conda",
+      stop("Environment is not available through conda",
            "\nPlease run `FastPCA::setup_py_env()`.")
     }
     message("Environment found.. Attempting to use..")
@@ -68,13 +79,15 @@ start_FastPCA_env = function(method = c("conda", "virtualenv"),
     reticulate::use_virtualenv(envname, required = required)
   }
 
-  #check to see if umap is availabel since that is installed automatically when starting
+  # umap is installed with every FastPCA environment and verified even for
+  # SVD-only workflows, so an environment without it is incomplete.
   message("Checking for modules available...")
   if(!reticulate::py_module_available("umap")){
-    stop("Restart R and ensure the environment `", envname, "` is set up correctly.",
-         "\nPlease run `FastPCA::setup_py_env()` and `FastPCA::start_FastPCA_env()`.")
+    stop("The Python environment `", envname, "` is missing the 'umap' module.\n",
+         "Re-run `FastPCA::setup_py_env()` and then `FastPCA::start_FastPCA_env()`.")
   }
   message("Successfully loaded and identified umap module..")
+  invisible(TRUE)
 }
 
 # Environment names from `conda env list` output.
@@ -87,4 +100,3 @@ start_FastPCA_env = function(method = c("conda", "virtualenv"),
   env_lines = grep(conda_root, conda_res, value = TRUE, fixed = TRUE)
   trimws(sub("^\\s*([^[:space:]]+).*$", "\\1", env_lines))
 }
-

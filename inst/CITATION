@@ -1,0 +1,29 @@
+citHeader("To cite FastPCA in publications use:")
+
+bibentry(
+  bibtype = "Article",
+  title = "FastPCA: An R package for fast singular value decomposition",
+  author = c(
+    person("Kimberly R.", "Ward"),
+    person("Mitchell", "Hayes"),
+    person("Lauren C.", "Peres"),
+    person("Brooke L.", "Fridley"),
+    person("Steven", "Eschrich"),
+    person("Alex C.", "Soupir")
+  ),
+  journal = "Journal of Open Source Software",
+  year = "2026",
+  volume = "11",
+  number = "119",
+  pages = "9706",
+  doi = "10.21105/joss.09706"
+)
+
+bibentry(
+  bibtype = "Manual",
+  title = "FastPCA: Fast Randomized and Exact Singular Value Decomposition for Large Matrices",
+  author = person("Alex", "Soupir"),
+  year = format(Sys.Date(), "%Y"),
+  note = paste0("R package version ", meta$Version),
+  url = "https://github.com/ACSoupir/FastPCA"
+)

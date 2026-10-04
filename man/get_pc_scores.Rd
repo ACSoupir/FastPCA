@@ -7,11 +7,18 @@
 get_pc_scores(fastpca_out)
 }
 \arguments{
-\item{fastpca_out}{List: output from running FastPCA::FastPCA with elements U, S, and Vh}
+\item{fastpca_out}{A \code{"fastpca"} object, i.e. the result of
+\code{\link[=FastPCA]{FastPCA()}}, with elements \code{U}, \code{S} and \code{Vh}.}
 }
 \value{
 Matrix: contains the scores associated with each of the PCs
 }
 \description{
 Calculate the PC scores
+}
+\examples{
+set.seed(1)
+x <- matrix(rnorm(60), nrow = 10, ncol = 6)
+res <- FastPCA(x, k = 3, p = 1, backend = "r")
+get_pc_scores(res)
 }

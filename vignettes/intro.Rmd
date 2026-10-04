@@ -126,6 +126,16 @@ fastpca_res = FastPCA(prepped_mat,
                       backend = "r")
 ```
 
+The result is a `"fastpca"` object. By default the total variance of the
+input is stored with it, so `summary()` reports the singular values and
+the percent (and cumulative percent) variation explained, while
+`get_pc_scores()` returns the scores.
+
+```{r}
+summary(fastpca_res)
+get_pc_scores(fastpca_res)[1:3, 1:2]
+```
+
 The output of `FastPCA()` has the left (`U`) and right (`Vh`) singular vectors, as well as the singular values (`S`). This is similar to functions like `irlba::irlba()` but different than `prcomp()` which returns the rotation (eigenvectors) as well as scores by default. Because `irlba::irlba()` is similar to `FastPCA()` in returning the reduced SVD list, lets do some benchmarking using `bench` package.
 
 ## Benchmarking

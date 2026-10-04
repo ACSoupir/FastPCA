@@ -2,7 +2,7 @@
 #'
 #' @param A_mat matrix passed from R
 #' @param k Integer. Number of dimensions to calculate the singular vectors on
-#' @param p Intger. Oversampling dimensions
+#' @param p Integer. Oversampling dimensions
 #' @param q_iter Integer. Number of power iterations to perform
 #' @param device Character. Either "CPU" or "GPU depending on what user selects and availability
 #' @param cores Integer. Number of CPU cores to use for matrix operations
@@ -35,7 +35,7 @@ rtorch_randomized_svd = function(A_mat, k, p, q_iter, device = "CPU", cores = 1)
 
   #subspace
   Y = A$matmul(Omega)
-  for(i in seq(q_iter)){
+  for(i in seq_len(q_iter)){
     Q = torch::linalg_qr(torch::torch_transpose(A, 1, 2)$matmul(Y))[[1]]
     Y = torch::linalg_qr(A$matmul(Q))[[1]]
   }

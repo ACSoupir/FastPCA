@@ -15,25 +15,40 @@ prep_matrix(
 )
 }
 \arguments{
-\item{mat}{A numeric R matrix.}
+\item{mat}{A dense numeric R matrix (rows as features and columns as samples
+by default). Sparse \code{Matrix} input is not supported here; convert with
+\code{as.matrix()} first.}
 
-\item{transpose}{Boolean. Whether the matrix needs to be transposed. If starting with samples as columns, set to \code{TRUE}. Default is \code{FALSE}}
+\item{log2}{Logical. Whether to apply a log2 transformation. Default
+\code{TRUE}. The input must be positive or the transform yields -Inf/NaN.}
 
-\item{scale}{Boolean. Whether to center and scale the matrix. Default to \code{TRUE}}
+\item{transpose}{Logical. Whether the matrix needs to be transposed. If
+starting with samples as columns, set to \code{TRUE}. Default is
+\code{FALSE}.}
 
-\item{backend}{Character. The backend which to use for performing transformations.
-Options are "r", "rtorch", "pytorch" or "tinygrad". The "tinygrad" backend
-runs on Apple Metal (float32) and matches the others to ~1e-6. See details
-for information about the pytorch/conda environments}
+\item{scale}{Logical. Whether to centre and scale the matrix to unit variance.
+Default is \code{TRUE}.}
+
+\item{backend}{Character. The backend to use for the transformations: "r"
+(default, no Python), "rtorch", "pytorch" or "tinygrad". The "tinygrad"
+backend runs on Apple Metal (float32) and matches the others to ~1e-6. See
+details for information about the pytorch/conda environments.}
 
 \item{cores}{Numeric. The number of cores to use. Clamped to 1 for this call
 when an OpenMP runtime conflict is detected in the session.}
+
+\item{device}{Character, either "CPU" (default) or "GPU". Only the tinygrad
+backend acts on this directly; Python backends also fall back to CPU when a
+GPU is unavailable.}
 }
 \value{
-A matrix that has been rotated (transposed) and scaled if needed
+A matrix that has been transposed and scaled if requested, with
+row/column names carried over from the input.
 }
 \description{
-This function uses python to perform transformations of the input matrix
+This function transforms an input matrix: optionally log2-transforming,
+transposing and/or centre-scaling it. The base R backend needs no Python; the
+PyTorch, rtorch and tinygrad backends are optional.
 }
 \details{
 Depending on the backend chosen, the session may need to be reset with \code{rstudioapi::restartSession()}.
@@ -52,21 +67,12 @@ exact.
 }
 
 \examples{
-\dontrun{
-  #need to have environment first
-  reticulate::use_condaenv("FastPCA")
+set.seed(123)
+test_data <- matrix(runif(200, min = 1, max = 50), nrow = 10, ncol = 20)
+rownames(test_data) <- paste0("Feature", seq_len(nrow(test_data)))
+colnames(test_data) <- paste0("Sample", seq_len(ncol(test_data)))
 
-  # Create a sample R matrix (e.g., 20 samples, 100 features)
-  # Ensure values are positive for log transform.
-  set.seed(123)
-  test_data <- matrix(runif(20 * 100, min=1, max=100), nrow = 20, ncol = 100)
-  colnames(test_data) <- paste0("Feature", 1:ncol(test_data))
-  rownames(test_data) <- paste0("Sample", 1:nrow(test_data))
-
-  print(paste("Original R matrix dimensions:", paste(dim(test_data), collapse = "x")))
-
-  # Perform Randomized SVD
-  prepped_matrix <- FastPCA::prep_matrix(test_data, log2 = TRUE,
-                                  transpose = FALSE, scale = TRUE)
-}
+prepped_matrix <- prep_matrix(test_data, log2 = TRUE,
+                              transpose = FALSE, scale = TRUE)
+dim(prepped_matrix)
 }

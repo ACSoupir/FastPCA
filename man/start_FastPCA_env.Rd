@@ -20,12 +20,19 @@ Defaults to "FastPCA".}
 \item{required}{boolean passed to \code{reticulate}}
 }
 \value{
-Invisibly returns \code{TRUE} if setup is successful, \code{FALSE} otherwise.
+Invisibly returns \code{TRUE} when the environment is activated and its
+modules can be imported.
 }
 \description{
 Activate python environment for FastPCA
 }
 \details{
+A FastPCA Python environment always installs \code{umap-learn} alongside the SVD
+backends, and this function verifies that \code{umap} is importable. That check
+runs even when you only intend to use the Python SVD backends, so an
+environment without \code{umap} is treated as incomplete (re-run
+\code{\link[=setup_py_env]{setup_py_env()}} to repair it).
+
 Using a conda environment can allow for quick testing of new versions of pytorch and tinygrad.
 However, it should be used with some caution. For example, if you have already used the 'rtorch' backend
 in some other functions, not even necessarily part of this package, using \code{start_FastPCA_env} will attach
@@ -39,7 +46,7 @@ the rtorch implementation is likely sufficient.
 \dontrun{
   #for conda
   setup_py_env(method = "conda", envname = "FastPCA",
-    python_version = "3.9", backend = "all", cuda = FALSE)
-  start_fpca_env
+    python_version = "3.10", backend = "all", cuda = FALSE)
+  start_FastPCA_env()
 }
 }

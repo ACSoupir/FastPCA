@@ -1,4 +1,31 @@
-# FastPCA (development version)
+# FastPCA 0.9.1
+
+## CRAN readiness
+
+* `TESTING/`, Python bytecode caches and scratch scripts are excluded from the
+  built tarball, so no heavy development data ships with the package.
+* `LICENSE` is a valid CRAN MIT stub (full text kept in `LICENSE.md`), and
+  `SystemRequirements` records the Python version needed for optional backends.
+* Help pages regenerated with roxygen2: previously undocumented arguments
+  (`device`, `log2`) are documented and the malformed Seurat Rd page is fixed.
+* Added `inst/CITATION`, citing the JOSS paper (doi:10.21105/joss.09706).
+
+## Functionality and fixes
+
+* `FastPCA()` returns a `"fastpca"` S3 object with `print()`, `summary()`,
+  `plot()` and `pve()` methods; percent variation explained is available via
+  `store_variance` (default `TRUE`).
+* Every entry point now uses the backend/device resolved by
+  `validate_backend()`. Requesting rtorch without torch now falls back to base
+  R instead of erroring part-way through a call.
+* `magrittr` is imported and the pipe re-exported, fixing `get_pc_scores()`
+  when magrittr is not attached.
+* Fixed `prep_matrix()` row/column names with `transpose = FALSE` on the Python
+  backends, and fixed its rtorch path when `scale = FALSE`.
+* Shared argument validation: `q_iter` must be >= 1, and `k`, `p`, matrix type
+  and dimension constraints give actionable errors.
+* Sparse `Matrix` input is documented as supported by the base R and irlba
+  backends only.
 
 * Added `RunFastPCA()`, a Seurat integration that runs FastPCA on an assay's
   scaled data and stores the result as a `DimReduc`, so downstream steps such

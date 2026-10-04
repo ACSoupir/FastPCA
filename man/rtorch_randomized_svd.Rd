@@ -11,7 +11,7 @@ rtorch_randomized_svd(A_mat, k, p, q_iter, device = "CPU", cores = 1)
 
 \item{k}{Integer. Number of dimensions to calculate the singular vectors on}
 
-\item{p}{Intger. Oversampling dimensions}
+\item{p}{Integer. Oversampling dimensions}
 
 \item{q_iter}{Integer. Number of power iterations to perform}
 

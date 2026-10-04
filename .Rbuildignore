@@ -4,12 +4,16 @@
 ^FastPCA\.Rproj$
 ^\.Rproj\.user$
 ^README\.Rmd$
+^ROADMAP\.md$
 ^docs_acs$
 ^docs$
 ^paper$
 ^tests$
 ^man/figures$
 ^\.github$
+^TESTING$
+__pycache__
+^inst/test_script\.py$
 
 #only online vignettes
 ^vignettes/SpatialTranscriptomics\.Rmd

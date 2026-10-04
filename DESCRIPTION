@@ -1,31 +1,39 @@
 Package: FastPCA
-Title: FastPCA: Providing computationally efficient access to dimension reduction.
-Version: 0.9.0.0
-Authors@R: 
-    c(
-      person("Alex", "Soupir", , "Alex.Soupir@moffitt.org", role = c("aut", "cre"))
-    )
-Description: Fast singular value decomposition with various backends to improve speed of workflows. Main focus is on increasing speed of iteration in analyzing high dimensional biological data.
-URL: https://github.com/ACSoupir/FastPCA, https://acsoupir.github.io/FastPCA
+Title: Fast Randomized and Exact Singular Value Decomposition for Large Matrices
+Version: 0.9.1
+Authors@R:
+    person("Alex", "Soupir", , "Alex.Soupir@moffitt.org",
+           role = c("aut", "cre"))
+Description: Fast randomized and exact singular value decomposition (SVD)
+    for large matrices, aimed at the iterative workflows common in
+    high-dimensional biological data analysis. Several computational backends
+    are available: base R and 'irlba' require no Python, while optional
+    PyTorch or tinygrad backends are accessed through the 'reticulate'
+    package. Helpers for matrix transformation and UMAP embedding are also
+    provided.
+URL: https://github.com/ACSoupir/FastPCA, https://acsoupir.github.io/FastPCA/
 BugReports: https://github.com/ACSoupir/FastPCA/issues
 License: MIT + file LICENSE
 Encoding: UTF-8
-Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.3
-Imports: 
-    reticulate,
+Depends:
+    R (>= 4.1)
+Imports:
     irlba,
+    magrittr,
+    reticulate,
     uwot
-Suggests: 
+Suggests:
+    bench,
+    dplyr,
+    ggplot2,
     knitr,
     rmarkdown,
-    ggplot2,
-    dplyr,
-    magrittr,
-    torch,
     Seurat,
     SeuratObject,
-    bench,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    torch
+SystemRequirements: Python (>= 3.9) for the 'pytorch' and 'tinygrad' backends
 VignetteBuilder: knitr
 Config/testthat/edition: 3
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3

@@ -13,3 +13,10 @@ docs_acs/paper/paper_results.rds
 .Rprofile
 __pycache__/
 *.py[cod]
+
+# build and check artifacts
+FastPCA.Rcheck/
+*.tar.gz
+
+# local scratch (benchmark logs, generated matrices)
+TESTING/_logs/

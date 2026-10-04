@@ -8,8 +8,8 @@
 #'   Can be "conda" (default) or "virtualenv".
 #' @param envname Character string. The name of the Python environment to create/use.
 #'   Defaults to "FastPCA".
-#' @param python_version Character string. The Python version to use (e.g., "3.9").
-#'   Defaults to "3.9". It's recommended to stick to well-supported versions.
+#' @param python_version Character string. The Python version to use (e.g., "3.10").
+#'   Defaults to "3.10". It's recommended to stick to well-supported versions.
 #' @param backend character string of the backend to use: 'pytorch', 'tinygrad',
 #'   or 'all'. Defaults to 'pytorch'. Use 'tinygrad' (or 'all') on Apple Silicon
 #'   to install the native Metal backend.

@@ -13,44 +13,67 @@ FastPCA(
   backend = c("r", "rtorch", "pytorch", "irlba", "tinygrad"),
   device = c("CPU", "GPU"),
   cores = 4,
+  store_variance = TRUE,
   ...
 )
 }
 \arguments{
-\item{input_r_matrix}{A numeric R matrix. It's assumed that rows are observations
-(e.g., samples) and columns are features (e.g., genes). The function will
-transpose this for the PyTorch or Tinygrad SVD based on the original Python script's logic.}
+\item{input_r_matrix}{A numeric matrix, with rows as observations (e.g.,
+samples or cells) and columns as features (e.g., genes). Sparse
+\code{Matrix} objects are accepted by the base R and \code{"irlba"}
+backends; all other backends require a dense numeric matrix (convert with
+\code{as.matrix()}).}
 
 \item{k}{Integer. The number of singular values/vectors to compute.}
 
-\item{p}{Integer. Oversampling parameter (default: 10).}
+\item{p}{Integer. Oversampling parameter (default: 10). \code{k + p} must
+not exceed the smallest matrix dimension. The base R and \code{"irlba"}
+backends use at least 7 extra Lanczos vectors regardless of \code{p}, so a
+small \code{p} still converges.}
 
-\item{q_iter}{Integer. Number of power iterations (default: 2).}
+\item{q_iter}{Integer >= 1. Number of power iterations (default: 2).
+Randomized SVD requires at least one power iteration.}
 
-\item{exact}{Boolean. Whether to compute the exact matrix or not. Only works with pytorch backend}
+\item{exact}{Logical. Whether to compute the full (exact) SVD instead of a
+randomized one. Only implemented for \code{backend = "pytorch"}; other
+backends compute a randomized decomposition and warn.}
 
-\item{backend}{Character. which backend to use: "r", "rtorch", "pytorch",
-"irlba" or "tinygrad". The "tinygrad" backend runs the randomized SVD on
-Apple Metal; note that on arm64 Macs a \code{device = "CPU"} request still runs
-on the GPU because tinygrad's CPU codegen is unavailable there.
-See details for informaiotn about backends.}
+\item{backend}{Character. Which backend to use: \code{"r"}, \code{"rtorch"},
+\code{"pytorch"}, \code{"irlba"} or \code{"tinygrad"}. The
+\code{"r"} and \code{"irlba"} backends need no Python. The
+\code{"tinygrad"} backend runs the randomized SVD on Apple Metal; note
+that on arm64 Macs a \code{device = "CPU"} request still runs on the GPU
+because tinygrad's CPU codegen is unavailable there. See Details for
+information about backends.}
 
-\item{cores}{Integer. Number of CPU cores to use with the backend.
-Clamped to 1 for this call when an OpenMP runtime conflict is detected in the
+\item{device}{Character, either \code{"CPU"} (default) or \code{"GPU"}.
+Backends fall back to the CPU with a message when the requested device is
+unavailable.}
+
+\item{cores}{Integer. Number of CPU cores to use with the backend. Clamped
+to 1 for this call when an OpenMP runtime conflict is detected in the
 session (for example after loading \pkg{data.table} or Seurat).}
 
-\item{...}{other parameters to pass to irlba when \code{backend} is either \code{'r'} or \code{'irlba'}}
+\item{store_variance}{Logical. When \code{TRUE} (default) the total variance
+of the input is stored on the result so that \code{\link[=pve]{pve()}} can report percent
+variation explained. Set to \code{FALSE} for very large inputs if the
+extra pass is not wanted.}
+
+\item{...}{Other parameters passed to \code{\link[irlba:irlba]{irlba::irlba()}} when \code{backend}
+is either \code{"r"} or \code{"irlba"}.}
 }
 \value{
-A list containing:
-\item{U}{The left singular vectors (R matrix). Dimensions: Features x k.}
-\item{S}{The singular values (R numeric vector). Length: k.}
-\item{Vh}{The transpose of the right singular vectors (R matrix). Dimensions: Samples x k.}
-All results are moved to CPU by the Python script and returned as R objects.
+An object of class \code{"fastpca"}, a list with elements:
+\item{U}{The left singular vectors (rows of the input x \code{k}).}
+\item{S}{The singular values (numeric vector of length \code{k}).}
+\item{Vh}{The transpose of the right singular vectors (\code{k} x columns
+of the input).}
+\code{print()}, \code{summary()} and \code{\link[=pve]{pve()}} methods are available, as is
+\code{\link[=get_pc_scores]{get_pc_scores()}}.
 }
 \description{
-This function will perform either Randomized SVD or exact SVD to compute
-the singullar value decomposition of large matrices.
+This function performs either a randomized or an exact singular value
+decomposition (SVD) of large matrices.
 }
 \details{
 Depending on the backend chosen, the session may need to be reset with \code{rstudioapi::restartSession()}.
@@ -71,18 +94,18 @@ roughly 7\% error in the top singular values for both. Use \code{backend = "r"} 
 }
 
 \examples{
+set.seed(123)
+test_data <- matrix(runif(30 * 100, min = 1, max = 50), nrow = 30, ncol = 100)
+rownames(test_data) <- paste0("Sample", seq_len(nrow(test_data)))
+colnames(test_data) <- paste0("Feature", seq_len(ncol(test_data)))
+
+# base R backend: no Python required
+svd_results <- FastPCA(test_data, k = 5, p = 2, backend = "r")
+svd_results
+summary(svd_results)
+
 \dontrun{
-
-  # Create a sample R matrix (e.g., 20 samples, 100 features)
-  # Ensure values are positive for log transform.
-  set.seed(123)
-  test_data <- matrix(runif(20 * 100, min=1, max=100), nrow = 20, ncol = 100)
-  colnames(test_data) <- paste0("Feature", 1:ncol(test_data))
-  rownames(test_data) <- paste0("Sample", 1:nrow(test_data))
-
-  print(paste("Original R matrix dimensions:", paste(dim(test_data), collapse = "x")))
-
-  # Perform Randomized SVD
-  svd_results <- FastPCA::FastPCA(test_data, k = 5)
+  # optional Python backend (requires setup_py_env()/start_FastPCA_env())
+  svd_torch <- FastPCA(test_data, k = 5, p = 2, backend = "pytorch")
 }
 }

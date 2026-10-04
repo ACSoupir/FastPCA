@@ -12,7 +12,7 @@ RunFastPCA(
   p = 10L,
   q_iter = 2L,
   reduction.name = "pca",
-  backend = c("pytorch", "rtorch", "r"),
+  backend = c("r", "rtorch", "pytorch"),
   device = c("CPU", "GPU"),
   cores = 4L,
   memory_limit = getOption("FastPCA.memory_limit", 20),
@@ -20,44 +20,46 @@ RunFastPCA(
 )
 }
 \arguments{
-\item{object}{A Seurat object whose assay has a code{scale.data} layer for
+\item{object}{A Seurat object whose assay has a \code{scale.data} layer for
 the requested features (see \code{\link[Seurat:ScaleData]{Seurat::ScaleData()}}).}
 
 \item{assay}{Assay to use. Defaults to the object's default assay.}
 
 \item{features}{Features used for the PCA. Defaults to
-code{VariableFeatures(object)}; if none are set, all assay features.}
+\code{VariableFeatures(object)}; if none are set, all assay features.}
 
 \item{npcs}{Number of principal components to compute and store. Default 50.}
 
 \item{p}{Oversampling parameter passed to \code{\link[=FastPCA]{FastPCA()}}. Default 10.}
 
-\item{q_iter}{Number of power iterations passed to \code{\link[=FastPCA]{FastPCA()}}. Default 2.}
+\item{q_iter}{Integer >= 1. Number of power iterations passed to \code{\link[=FastPCA]{FastPCA()}}.
+Default 2.}
 
 \item{reduction.name}{Name under which the reduction is stored. Default "pca".}
 
-\item{backend, device}{Passed to \code{\link[=FastPCA]{FastPCA()}}. Default pytorch/CPU.}
+\item{backend, device}{Passed to \code{\link[=FastPCA]{FastPCA()}}. The default is the base R
+backend on CPU, which needs no Python.}
 
 \item{cores}{Number of CPU cores requested; automatically clamped to 1 when an
-OpenMP runtime conflict is detected (see code{?FastPCA}).}
+OpenMP runtime conflict is detected (see \code{\link[=FastPCA]{FastPCA()}}).}
 
 \item{memory_limit}{Numeric GB ceiling for the call. Defaults to
-code{getOption("FastPCA.memory_limit", 20)}. The dense conversion cost is
+\code{getOption("FastPCA.memory_limit", 20)}. The dense conversion cost is
 estimated up front and the call stops before exceeding the limit.}
 
-\item{verbose}{Print progress messages. Default code{TRUE}.}
+\item{verbose}{Print progress messages. Default \code{TRUE}.}
 }
 \value{
 The Seurat object with the FastPCA reduction stored under
-code{reduction.name}.
+\code{reduction.name}.
 }
 \description{
 Computes principal components with \code{\link[=FastPCA]{FastPCA()}} and stores them as a Seurat
-code{DimReduc} so that downstream steps such as \code{\link[Seurat:RunUMAP]{Seurat::RunUMAP()}} work
+\code{DimReduc} so that downstream steps such as \code{\link[Seurat:RunUMAP]{Seurat::RunUMAP()}} work
 unchanged. The scaled data for the requested features is passed to FastPCA in
-its native code{features x cells} orientation; the returned singular vectors
-are converted into Seurat's code{cell embeddings}, code{feature loadings}
-and code{stdev} conventions.
+its native \code{features x cells} orientation; the returned singular vectors
+are converted into Seurat's \code{cell embeddings}, \code{feature loadings}
+and \code{stdev} conventions.
 }
 \examples{
 \dontrun{

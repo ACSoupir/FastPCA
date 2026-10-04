@@ -20,8 +20,8 @@ Can be "conda" (default) or "virtualenv".}
 \item{envname}{Character string. The name of the Python environment to create/use.
 Defaults to "FastPCA".}
 
-\item{python_version}{Character string. The Python version to use (e.g., "3.9").
-Defaults to "3.9". It's recommended to stick to well-supported versions.}
+\item{python_version}{Character string. The Python version to use (e.g., "3.10").
+Defaults to "3.10". It's recommended to stick to well-supported versions.}
 
 \item{backend}{character string of the backend to use: 'pytorch', 'tinygrad',
 or 'all'. Defaults to 'pytorch'. Use 'tinygrad' (or 'all') on Apple Silicon

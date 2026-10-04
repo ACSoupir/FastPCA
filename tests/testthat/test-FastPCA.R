@@ -21,7 +21,7 @@ test_that("FastPCA", {
 
   res = suppressMessages(FastPCA(X2, k = k, p = p, q_iter = q_iter, cores = 1, backend = "pytorch"))
   expect_equal(dim(res$U), c(10000, 5))
-  expect_equal(dim(res$S), c(5))
+  expect_length(res$S, 5)
   expect_equal(dim(res$Vh), c(5, 200))
 
   #running rtorch after pytorch - avoid collisions
