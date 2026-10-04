@@ -43,6 +43,33 @@ run stays core-bound. Peak RSS does not move with thread count, so the single-co
 figures elsewhere are an honest comparison rather than a memory trade. Raw logs:
 `TESTING/results/nipals_threads_f.txt`, `..._single.txt`.
 
+**Naming and aliases (not implemented).** The function will be `NIPALS()`,
+specified in the implementation plan (`TESTING/NIPALS_PLAN.md`). The longer
+spelling `FastNIPALS()` / `fastnipals()` is *not* exported. If it turns out to be
+a common guess, a roxygen `@aliases FastNIPALS` on the help page is enough to make
+it findable. The "Fast" prefix is justified rather than aspirational: the pytorch
+backend measured 5-6x faster than base R and ~35x faster than the CRAN package.
+
+**tinygrad placeholder.** `NIPALS(backend = "tinygrad")` is accepted by the
+backend vector and then stops with an explicit not-implemented error. A Metal
+kernel for missing-value NIPALS is future work.
+
+**Deferred from the first implementation.** The full specification and its settled
+decisions are in `TESTING/NIPALS_PLAN.md`. Three items were deliberately left out:
+
+- *Wold / reconstruction deflation.* v1 subtracts the masked rank-1 component,
+  matching `nipals::nipals`. The classic variant fills the missing entries with the
+  current component fit before subtracting; it imputes better but diverges from the
+  CRAN reference and needs its own validation. Planned as a
+  `deflation = c("masked", "wold")` argument.
+- *Cross-solver sign convention.* NIPALS signs are normalised (largest absolute
+  loading positive) so results are stable across backends and runs. The SVD path
+  keeps its current signs, because changing them would alter existing user output;
+  unifying the two is an opt-in change for later.
+- *float32 mode.* Every backend computes in double. Single precision would roughly
+  halve memory on the torch backends but moves results by ~1e-4, which would need
+  its own parity tolerance.
+
 ## Iterative / converging SVD
 
 The randomized backends use a fixed number of power iterations. A future
