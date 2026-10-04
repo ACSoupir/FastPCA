@@ -7,15 +7,17 @@
 pve(x, total = NULL)
 }
 \arguments{
-\item{x}{A \code{"fastpca"} object returned by \code{\link[=FastPCA]{FastPCA()}}.}
+\item{x}{A \code{"fastpca"} object returned by \code{\link[=FastPCA]{FastPCA()}} or \code{\link[=NIPALS]{NIPALS()}}.}
 
 \item{total}{Optional numeric scalar: the sum of squared entries of the input
-matrix. Defaults to the total variance stored by \code{\link[=FastPCA]{FastPCA()}}.}
+matrix. Defaults to the total variance stored by \code{\link[=FastPCA]{FastPCA()}} or \code{\link[=NIPALS]{NIPALS()}}.}
 }
 \value{
 A named numeric vector of per-component fractions (\code{PC1}, ...).
 Percent values are \code{100 * pve(x)}.
 }
 \description{
-Percent variation explained
+For NIPALS results the denominator is the sum of squared entries over the
+observed (non-missing) cells only, so it is not directly comparable to a sum
+of squares computed after imputation.
 }

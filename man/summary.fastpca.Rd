@@ -13,11 +13,16 @@
 }
 \value{
 A \code{data.frame} with columns \code{PC},
-\code{singular_value}, \code{percent_variance} and
-\code{cumulative_percent_variance}.
+\code{singular_value}, \code{percent_variance},
+\code{cumulative_percent_variance}, \code{iterations} and
+\code{converged}. The solver (\code{"svd"} or \code{"nipals"}) and backend
+are carried as attributes.
 }
 \description{
 Returns one row per component with the singular value and, when total
 variance is available (see \code{store_variance} in \code{\link[=FastPCA]{FastPCA()}}), the
-percent and cumulative percent variation explained.
+percent and cumulative percent variation explained. For NIPALS results the
+\code{iterations} column records how many iterations each component needed
+and \code{converged} whether it reached the tolerance before \code{maxit};
+both are \code{NA} for SVD results.
 }

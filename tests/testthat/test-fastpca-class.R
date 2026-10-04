@@ -28,9 +28,23 @@ test_that("FastPCA returns a fastpca object with usable methods", {
   expect_identical(colnames(scores), paste0("PC", seq_len(4)))
   expect_identical(scores, scores(res))
 
+  # every result carries scores, so no accessor has to recompute them
+  expect_equal(unname(res$scores), unname(res$U %*% diag(res$S)), tolerance = 1e-10)
+
   grDevices::pdf(tempfile())
   on.exit(grDevices::dev.off(), add = TRUE)
   expect_silent(plot(res))
+})
+
+test_that("a legacy three-element object still loads", {
+  set.seed(2)
+  m <- matrix(rnorm(120), nrow = 12, ncol = 10)
+  res <- FastPCA(m, k = 3L, p = 2L, backend = "r", cores = 1L)
+  legacy <- structure(res[c("U", "S", "Vh")], class = "fastpca")
+  expect_silent(utils::capture.output(print(legacy)))
+  derived <- get_pc_scores(legacy)
+  expect_equal(unname(derived), unname(res$scores[seq_len(nrow(m)), ]),
+               tolerance = 1e-10)
 })
 
 test_that("pve requires a stored or supplied total variance", {
