@@ -28,9 +28,10 @@
 #' @param device Character, either \code{"CPU"} (default) or \code{"GPU"}.
 #'   Backends fall back to the CPU with a message when the requested device is
 #'   unavailable.
-#' @param cores Integer. Number of CPU cores to use with the backend. Clamped
-#'   to 1 for this call when an OpenMP runtime conflict is detected in the
-#'   session (for example after loading \pkg{data.table} or Seurat).
+#' @param cores Integer. Number of CPU threads to use with the backend
+#'   (default 1). Clamped to 1 for this call when an OpenMP runtime conflict is
+#'   detected in the session (for example after loading \pkg{data.table} or
+#'   Seurat).
 #' @param store_variance Logical. When \code{TRUE} (default) the total variance
 #'   of the input is stored on the result so that [pve()] can report percent
 #'   variation explained. Set to \code{FALSE} for very large inputs if the
@@ -84,7 +85,7 @@ FastPCA <- function(input_r_matrix,
                     q_iter = 2,
                     exact = FALSE,
                     backend = c("r", "rtorch", "pytorch", "irlba", "tinygrad"),
-                    device = c("CPU","GPU"), cores = 4,
+                    device = c("CPU","GPU"), cores = 1,
                     store_variance = TRUE,
                     ...) {
   dots <- list(...)

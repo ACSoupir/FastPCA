@@ -55,8 +55,8 @@
 #' @param reduction.name Name under which the reduction is stored. Default "pca".
 #' @param backend,device Passed to [FastPCA()]. The default is the base R
 #'   backend on CPU, which needs no Python.
-#' @param cores Number of CPU cores requested; automatically clamped to 1 when an
-#'   OpenMP runtime conflict is detected (see [FastPCA()]).
+#' @param cores Number of CPU threads requested (default 1); automatically
+#'   clamped to 1 when an OpenMP runtime conflict is detected (see [FastPCA()]).
 #' @param memory_limit Numeric GB ceiling for the call. Defaults to
 #'   \code{getOption("FastPCA.memory_limit", 20)}. The dense conversion cost is
 #'   estimated up front and the call stops before exceeding the limit.
@@ -81,7 +81,7 @@ RunFastPCA <- function(object,
                        reduction.name = "pca",
                        backend = c("r", "rtorch", "pytorch"),
                        device = c("CPU", "GPU"),
-                       cores = 4L,
+                       cores = 1L,
                        memory_limit = getOption("FastPCA.memory_limit", 20),
                        verbose = TRUE) {
   if (!inherits(object, "Seurat")) stop("'object' must be a Seurat object.", call. = FALSE)

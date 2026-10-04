@@ -20,8 +20,13 @@ check_backend = function(backend = c("tinygrad", "pytorch")){
 #get python file locations from package folder
 get_python_files = function(backend = NULL){
   # the tinygrad backend only needs its own module, so selecting it does not
-  # require torch to be installed in the same environment.
-  if(identical(backend, "tinygrad")){
+  # require torch to be installed in the same environment. NIPALS likewise gets
+  # its own module so an SVD-only or umap import is never pulled in.
+  if(identical(backend, "nipals")){
+    file_list = list(
+      nipals_func = system.file("python", "nipals_func.py", package = "FastPCA")
+    )
+  } else if(identical(backend, "tinygrad")){
     file_list = list(
       tinygrad_random_svd = system.file("python", "tinygrad_svd_func.py", package = "FastPCA"),
       tinygrad_tranformation = system.file("python", "tinygrad_transform.py", package = "FastPCA")
@@ -103,7 +108,8 @@ python_functions = function(backend = NULL,
 #   message(paste("Python SVD script '", basename(script_path), "' loaded.", sep=""))
 }
 
-validate_backend = function(backend = c("r", "rtorch", "pytorch", "irlba", "tinygrad"),
+validate_backend = function(backend = c("r", "rtorch", "pytorch", "irlba",
+                                          "nipals", "tinygrad"),
                             device = c("CPU", "GPU")){
   backend = match.arg(backend)
   device = match.arg(device)
@@ -111,6 +117,22 @@ validate_backend = function(backend = c("r", "rtorch", "pytorch", "irlba", "tiny
   if(backend == "r"){
     if(device == "GPU"){
       warning("Currently no GPU device implemented for base R PCA")
+      message("Setting device to 'CPU'")
+      device = "CPU"
+    }
+  }
+  # the CRAN 'nipals' package is the reference NIPALS implementation: pure R,
+  # CPU only. It ships in Imports, but fall back to the base implementation if
+  # an installation is broken rather than failing deep inside a call.
+  if(backend == "nipals"){
+    if(!requireNamespace("nipals", quietly = TRUE)){
+      warning("The 'nipals' package is not installed; it provides the reference ",
+              "NIPALS implementation.")
+      message("Setting backend to 'r' and device to 'CPU'")
+      return(list(backend = "r", device = "CPU"))
+    }
+    if(device == "GPU"){
+      warning("Currently no GPU device implemented for the 'nipals' package backend")
       message("Setting device to 'CPU'")
       device = "CPU"
     }

@@ -14,7 +14,7 @@ RunFastPCA(
   reduction.name = "pca",
   backend = c("r", "rtorch", "pytorch"),
   device = c("CPU", "GPU"),
-  cores = 4L,
+  cores = 1L,
   memory_limit = getOption("FastPCA.memory_limit", 20),
   verbose = TRUE
 )
@@ -40,8 +40,8 @@ Default 2.}
 \item{backend, device}{Passed to \code{\link[=FastPCA]{FastPCA()}}. The default is the base R
 backend on CPU, which needs no Python.}
 
-\item{cores}{Number of CPU cores requested; automatically clamped to 1 when an
-OpenMP runtime conflict is detected (see \code{\link[=FastPCA]{FastPCA()}}).}
+\item{cores}{Number of CPU threads requested (default 1); automatically
+clamped to 1 when an OpenMP runtime conflict is detected (see \code{\link[=FastPCA]{FastPCA()}}).}
 
 \item{memory_limit}{Numeric GB ceiling for the call. Defaults to
 \code{getOption("FastPCA.memory_limit", 20)}. The dense conversion cost is

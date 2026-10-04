@@ -12,7 +12,7 @@ FastPCA(
   exact = FALSE,
   backend = c("r", "rtorch", "pytorch", "irlba", "tinygrad"),
   device = c("CPU", "GPU"),
-  cores = 4,
+  cores = 1,
   store_variance = TRUE,
   ...
 )
@@ -50,9 +50,10 @@ information about backends.}
 Backends fall back to the CPU with a message when the requested device is
 unavailable.}
 
-\item{cores}{Integer. Number of CPU cores to use with the backend. Clamped
-to 1 for this call when an OpenMP runtime conflict is detected in the
-session (for example after loading \pkg{data.table} or Seurat).}
+\item{cores}{Integer. Number of CPU threads to use with the backend
+(default 1). Clamped to 1 for this call when an OpenMP runtime conflict is
+detected in the session (for example after loading \pkg{data.table} or
+Seurat).}
 
 \item{store_variance}{Logical. When \code{TRUE} (default) the total variance
 of the input is stored on the result so that \code{\link[=pve]{pve()}} can report percent

@@ -159,8 +159,10 @@ uniform across methods:
   `n_obs x k` matrix that is already derivable from `U`, but at roughly 78 KB for
   978 x 10 that is not a memory concern, and it removes the "does this object have
   scores?" question entirely.
-- **NIPALS**: `scores` are the native score vectors, which differ from
-  `U %*% diag(S)` because NIPALS does not produce orthogonal singular vectors.
+- **NIPALS**: `scores` are the native score vectors and `U` is defined as their
+  unit-norm version, so the same identity (`scores == U %*% diag(S)`) holds. The
+  real difference is that NIPALS' left vectors are *not* mutually orthogonal, so
+  `crossprod(U)` is not the identity even though each column has unit norm.
 
 No existing test asserts `length(res) == 3` or the names of the list, so this is
 additive: code that indexes `$U`, `$S` or `$Vh` keeps working. NEWS records it as an
@@ -175,7 +177,7 @@ addition rather than a break.
 | `summary.fastpca()` | add `iterations` and `converged` columns (NA for SVD); carry the method on the data.frame |
 | `pve()` | unchanged; document that the NIPALS denominator uses observed entries only |
 | `plot.fastpca()` | unchanged (scree / cumulative) |
-| `fitted.fastpca()` | **new**, NIPALS only: reconstruct the input from `U`, `S`, `Vh` and the stored centring/scaling |
+| `fitted.fastpca()` | **new**, NIPALS only: reconstruct the input from `scores`, `Vh` and the stored centring/scaling |
 
 Target `print()` shape:
 

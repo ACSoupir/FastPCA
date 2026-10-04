@@ -1,3 +1,57 @@
+# FastPCA 0.9.2
+
+## NIPALS: PCA with missing values
+
+* Added `NIPALS()`, which extracts principal components one at a time by
+  iterative least squares and accepts a matrix containing `NA` (missing
+  quantifications are routine in proteomics and metabolomics). It returns the
+  same `"fastpca"` object as `FastPCA()`, so `print()`, `summary()`, `pve()`,
+  `get_pc_scores()`/`scores()` and `plot()` work unchanged. Backends are base R
+  (`"r"`), the CRAN `nipals` package, native torch (`"rtorch"`) and PyTorch
+  through reticulate (`"pytorch"`); `backend = "tinygrad"` is accepted but stops
+  with an explicit not-implemented message. Note that `backend = "nipals"`
+  names the *package* and runs it as the reference implementation; because that
+  package allocates an O(max(nrow, ncol)^2) Gram-Schmidt matrix it refuses
+  shapes that would exceed `options(FastPCA.memory_limit)` and cannot handle
+  all-NA rows or zero-variance columns.
+* Missing-value semantics follow the reference implementation: observed-only
+  means and unbiased standard deviations, zero-filled products with
+  observed-only denominators, and masked rank-one deflation. Columns that are
+  entirely missing are dropped with a warning (their loadings stay `NA` so the
+  feature axis stays aligned) and rows with no observed entries keep `NA`
+  scores. NIPALS signs are not identifiable, so each component is flipped to
+  make its largest-magnitude loading positive; the SVD path keeps its own signs.
+* `fitted()` reconstructs -- and therefore imputes missing entries of -- a
+  NIPALS result, undoing the stored centring and scaling. It is computed on
+  demand because the reconstruction of the package example (978 x 199112) would
+  be about 1.5 GB.
+* Added `RunNIPALS()`, the Seurat counterpart of `RunFastPCA()`: it stores a
+  reduction named `"nipals"` (key `NP_`) so it can coexist with a FastPCA
+  reduction, and runs NIPALS on the scaled data with cells as observations so
+  that the native score vectors are cell embeddings.
+* `nipals` is now a hard dependency (Imports), so the reference backend needs no
+  separate install step.
+* `cores` now defaults to **1** in `FastPCA()`, `RunFastPCA()`, `NIPALS()` and
+  `RunNIPALS()`. Thread scaling measured in `TESTING/` buys only ~5-10% for
+  NIPALS while peak memory is flat, and the base R/irlba paths were already
+  effectively single-threaded. `prep_matrix()` keeps its default of 2 and
+  `umap()` keeps 4, where the threads are genuinely used.
+* The result object carries a `scores` element for every solver, and
+  `.validate_fastpca()` checks its invariants in one place; a three-element list
+  written before this release is still accepted (scores are derived from `U` and
+  `S`). `get_pc_scores()` now also accepts a Seurat object or `DimReduc`.
+
+## tinygrad backend and preprocessing (earlier unreleased work)
+
+* `FastPCA(backend = "tinygrad")` runs the randomized SVD on Apple Metal, and
+  `prep_matrix(backend = "tinygrad")` uses an optimized transform that is about
+  3-4x faster than the previous implementation.
+* Device resolution warns when a `device = "CPU"` request is mapped to Metal on
+  arm64 Macs, where tinygrad has no CPU codegen.
+* Documented that centre-scaling data with little structure leaves nearly equal
+  top singular values, which is ill-conditioned for *any* randomized SVD; use
+  `backend = "r"` or `"irlba"` when the leading components must be exact.
+
 # FastPCA 0.9.1
 
 ## CRAN readiness

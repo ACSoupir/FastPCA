@@ -23,8 +23,12 @@ and 35-37x faster than the CRAN `nipals` package on the example data, at 3-5x
 lower peak RSS. With missing values the gap widens: on 978 x 20000 at 5% MCAR,
 pytorch needs ~1.4 GB where the package needs ~12 GB. The CRAN package cannot run
 on the full 199112-feature matrix at all -- it allocates an O(n^2) Gram-Schmidt
-matrix (~295 GB), which the harness reports as N/A rather than crashing. No
-package code has changed yet; the pytorch implementation is `TESTING/nipals_torch.py`.
+matrix (~295 GB), which the harness reports as N/A rather than crashing.
+
+**Implemented in 0.9.2.** `NIPALS()` and `RunNIPALS()` ship the base R, native
+torch, PyTorch and CRAN-package backends; `TESTING/nipals_torch.py` remains the
+standalone benchmark prototype. See `NEWS.md` for the user-facing summary and
+`TESTING/NIPALS_PLAN.md` for the design.
 
 **Thread scaling on the full matrix (978 x 199112, ncomp = 10).**
 `torch.set_num_threads(N)` with `OMP_NUM_THREADS=N`, one run each:
@@ -43,8 +47,8 @@ run stays core-bound. Peak RSS does not move with thread count, so the single-co
 figures elsewhere are an honest comparison rather than a memory trade. Raw logs:
 `TESTING/results/nipals_threads_f.txt`, `..._single.txt`.
 
-**Naming and aliases (not implemented).** The function will be `NIPALS()`,
-specified in the implementation plan (`TESTING/NIPALS_PLAN.md`). The longer
+**Naming and aliases.** The exported function is `NIPALS()`, as specified in the
+implementation plan (`TESTING/NIPALS_PLAN.md`) and shipped in 0.9.2. The longer
 spelling `FastNIPALS()` / `fastnipals()` is *not* exported. If it turns out to be
 a common guess, a roxygen `@aliases FastNIPALS` on the help page is enough to make
 it findable. The "Fast" prefix is justified rather than aspirational: the pytorch

@@ -1,6 +1,6 @@
 Package: FastPCA
-Title: Fast Randomized and Exact Singular Value Decomposition for Large Matrices
-Version: 0.9.1
+Title: Fast SVD, Randomized and Exact, with Missing-Value PCA
+Version: 0.9.2
 Authors@R:
     person("Alex", "Soupir", , "Alex.Soupir@moffitt.org",
            role = c("aut", "cre"))
@@ -9,6 +9,8 @@ Description: Fast randomized and exact singular value decomposition (SVD)
     high-dimensional biological data analysis. Several computational backends
     are available: base R and 'irlba' require no Python, while optional
     PyTorch or tinygrad backends are accessed through the 'reticulate'
+    package. Principal component analysis that tolerates missing values is
+    provided by NIPALS(), with a reference implementation from the 'nipals'
     package. Helpers for matrix transformation and UMAP embedding are also
     provided.
 URL: https://github.com/ACSoupir/FastPCA, https://acsoupir.github.io/FastPCA/
@@ -20,6 +22,7 @@ Depends:
 Imports:
     irlba,
     magrittr,
+    nipals,
     reticulate,
     uwot
 Suggests:
