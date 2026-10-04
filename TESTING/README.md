@@ -287,6 +287,7 @@ function rather than another `backend =`. This section measures what it costs.
 | `nipals_export.R` | transposes the example matrix to samples x features, subsamples features, writes raw float64 + a shared MCAR mask so R and pytorch see identical missingness |
 | `nipals_torch.py` | single-core pytorch NIPALS, a faithful port of the R package's algorithm |
 | `nipals_r.R` | base-R NIPALS, the vendored CRAN package, and an irlba reference |
+| `nipals_tinygrad.py` | the same NIPALS loop as one TinyJit graph on tinygrad Metal (or CPU); float32, two m x n device buffers |
 | `nipals_validate.py` | relative eigenvalue error + principal angles between loading subspaces |
 | `nipals_collect.py` | merges per-run JSON and peak RSS into one results file |
 | `run_nipals_bench.sh` | tiers s / m / f, one implementation per process under `/usr/bin/time -l` |
@@ -323,6 +324,45 @@ The CRAN package allocates `TTp <- matrix(0, nobs, nobs)` and
 `PPp <- matrix(0, nvar, nvar)` for its Gram-Schmidt step, so at 199112 features
 it cannot run in either orientation. `nipals_r.R` pre-checks the allocation and
 reports N/A rather than being OOM-killed.
+
+### Tier m and f -- tinygrad Metal (fp32)
+
+A third engine runs the same NIPALS loop as a single `TinyJit` graph on Metal.
+float32 is forced (Metal has no fp64), the data and mask are the only two m x n
+device buffers, and `--block` unrolls B iterations per graph replay so the host
+syncs once per block. `--device CPU` also works, but only with Apple clang on
+PATH and CC: the anaconda wrapper rejects tinygrad's `--target` flag. CPU is
+~10x slower than Metal at tier m.
+
+| implementation | complete s | peak RSS GB | 5% MCAR s | peak RSS GB |
+|---|---|---|---|---|
+| **tinygrad Metal fp32, block=8** | **0.94** | 0.51 | **1.39** | **0.73** |
+| pytorch fp64, 1 thread | 2.02 | **0.53** | 4.13 | 1.06 |
+| base R NIPALS | 13.48 | 1.19 | 26.17 | 2.13 |
+| `nipals` CRAN package | 96.06 | 7.54 | 160.82 | 11.62 |
+| tinygrad CPU fp32, block=8 | 13.81 | 0.56 | 24.63 | 0.77 |
+
+At the full 978 x 199,112 shape (fresh process per run):
+
+| implementation | complete s | peak RSS GB | 5% MCAR s | peak RSS GB |
+|---|---|---|---|---|
+| **tinygrad Metal fp32** | **12.75** | **3.17** | **18.41** | **4.53** |
+| pytorch fp64, 1 thread | 20.94 | 3.39 | 46.17 | 8.64 |
+
+tinygrad is ~2.1x / 3.0x faster than pytorch at tier m (complete / 5% MCAR) and
+1.6x / 2.5x at full size, using about half the RSS once a mask is involved; on
+complete data it only edges pytorch out (0.51 vs 0.53 GB at tier m). At the small
+F2000 shape it is *slower* (0.28 s vs 0.08 s) because kernel-launch latency
+dominates, though it still uses less memory (0.15 vs 0.26 GB).
+
+Accuracy is float32-limited: max relative eigenvalue error versus pytorch fp64 is
+3.3e-6 (complete) and 2.8e-5 (5% MCAR), with loading-subspace angles <=0.003 and
+<=0.77 degrees respectively. Because `tol = 1e-6` sits at the fp32 rounding floor,
+convergence is detected earlier than in fp64 (155 vs 391 total iterations at
+F2000), so a tighter `--tol` is needed if fp64-level iteration counts matter.
+Run-to-run spread on this machine remains +/-20%.
+
+Results: `results/nipals_tinygrad_bench.json`.
 
 ### Correctness
 

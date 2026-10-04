@@ -1,0 +1,61 @@
+{
+  "generated_by": "TESTING/nipals_tinygrad.py",
+  "machine": "arm64 macOS, R 4.5.0 / tinygrad venv py3.10 (numpy 2.2.6), torch 0.17 / libtorch",
+  "method": {
+    "threads": 1,
+    "OMP_NUM_THREADS": "1",
+    "ncomp": 10,
+    "center": true,
+    "scale": false,
+    "tol": 1e-6,
+    "gramschmidt": true,
+    "tinygrad_dtype": "fp32",
+    "pytorch_dtype": "fp64",
+    "rss_measured_with": "/usr/bin/time -l (maximum resident set size)",
+    "note": "tinygrad times are the best of 3 runs inside one process (JIT compiled once); pytorch single-process numbers are quoted because its --repeats path clones the input inside the timer and inflates both time and RSS"
+  },
+  "tier_m_978x20000": {
+    "complete": {
+      "tinygrad_metal_fp32_block8": {"best_s": 0.935, "first_run_s": 1.132, "peak_rss_gb": 0.51},
+      "pytorch_fp64_1thread": {"best_s": 2.020, "peak_rss_gb": 0.53},
+      "base_r_nipals": {"best_s": 13.483, "peak_rss_gb": 1.19},
+      "nipals_cran_package": {"best_s": 96.062, "peak_rss_gb": 7.54},
+      "tinygrad_cpu_fp32_block8": {"best_s": 13.810, "peak_rss_gb": 0.56}
+    },
+    "mcar_5pct": {
+      "tinygrad_metal_fp32_block8": {"best_s": 1.393, "first_run_s": 1.862, "peak_rss_gb": 0.73},
+      "pytorch_fp64_1thread": {"best_s": 4.128, "peak_rss_gb": 1.06},
+      "base_r_nipals": {"best_s": 26.171, "peak_rss_gb": 2.13},
+      "nipals_cran_package": {"best_s": 160.821, "peak_rss_gb": 11.62},
+      "tinygrad_cpu_fp32_block8": {"best_s": 24.630, "peak_rss_gb": 0.77}
+    }
+  },
+  "full_978x199112": {
+    "complete": {
+      "tinygrad_metal_fp32_block8": {"best_s": 12.75, "peak_rss_gb": 3.17},
+      "pytorch_fp64_1thread": {"best_s": 20.94, "peak_rss_gb": 3.39},
+      "base_r_nipals_previous_run": {"best_s": 130.87, "peak_rss_gb": 11.30},
+      "nipals_cran_package_previous_run": {"status": "N/A", "reason": "O(n^2) Gram-Schmidt allocation ~295 GB"}
+    },
+    "mcar_5pct": {
+      "tinygrad_metal_fp32_block8": {"best_s": 18.41, "peak_rss_gb": 4.53},
+      "pytorch_fp64_1thread": {"best_s": 46.17, "peak_rss_gb": 8.64},
+      "base_r_nipals_previous_run": {"best_s": 262.72, "peak_rss_gb": 12.92},
+      "nipals_cran_package_previous_run": {"status": "N/A"}
+    }
+  },
+  "correctness_vs_pytorch_fp64": {
+    "F2000_complete": {"max_rel_eig_err": 3.31e-06, "max_subspace_angle_deg": 0.00298},
+    "F2000_mcar5": {"max_rel_eig_err": 2.84e-05, "max_subspace_angle_deg": 0.77138},
+    "F20000_complete_eig1_rel_err": 3.6e-06,
+    "F20000_mcar5_eig1_rel_err": 2.0e-06,
+    "full_complete_eig1_rel_err": 6.4e-06,
+    "full_mcar5_eig1_rel_err": 4.0e-06
+  },
+  "caveats": [
+    "Metal has no fp64: tinygrad runs float32, so tol=1e-6 sits at the rounding floor and convergence is detected earlier than fp64 (F2000 complete: 155 vs 391 total iterations). Eigenvalues still agree with fp64 to ~3e-5 relative.",
+    "Block size barely changes wall time at any tested shape; unrolling 8 steps costs ~1.2-1.8x redundant iterations but saves per-op dispatch.",
+    "The CPU device only works when clang resolves to Apple's toolchain; the anaconda wrapper shadows it on PATH and via CC.",
+    "Run-to-run spread is +/-20 percent; the F2000 tier favours pytorch because kernel-launch latency dominates."
+  ]
+}

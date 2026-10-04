@@ -13,6 +13,9 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(dirname "$HERE")"
 PY="${FASTPCA_PYTHON:-/opt/anaconda3/envs/FastPCA/bin/python}"
 RSCRIPT="${FASTPCA_R:-/usr/local/bin/Rscript}"
+TG="${FASTPCA_TG:-$HERE/.venv-tg/bin/python}"
+TG_DEVICE="${FASTPCA_TG_DEVICE:-METAL}"
+TG_BLOCK="${FASTPCA_TG_BLOCK:-8}"
 
 TIER="${TIER:-m}"
 NCOMP="${NCOMP:-10}"
@@ -58,6 +61,11 @@ for NA in $(echo "$NA_RATES" | tr ',' ' '); do
   run_one "torch-${TAG}" "$PY" TESTING/nipals_torch.py --x="$X" ${MK[@]+"${MK[@]}"} \
     --m="$M" --n="$N" --tag="${TAG}" --ncomp="$NCOMP" \
     --save-npz="TESTING/_tmp/torch_${TAG}.npz"
+  if [ -x "$TG" ]; then
+    run_one "tinygrad-${TAG}" "$TG" TESTING/nipals_tinygrad.py --x="$X" ${MK[@]+"${MK[@]}"} \
+      --m="$M" --n="$N" --tag="${TAG}" --ncomp="$NCOMP" \
+      --block="$TG_BLOCK" --device="$TG_DEVICE"
+  fi
   run_one "base-${TAG}" "$RSCRIPT" --vanilla TESTING/nipals_r.R --impl=base \
     --x="$X" ${MK[@]+"${MK[@]}"} --m="$M" --n="$N" --tag="${TAG}" --ncomp="$NCOMP" \
     --save-bin="TESTING/_tmp/base_${TAG}"
