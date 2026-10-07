@@ -9,6 +9,10 @@
 # needs complete data) and "nipals" names the CRAN reference package.
 .nipals_backends <- c("r", "rtorch", "pytorch", "nipals", "tinygrad")
 .fastpca_devices <- c("CPU", "GPU")
+# Numeric precision shared by the PyTorch/tinygrad backends. Only torch_irlba()
+# exposes it so far; "double" is the historical behaviour (reticulate hands R
+# doubles to Python unchanged) and "single" is the float32 escape hatch.
+.fastpca_precisions <- c("double", "single")
 
 # Resolve a backend/device pair exactly once per call.
 #
@@ -114,6 +118,41 @@ resolve_backend_device <- function(backend, device,
   maxit <- .check_scalar_int(maxit, "maxit", 1L)
   max_na_prop <- .check_scalar_num(max_na_prop, "max_na_prop", min = 0, max = 1)
   list(ncomp = ncomp, tol = tol, maxit = maxit, max_na_prop = max_na_prop)
+}
+
+# Precision validation shared by the torch/tinygrad entry points.
+.resolve_precision <- function(precision) {
+  precision <- tolower(as.character(precision))
+  match.arg(precision, .fastpca_precisions)
+}
+
+# nv / work / tol / svtol / maxit validation for torch_irlba(). irlba requires
+# max(nu, nv) < min(dim(A)); work defaults to nv + 7 (as in irlba) and is capped
+# at the smallest dimension, exactly as the PyTorch port clamps it.
+.check_irlba_args <- function(A, nv = 5L, work = NULL, tol = 1e-5,
+                              svtol = NULL, maxit = 1000L) {
+  dims <- dim(A)
+  if (length(dims) != 2L || anyNA(dims)) {
+    stop("`input_r_matrix` must be two-dimensional.", call. = FALSE)
+  }
+  smallest <- min(dims)
+  nv <- .check_scalar_int(nv, "nv", 1L)
+  if (nv > smallest - 1L) {
+    stop(sprintf(paste0("`nv` (%d) must be strictly less than the smallest ",
+                        "matrix dimension (%d)."), nv, smallest), call. = FALSE)
+  }
+  if (is.null(work)) work <- min(nv + 7L, smallest)
+  work <- .check_scalar_int(work, "work", 2L)
+  if (work < nv + 1L) work <- min(nv + 1L, smallest)
+  if (work > smallest) work <- smallest
+  tol <- .check_scalar_num(tol, "tol", min = 0)
+  if (tol <= 0) stop("`tol` must be greater than 0.", call. = FALSE)
+  if (is.null(svtol)) svtol <- tol
+  svtol <- .check_scalar_num(svtol, "svtol", min = 0)
+  if (svtol <= 0) stop("`svtol` must be greater than 0.", call. = FALSE)
+  maxit <- .check_scalar_int(maxit, "maxit", 1L)
+  list(nv = nv, work = as.integer(work), tol = tol, svtol = svtol,
+       maxit = maxit)
 }
 
 # Total variance (sum of squared entries) used for percent-variation-explained.

@@ -11,6 +11,7 @@ check_backend = function(backend = c("tinygrad", "pytorch")){
   }
   #check the modules the selected backend actually needs
   required = if(backend == "tinygrad") c("numpy", "tinygrad") else c("torch", "numpy")
+  # torch_irlba() reuses the pytorch check: it needs torch + numpy only
   missing = required[!vapply(required, reticulate::py_module_available, logical(1))]
   if(length(missing) > 0){
     stop("The '", backend, "' backend requires the Python module(s): ",
@@ -28,6 +29,12 @@ get_python_files = function(backend = NULL){
   if(identical(backend, "nipals")){
     file_list = list(
       nipals_func = system.file("python", "nipals_func.py", package = "FastPCA")
+    )
+  } else if(identical(backend, "torch_irlba")){
+    # torch_irlba() is its own Lanczos solver, so it only loads that module
+    file_list = list(
+      torch_irlba_func = system.file("python", "torch_irlba_func.py",
+                                     package = "FastPCA")
     )
   } else if(identical(backend, "nipals_tinygrad")){
     file_list = list(

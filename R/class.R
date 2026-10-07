@@ -52,7 +52,9 @@ new_fastpca <- function(U, S, Vh, scores = NULL,
                         center = NULL, scaling = NULL,
                         ncomp = NULL, tol = NA_real_, maxit = NA_integer_,
                         iterations = NULL, converged = NULL,
-                        missing_fraction = NA_real_, dropped_features = NULL) {
+                        missing_fraction = NA_real_, dropped_features = NULL,
+                        precision = NA_character_, work = NULL,
+                        n_iter = NULL, mprod = NULL) {
   method <- match.arg(method, c("svd", "nipals"))
   S <- as.numeric(S)
   if (is.null(scores)) scores <- .fastpca_scores_from_udv(U, S)
@@ -79,7 +81,11 @@ new_fastpca <- function(U, S, Vh, scores = NULL,
     iterations = if (is.null(iterations)) NULL else as.integer(iterations),
     converged = if (is.null(converged)) NULL else as.logical(converged),
     missing_fraction = if (length(missing_fraction)) as.numeric(missing_fraction)[1] else NA_real_,
-    dropped_features = if (is.null(dropped_features)) NULL else as.character(dropped_features)
+    dropped_features = if (is.null(dropped_features)) NULL else as.character(dropped_features),
+    precision = if (length(precision) && !is.na(precision[1])) as.character(precision)[1] else NA_character_,
+    work = if (is.null(work)) NULL else as.integer(work)[1],
+    n_iter = if (is.null(n_iter)) NULL else as.integer(n_iter)[1],
+    mprod = if (is.null(mprod)) NULL else as.integer(mprod)[1]
   )
 }
 
@@ -127,6 +133,7 @@ new_fastpca <- function(U, S, Vh, scores = NULL,
 # Human-readable solver label used by print()/summary().
 .fastpca_method_label <- function(x) {
   if (identical(attr(x, "method"), "nipals")) return("NIPALS (missing-value)")
+  if (identical(attr(x, "backend"), "torch_irlba")) return("Lanczos SVD (IRLBA)")
   if (isTRUE(attr(x, "exact"))) return("exact SVD")
   "randomized SVD"
 }
@@ -143,8 +150,12 @@ print.fastpca <- function(x, ...) {
   k <- length(x$S)
   cat(sprintf("<fastpca> %s x %s input; k = %d\n",
               format(attr(x, "n_obs")), format(attr(x, "n_features")), k))
-  cat(sprintf("  method: %s | backend: %s | device: %s\n",
-              .fastpca_method_label(x), attr(x, "backend"), attr(x, "device")))
+  precision <- attr(x, "precision")
+  cat(sprintf("  method: %s | backend: %s | device: %s%s\n",
+              .fastpca_method_label(x), attr(x, "backend"), attr(x, "device"),
+              if (length(precision) && !is.na(precision)) {
+                paste0(" | precision: ", precision)
+              } else ""))
 
   if (identical(attr(x, "method"), "nipals")) {
     missing_fraction <- attr(x, "missing_fraction")
@@ -163,6 +174,16 @@ print.fastpca <- function(x, ...) {
                     length(iterations)))
       }
       cat("\n")
+    }
+  } else if (identical(attr(x, "backend"), "torch_irlba")) {
+    cat(sprintf("  solver: Lanczos (IRLBA), nv = %d, work = %s\n",
+                k, format(attr(x, "work"))))
+    n_iter <- attr(x, "n_iter")
+    if (length(n_iter) && !is.na(n_iter)) {
+      mprod <- attr(x, "mprod")
+      cat(sprintf("  converged in %d iteration%s (%s matrix products)\n",
+                  n_iter, if (identical(as.integer(n_iter), 1L)) "" else "s",
+                  format(mprod)))
     }
   } else {
     cat(sprintf("  solver: %s (p = %s, q_iter = %s)\n",

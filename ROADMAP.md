@@ -70,9 +70,10 @@ decisions are in `TESTING/NIPALS_PLAN.md`. Three items were deliberately left ou
   loading positive) so results are stable across backends and runs. The SVD path
   keeps its current signs, because changing them would alter existing user output;
   unifying the two is an opt-in change for later.
-- *float32 mode.* Every backend computes in double. Single precision would roughly
-  halve memory on the torch backends but moves results by ~1e-4, which would need
-  its own parity tolerance.
+- *float32 mode.* Every backend computes in double except `torch_irlba()`,
+  which added a `precision = "double" | "single"` argument (measured ~1.5x
+  faster and half the memory at ~3e-5 relative singular-value error). Extending
+  the same argument to `FastPCA()`/`NIPALS()` is still open.
 
 ## Iterative / converging SVD
 
@@ -85,6 +86,13 @@ building block for NIPALS.
 Whether this is its own function or a `method = "iterative"` argument on the
 existing solver should wait until NIPALS has settled, so both share a single
 convergence interface.
+
+**Status (0.9.3).** Shipped as its own exported function, `torch_irlba()`,
+which mirrors irlba's iterative arguments and adds the package's
+`precision`/`device` controls. On `data/prepped_gex.rds` used as-is
+(199112 samples x 978 genes) it reproduces `irlba::irlba()` to ~1e-9 and runs
+~2.9x faster in float64; see `TESTING/README.md`, "Orientation correction and
+the packaged torch_irlba()".
 
 ## Other candidates
 

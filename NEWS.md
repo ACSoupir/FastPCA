@@ -1,3 +1,25 @@
+# FastPCA 0.9.3
+
+## Iterative Lanczos SVD: `torch_irlba()`
+
+* Added `torch_irlba()`, an exported iterative SVD that runs irlba's own
+  algorithm (Lanczos bidiagonalisation with implicit restart, classical
+  Gram-Schmidt and `convtests()`) on PyTorch. It mirrors `irlba::irlba()`'s
+  arguments (`nv`, `work`, `maxit`, `reorth`, `tol`, `svtol`, and a
+  starting vector `v`) and returns the same `"fastpca"` object as
+  `FastPCA()`, so `print()`, `summary()`, `pve()` and the accessors work
+  unchanged. Given a shared start vector it agrees with `irlba::irlba()` to
+  about 1e-9 in the singular values while running ~2.9x faster on the package
+  example.
+* Added `precision = "double" | "single"` and `device = "CPU" | "GPU"`
+  controls. Single precision roughly halves memory and is faster; on arm64 Macs
+  a GPU request reaches Metal only in single precision, because MPS has no
+  float64 support (a double-precision GPU request runs on the CPU and reports
+  why). Results record their `precision`, restart count (`n_iter`) and
+  matrix-product count, which `print()` reports.
+* The input is oriented observations x features, as everywhere in the package:
+  rows are samples or cells and columns are features.
+
 # FastPCA 0.9.2
 
 ## NIPALS: PCA with missing values
