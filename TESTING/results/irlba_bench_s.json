@@ -1,0 +1,63 @@
+{
+  "rows": [
+    {
+      "impl": "torch_irlba",
+      "tag": "F2000_na00_fp32-cpu_c1",
+      "m": 978,
+      "n": 2000,
+      "dtype": "fp32",
+      "threads": 1,
+      "nv": 10,
+      "device_requested": "CPU",
+      "device_resolved": "cpu",
+      "device_status": "requested",
+      "load_s": 0.004,
+      "to_device_s": 0.0,
+      "torch_threads_effective": 1,
+      "work": 17,
+      "tol": 1e-05,
+      "svtol": 1e-05,
+      "maxit": 1000,
+      "center": true,
+      "converged": true,
+      "iterations": 6,
+      "mprod": 74,
+      "times_s": [
+        0.0065
+      ],
+      "best_s": 0.0065,
+      "eig": [
+        50319.62890625,
+        38248.390625,
+        26807.91210938,
+        21275.36328125,
+        16521.76953125,
+        14368.17382812,
+        12096.40332031,
+        10364.68261719,
+        9559.25292969,
+        8710.24902344
+      ],
+      "sv": [
+        224.32037354,
+        195.57196045,
+        163.73121643,
+        145.86076355,
+        128.53703308,
+        119.8673172,
+        109.98365021,
+        101.80708313,
+        97.77143097,
+        93.32871246
+      ],
+      "peak_rss_gb": 0.241,
+      "mps_driver_gb": null,
+      "wall_total_s": 0.01,
+      "label": "torch_irlba-F2000_na00_fp32-cpu_c1",
+      "peak_rss_time_l_gb": 0.255,
+      "memguard_peak_gb": 0.255,
+      "killed_by_memguard": false
+    }
+  ],
+  "skipped": []
+}

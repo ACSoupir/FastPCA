@@ -1,0 +1,23 @@
+[
+  {
+    "q_iter": 2,
+    "max_rel_sv_err_worst": 0.10864510127538098,
+    "max_rel_sv_err_best": 0.08836918993149157,
+    "max_angle_deg_worst": 52.35453106661593,
+    "reps": 3
+  },
+  {
+    "q_iter": 4,
+    "max_rel_sv_err_worst": 0.03407877575029321,
+    "max_rel_sv_err_best": 0.017234509290809764,
+    "max_angle_deg_worst": 25.758246105147954,
+    "reps": 3
+  },
+  {
+    "q_iter": 6,
+    "max_rel_sv_err_worst": 0.0034365775519520515,
+    "max_rel_sv_err_best": 0.0028531462054520542,
+    "max_angle_deg_worst": 9.278149894856103,
+    "reps": 3
+  }
+]

@@ -1,0 +1,46 @@
+Precision x device sweep -- torch_irlba (PyTorch port of irlba's algorithm)
+================================================================================
+Machine: Apple silicon, macOS.  torch 2.9.0 (BLAS_INFO=accelerate), MPS available.
+All runs: memguard.py --cap-gb 20 (SIGKILL above 20 GB tree RSS) wrapped in
+/usr/bin/time -l; k = 10 (--nv=10), work = k+7, tol = svtol = 1e-5,
+--threads=1 (matmul is single-core through Accelerate/AMX either way),
+identical start vector (--seed=42).  Reference for the error columns:
+irlba::irlba C fast path on the same centred matrix.
+
+Tier f -- 978 x 199112 (full prepped_gex), best of 2
+--------------------------------------------------------------------------------
+config            best_s   vs fp64 CPU   iter/mprod   peak RSS    max rel eig err
+fp64 / cpu        2.128    1.00x          5 / 66       3.31 GB     1.48e-11
+fp32 / cpu        1.042    2.04x          5 / 66       3.31 GB     6.09e-06
+fp32 / gpu(mps)   0.661    3.22x          5 / 66       3.31 GB     1.62e-06
+
+Principal angles vs irlba: fp64 <=0.0006 deg, fp32/cpu <=0.0021 deg,
+fp32/mps <=0.0009 deg.
+
+Tier s -- 978 x 2000, best of 2
+--------------------------------------------------------------------------------
+config            best_s   note
+fp64 / cpu        0.014    baseline
+fp32 / cpu        0.006    2.3x faster than fp64
+fp32 / gpu(mps)   0.120    20x SLOWER than fp32 CPU -- per-op dispatch and the
+                           host round-trip for svd(B) dominate when m x n is small.
+MPS also pays ~3.5 s of kernel compilation on the first call in a process
+(repeat 1 = 3.49 s, repeat 2 = 0.126 s), so GPU numbers are best-of-N warm.
+
+Platform constraints found by TESTING/device_dtype_probe.py
+--------------------------------------------------------------------------------
+* MPS refuses float64 outright:
+    TypeError: Cannot convert a MPS Tensor to float64 dtype as the MPS framework
+    doesn't support float64. Please use float32 instead.
+  -> an fp64 + GPU request is served on the CPU and reported as
+     device_status = "mps-fp64-downgrade"; dtype is never silently changed.
+* No native MPS linalg.qr / svdvals / eigh in torch 2.9; plain linalg.svd
+  silently falls back to the CPU with a warning per call, so irlba_torch.py
+  moves the work x work matrix to the host explicitly.
+* The empty-subspace projection in orthog() (j == 0) tripped an MPS internal
+  assert ("Placeholder tensor is empty!") until it short-circuits on an empty X.
+* fp64 3072-square GEMM: ~320 GFLOPS, cpu/wall = 1.00x at threads=1 and 4
+  (single AMX core).  fp32: ~1100 GFLOPS on the same single core.
+* MPS does not show up in ru_maxrss: RSS stayed at 3.31 GB while the fp32
+  matrix (779 MB) lived on the GPU, so irlba_torch.py also checks
+  torch.mps.driver_allocated_memory() each repeat and aborts above --max-gb.

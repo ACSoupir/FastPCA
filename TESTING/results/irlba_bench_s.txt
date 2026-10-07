@@ -1,0 +1,16 @@
+======== tier=s  978 x 2000  ncomp=10 work=17 cap=20 GB ========
+--- torch_irlba-F2000_na00_fp32-cpu_c1 ---
+[torch_irlba] loaded 978x2000 dtype=fp32 device=cpu (requested) in 0.00s +0.00s transfer peakRSS=0.237GB
+[torch_irlba] repeat 1: 0.007s iter=6 mprod=74
+[torch_irlba] best=0.007s iter=6 mprod=74 peakRSS=0.241GB sv[:5]=[224.32040405273438, 195.57200622558594, 163.731201171875, 145.8607940673828, 128.53700256347656]
+[torch_irlba] wrote /Users/4471592/Documents/share/lab_soupir/projects/FastPCA/TESTING/_tmp/torch_irlba_F2000_na00_fp32-cpu_c1.*
+== validation (singular values + principal angles) ==
+n=10 max_rel_eig_err=1.555e-06 mean=7.584e-07 | max_angle=0.0041 deg mean=0.0005 deg
+VALIDATE_JSON {"n": 10, "max_rel_eig_err": 1.5554749866056718e-06, "mean_rel_eig_err": 7.583721018052711e-07, "max_angle_deg": 0.004148372725852306, "mean_angle_deg": 0.0004521853798115632}
+n=10 max_rel_eig_err=1.555e-06 mean=7.585e-07 | max_angle=0.0018 deg mean=0.0002 deg
+VALIDATE_JSON {"n": 10, "max_rel_eig_err": 1.5554749886576172e-06, "mean_rel_eig_err": 7.584872493273118e-07, "max_angle_deg": 0.0017653559667297999, "mean_angle_deg": 0.0002139364523938623}
+== collected results ==
+label                             best_s   RSS_GB   MG_GB  iter/mprod  sv1
+torch_irlba-F2000_na00_fp32-cpu_c1     0.006    0.255   0.255        6/74  224.32
+
+wrote /Users/4471592/Documents/share/lab_soupir/projects/FastPCA/TESTING/results/irlba_bench_s.json

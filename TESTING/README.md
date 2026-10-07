@@ -51,6 +51,20 @@ Reconstruction error is identical to the baseline in every row
 | `results/tinygrad_bench.txt` | raw tinygrad measurements |
 | `tinygrad_transform_optim.py` | optimized tinygrad prep_matrix transform (log2/transpose/scale) |
 | `tg_transform_bench.py` | transform correctness + speed/memory benchmark |
+| `irlba_torch.py` | PyTorch port of irlba's Lanczos + implicit-restart iteration |
+| `irlba_r.R` | irlba::irlba fast C path and pure-R fallback, for comparison |
+| `fastpca_torch_bench.R` | FastPCA(backend = "pytorch") through the installed R API |
+| `fastpca_kernel_bench.py` | the shipped randomized_svd_py called directly (no reticulate) |
+| `irlba_accuracy.py` | randomized-kernel error vs q_iter against the exact irlba reference |
+| `memguard.py` | hard RSS cap: SIGKILL the process group above --cap-gb |
+| `memguard_selftest.sh` | proves the cap (survive / kill at 137 / pre-flight refusal) |
+| `run_irlba_bench.sh` | reproduces the IRLBA sweep, one implementation per process |
+| `irlba_collect.py` | merges RESULT_JSON + peak RSS into results/irlba_bench_*.json |
+| `results/irlba_bench_{s,m,f}.{txt,json}` | raw IRLBA measurements |
+| `results/irlba_accuracy_{s,f}.json` | randomized error vs q_iter |
+| `thread_probe.py`, `thread_probe2.py` | measures cores actually used (cpu/wall) vs the requested count |
+| `run_thread_verify.sh` | reproduces the thread-binding evidence into results/thread_verify.txt |
+| `results/thread_verify.txt` | raw thread-binding measurements |
 
 ## Why it is faster
 
@@ -293,9 +307,13 @@ function rather than another `backend =`. This section measures what it costs.
 | `run_nipals_bench.sh` | tiers s / m / f, one implementation per process under `/usr/bin/time -l` |
 | `vendor/nipals/` | vendored CRAN source (CRAN is unreachable from this sandbox) |
 
-Data: `data/prepped_gex.rds`, 199112 features x 978 samples, **zero NAs**. PCA
-orientation is samples x features (978 x F); all cells are kept and only
-*features* are subsampled, because that is the axis with room to spare. Peak RSS
+Data: `data/prepped_gex.rds`, **199112 samples (cells) x 978 features
+(genes)**, **zero NAs** -- already the samples x features orientation PCA wants.
+The Seurat assay behind it has dim `features x cells = 978 x 199112` with gene
+symbols in the feature rownames, so no transpose is needed. `nipals_export.R`
+nevertheless treats rows as features and writes the transpose (`978 x F`, genes
+as observations), which is what every table below measured; see the orientation
+correction near the end for exactly what that does and does not change. Peak RSS
 is measured identically for R and python by `/usr/bin/time -l`.
 
 ### Tier m -- 978 x 20,000 features (10% of genes), ncomp = 10
@@ -406,6 +424,323 @@ because its inner loop materialises a full nobs x nvar matrix every iteration.
 * `scale = FALSE` (centre only) everywhere, so every implementation does the same
   work; `--scale=1` is available on both sides.
 * Missingness here is synthetic MCAR; the shipped example data has no NAs.
+## Iterative (IRLBA) PCA: PyTorch port vs irlba::irlba and FastPCA-pytorch
+
+`FastPCA(backend = "pytorch")` is a **randomized** SVD: it estimates the leading
+subspace from one random sketch plus `q_iter` power iterations. An **iterative**
+Lanczos solver (what `irlba::irlba` implements) instead grows an explicit Krylov
+basis and restarts it until the singular values stop moving -- many more
+matrix-vector products, but near-exact. This section asks how a faithful PyTorch
+port of irlba's own algorithm compares, on the shipped example matrix, with (a)
+the `irlba` package and (b) FastPCA's randomized backend.
+
+### Implementations
+
+| file | what it runs |
+|---|---|
+| `TESTING/irlba_torch.py` | PyTorch transcription of irlba's pure-R fallback: Lanczos bidiagonalization + implicit restart, `svd(B)` per sweep, irlba's own `convtests()` stopping rule |
+| `TESTING/irlba_r.R --impl=fast` | `irlba::irlba()` C fast path (the package version) |
+| `TESTING/irlba_r.R --impl=fallback` | `irlba::irlba(fastpath = FALSE)`, the pure-R reference |
+| `TESTING/fastpca_torch_bench.R` | installed FastPCA 0.9.0.0 `FastPCA(backend = "pytorch")` through reticulate |
+| `TESTING/fastpca_kernel_bench.py` | the shipped `torch_svd_func.py::randomized_svd_py` called directly, no reticulate |
+
+Data: `data/prepped_gex.rds` (199112 features x 978 samples) transposed to
+samples x features and column-centred by every runner, so all five see identical
+bytes. `k = 10`; the iterative solvers use `work = k + 7 = 17`, the randomized
+ones their package defaults (`p = 10`, `q_iter = 2` -> a 20-column sketch).
+
+### Harness
+
+One implementation per process. Each run is wrapped by
+`TESTING/memguard.py --cap-gb 20`, which polls the resident size of the whole
+process tree (via `proc_pid_rusage`; `/bin/ps` is denied in this sandbox) and
+SIGKILLs the process group above 20 GB, then by `/usr/bin/time -l` for an
+independent peak-RSS reading. Thread count is set with `--threads/--cores` and
+swept over 1 / 2 / 4. `TESTING/run_irlba_bench.sh` reproduces everything;
+`memguard_selftest.sh` proves the cap (a 1.5 GB child under a 0.25 GB ceiling is
+SIGKILLed, exit 137).
+
+`DTYPE=fp64|fp32` and `DEVICE=cpu|gpu` are passed through to
+[irlba_torch.py](TESTING/irlba_torch.py), so the precision x device sweep is
+just repeated harness invocations:
+
+    TIER=f DTYPE=fp64 DEVICE=cpu ./TESTING/run_irlba_bench.sh
+    TIER=f DTYPE=fp32 DEVICE=cpu ./TESTING/run_irlba_bench.sh
+    TIER=f DTYPE=fp32 DEVICE=gpu ./TESTING/run_irlba_bench.sh
+
+Measured results for that sweep are recorded in
+[results/precision_device.txt](TESTING/results/precision_device.txt).
+
+### Results -- full `prepped_gex` (978 x 199112), k = 10
+
+best of 3; RSS is `/usr/bin/time -l` peak:
+
+| implementation | cores=1 | cores=2 | cores=4 | peak RSS GB |
+|---|---|---|---|---|
+| **`torch_irlba`** (this port) | 1.780 s | **1.764 s** | 1.777 s | **3.31** |
+| `fastpca_kernel` (direct) | 0.701 s | 0.645 s | **0.624 s** | 3.49 |
+| `fastpca_torch` (R API) | 0.779 s | **0.719 s** | 0.734 s | 5.28 |
+| `irlba::irlba` (C fast path) | -- | 8.640 s | -- | 4.97 |
+| `irlba(fastpath = FALSE)` (R) | -- | 11.170 s | -- | 5.82 |
+
+### Accuracy
+
+Against the C fast path (itself equal to a full `numpy.linalg.svd` on F2000):
+
+| implementation | max rel. eigenvalue error | max loading-subspace angle |
+|---|---|---|
+| `torch_irlba` | **1.5e-11** | 0.0006 deg |
+| `fastpca_kernel`, q_iter=2 (default) | 1.6e-01 | 54 deg |
+| `fastpca_torch`, q_iter=2 (default) | 1.4e-01 | 38 deg |
+
+The port matches irlba's *own* pure-R fallback even more tightly: given the same
+start vector, F2000 agrees to 3.5e-15 on the eigenvalues and ~1e-6 degrees
+between loading subspaces, with identical iteration counts (`iter = 7`,
+`mprod = 82`) and the same convergence test.
+
+The randomized error is a property of this near-flat spectrum, not a bug --
+extra power iterations converge it:
+
+| q_iter | max rel. singular-value error, F2000 | full |
+|---|---|---|
+| 2 (default) | 8.8 - 10.9% | 3.9 - 10.6% |
+| 4 | 1.7 - 3.4% | 0.13 - 1.35% |
+| 6 | 0.29 - 0.34% | 0.05 - 0.24% |
+
+Even at `q_iter = 6` the randomized kernel is orders of magnitude less accurate
+than the iterative port, which reaches machine precision.
+
+### Size scaling (k = 10)
+
+| matrix | `torch_irlba` best | `fastpca_kernel` best | FastPCA-R best | `irlba_fast` |
+|---|---|---|---|---|
+| 978 x 2000   | **12 ms** (c2) | 21 ms | 90 ms | 105 ms |
+| 978 x 20000  | 190 ms (c2) | **77 ms** (c4) | 141 ms | 865 ms |
+| 978 x 199112 | 1.76 s (c2) | **0.62 s** (c4) | 0.72 s | 8.64 s |
+
+### Does the thread knob actually bind? (yes -- but not to matmul)
+
+`--threads/--cores` reaches `torch.set_num_threads()`, and torch honours it:
+inside every run `get_num_threads()` returns exactly the requested value, and
+the knob is demonstrably live because ATen's elementwise/reduction kernels scale:
+
+| requested 1 -> 4 | op (978 x 199112 fp64) | wall @1 thr | wall @4 thr | parallelism |
+|---|---|---|---|---|
+| `x.mul(2)`   | elementwise (ATen pool) | 152 ms | 72 ms | **1.00x -> 2.77x** |
+| `x.sum()`    | reduction   (ATen pool) | 24 ms  | 14 ms | **1.00x -> 3.95x** |
+
+Every matrix product in these solvers, however, is dispatched to **Apple
+Accelerate** (`torch.__config__`: `BLAS_INFO=accelerate`, `USE_MKL=OFF`), and
+Accelerate executes these GEMMs single-threaded:
+
+| shape | requested=1 | requested=4 | parallelism |
+|---|---|---|---|
+| skinny `(978 x 199112) @ (199112 x 17)` | 85.6 ms | 85.1 ms | **1.00x / 1.00x** |
+| square `2048 x 2048` fp64 | 49.2 ms | 49.8 ms | **1.00x / 1.00x** |
+
+`OMP_NUM_THREADS=1`, `VECLIB_MAXIMUM_THREADS=8` and requested=8 make no
+difference either. End to end on the real tier-f workload,
+`cpu/wall = (user+sys)/real` is ~1.0x at both settings:
+
+| run | threads=1 | threads=4 |
+|---|---|---|
+| `torch_irlba` best / cpu-wall | 2.04 s / **0.98x** | 2.00 s / **1.07x** |
+| `fastpca_kernel` best / cpu-wall | 0.75 s / **1.07x** | 0.66 s / **1.15x** |
+
+So the flat core sweep is real, and it means *one core does all of the work* --
+not that a fixed larger pool was always engaged. The knob is respected by
+PyTorch; it simply has nothing to act on, because the cost lives in BLAS. A
+single core sustains ~350 GFLOPS fp64 on a 4096-square GEMM (Apple's matrix
+unit, single-threaded), which is why spreading identical work over more cores
+does not pay. The real levers on this hardware are precision and execution unit
+(fp32, then MPS/GPU), not more CPU threads -- see the next section.
+
+`TESTING/run_thread_verify.sh` reproduces every number above into
+`results/thread_verify.txt`.
+
+### Can the single core be avoided? (yes -- but it is slower)
+
+Single-core GEMM is a property of **Accelerate**, not of the hardware. Accelerate
+dispatches these GEMMs to Apple's AMX matrix unit automatically and exposes no
+supported runtime switch to disable it, so there is nothing to toggle inside the
+torch wheel. But you are not stuck on one core: swapping in a BLAS that threads
+gets you real parallelism. In this same conda env `numpy` links such a library:
+
+| fp64 3072-square GEMM | wall | cpu/wall |
+|---|---|---|
+| torch, `threads=1` (Accelerate/AMX) | 162.0 ms | **1.00x** |
+| torch, `threads=4` (Accelerate/AMX) | 162.2 ms | **1.00x** |
+| numpy (its own BLAS) | 272.7 ms | **3.99x** |
+
+So multi-core *is* reachable -- and it still loses: one AMX core (162 ms) beats
+~4 OpenBLAS cores (273 ms) by 1.7x, because one AMX core sustains ~350 GFLOPS
+fp64 while the threaded library manages only ~50 GFLOPS/core. That is why every
+torch row here is single-core and why the core sweep is flat: routing these GEMMs
+through a threaded BLAS would add parallelism and *reduce* performance.
+
+The other execution unit is Metal/MPS, and it *is* fast in fp32 (3072-square
+GEMM: 11.9 ms on MPS vs 44.5 ms for CPU fp32). But it refuses float64 outright:
+
+    Cannot convert a MPS Tensor to float64 dtype as the MPS framework
+    doesn't support float64. Please use float32 instead.
+
+`TESTING/blas_backend_probe.py` reproduces those GEMM numbers
+(`KMP_DUPLICATE_LIB_OK=TRUE python TESTING/blas_backend_probe.py`).
+
+### Precision x device: fp32 is the real lever, not cores
+
+[irlba_torch.py](TESTING/irlba_torch.py) takes `--precision double|single`
+(`fp64`/`fp32` are accepted aliases) and `--device CPU|GPU`, treated as
+**independent** choices. The vocabulary deliberately matches FastPCA's own:
+`R/validate.R` defines `.fastpca_devices <- c("CPU", "GPU")`, a GPU request
+means CUDA when available and otherwise falls back to the CPU **with a message**,
+and that is exactly what this port does now (same wording as
+[inst/python/nipals_func.py](inst/python/nipals_func.py)). One platform rule is
+added on top: because MPS cannot hold float64, an fp64 + Apple-GPU request is
+served on the CPU and *reported* (`device_status = "mps-fp64-downgrade"`)
+instead of silently changing dtype.
+
+Because the package has no Apple value in `.fastpca_devices`, MPS is reachable
+here only through an explicit benchmark-only `--device MPS`, and it is fp32
+only. Verified on this machine (tier s, k = 5):
+
+| request | resolved | `device_status` |
+|---|---|---|
+| `--precision double --device GPU` | cpu (no CUDA here) | `no-gpu-fallback` |
+| `--precision single --device GPU` | cpu (no CUDA here) | `no-gpu-fallback` |
+| `--precision single --device MPS` | **mps** | `requested` |
+| `--precision double --device MPS` | cpu | `mps-fp64-downgrade` |
+
+**This whole constraint is Apple-only.** CUDA supports float64 natively, so on a
+Linux/NVIDIA host `device = "GPU"` with the fp64 default runs on the GPU
+unchanged -- there is nothing to fix in the package for that case. Two things are
+worth documenting rather than changing: on consumer GeForce parts fp64 runs at a
+fraction of the fp32 rate (datacentre cards are fine), so `GPU` + float64 can
+still lose to the CPU; and on arm64 Macs `torch_svd_func_exact.py` would report
+success while silently running the whole solve on the host, because MPS has no
+native `linalg.svd`.
+
+Tier f (978 x 199112, k = 10), best of 2, identical start vector and `tol`:
+
+| config | best | vs fp64 CPU | iter / mprod | max rel. eigenvalue err vs `irlba` |
+|---|---|---|---|---|
+| fp64 CPU (AMX) | 2.128 s | 1.00x | 5 / 66 | 1.5e-11 |
+| **fp32 CPU (AMX)** | **1.042 s** | **2.04x** | 5 / 66 | 6.1e-06 |
+| **fp32 MPS (GPU)** | **0.661 s** | **3.22x** | 5 / 66 | 1.6e-06 |
+
+So the way around "one core" is not more cores, and not necessarily even the
+GPU: fp32 on the *same* single AMX core is 2x faster than fp64, and MPS adds
+another ~1.5x at full width -- 3.2x over the fp64 baseline, with principal
+angles under 0.003 degrees and a relative eigenvalue error two orders below
+`tol = 1e-5`.
+
+**MPS only wins once the matrices are wide.** At tier s (978 x 2000) the same
+solve is **120 ms on MPS vs 6 ms fp32 CPU** -- 20x *slower*, because each of the
+~74 products is tiny and every call pays dispatch plus a host round-trip for the
+small SVD. Related op gaps in torch 2.9: there is no native MPS
+`linalg.qr`, `svdvals` or `eigh`, and plain `linalg.svd` silently falls back
+to the CPU with a warning per call, so [irlba_torch.py](TESTING/irlba_torch.py)
+moves the `work x work` matrix to the host explicitly. The first MPS call in a
+process also pays ~3.5 s of kernel compilation (repeat 1 = 4.31 s, repeat 2 =
+0.66 s), so GPU timings are best-of-N after a warm-up.
+
+**The RSS cap does not see Metal memory.** `ru_maxrss` stayed at 3.31 GB while
+the fp32 matrix sat on the GPU (memguard saw a 2.78 GB tree peak), so
+[irlba_torch.py](TESTING/irlba_torch.py) also checks
+`torch.mps.driver_allocated_memory()` after every repeat and aborts above
+`--max-gb`. An RSS-only guard would under-count an MPS run. (The empty-subspace
+guard added to [orthog()](TESTING/irlba_torch.py#L66-L75) is likewise defensive:
+the `(m, 0) @ (0,)` projection trips an MPS-internal *"Placeholder tensor is
+empty!"* assert that the CPU tolerates.)
+
+[device_dtype_probe.py](TESTING/device_dtype_probe.py) records the platform
+facts behind this section:
+
+    KMP_DUPLICATE_LIB_OK=TRUE python TESTING/device_dtype_probe.py
+
+### What this says
+
+* The PyTorch port is **4.9x faster than `irlba::irlba`'s C path** and 6.3x
+  faster than the R fallback on full data, with results identical to ~1e-11.
+  That is the "better performance without losing accuracy" result.
+* FastPCA's randomized backend is another ~2.5x faster again, but on this
+  near-flat spectrum its default `q_iter = 2` is ~16% off on the later singular
+  values. Use `torch_irlba` (or raise `q_iter` and pay for it) when the tail
+  matters.
+* **Core count barely moves anything, and that is expected.** The flag is
+  honoured by PyTorch but matmul runs single-threaded through Apple Accelerate,
+  so one core performs all the work: `torch_irlba` is flat across 1/2/4 threads
+  and the randomized kernel's ~11% (0.70 -> 0.62 s) comes from its non-BLAS
+  elementwise work, not from a faster GEMM. See "Does the thread knob actually
+  bind?" above for the `cpu/wall` measurements.
+* **Precision beats core count.** fp32 on the same AMX core is 2.04x faster
+  than fp64 at tier f (1.042 s vs 2.128 s) and MPS adds another ~1.5x
+  (0.661 s), all within `tol`: see "Precision x device" above.
+* Memory on full data: `torch_irlba` 3.31 GB < direct kernel 3.49 GB <
+  `irlba` C 4.97 GB < FastPCA-R API 5.28 GB < R fallback 5.82 GB. Every run
+  stayed well under the 20 GB ceiling; nothing was killed.
+
+### Caveats
+
+* R runs on **reference BLAS** (`libRblas.0.dylib`, single-threaded) while the
+  torch rows use Apple Accelerate (also effectively single-threaded here), so
+  part of the port's margin is BLAS quality rather than algorithm. The
+  algorithmic match was verified separately with a shared start vector.
+* FastPCA-pytorch pays for the R -> numpy conversion: 5.28 GB versus 3.49 GB for
+  the same kernel called directly from Python.
+* The FastPCA rows benchmark the **installed** package (0.9.0.0); this checkout's
+  `R/FastPCA.R` differs only in defaults (`cores`, variance bookkeeping) and
+  adds the tinygrad backend.
+* The full tier is 1.45 GiB of doubles; its `X_*.f64` export is regenerated by
+  the orchestrator and deleted again on this machine's small disk.
+* Run-to-run spread is a few percent; the core-sweep differences sit inside it
+  except for the randomized kernel's consistent ~11% at four threads.
+
+## Orientation correction and the packaged `torch_irlba()`
+
+The IRLBA/NIPALS benchmarks above ran on the transpose of the example data, and
+that is worth stating plainly because it flips which axis gets centred.
+
+**The evidence.** `data/seurat_object_v5.rds` carries the same matrix: its
+default assay (`Nanostring`) is `978 x 199112` with gene symbols in the
+**feature** rownames (`ABL1`, `ABL2`, ...) and cell barcodes in the columns
+(`Run5448.RCC3_1_1`). So `data/prepped_gex.rds`, at `199112 x 978`, is
+**samples (cells) x features (genes)** already, and standard PCA centres its 978
+columns. `nipals_export.R` assumed rows were features, so it wrote the
+transpose (`978 x F`) and every runner column-centred *cells* instead of genes.
+
+**What it changes.** Singular values are transpose-invariant, so the
+accuracy-vs-`irlba` comparisons stand: on the full matrix,
+`max |d(A) - d(t(A))| / d = 2.8e-11`. What changes is the centring axis, hence
+the actual principal subspace and PVE -- these are gene-wise PCs only in the
+correct orientation.
+
+**The packaged function.** The port was promoted into the package as an exported
+`torch_irlba()` ([R/torch_irlba.R](R/torch_irlba.R), kernel
+[inst/python/torch_irlba_func.py](inst/python/torch_irlba_func.py)). It mirrors
+`irlba::irlba()`'s iterative arguments (`nv`, `work`, `maxit`, `reorth`,
+`tol`, `svtol`, `v`) and adds the package's backend controls:
+`precision = "double" | "single"` and `device = "CPU" | "GPU"`, with the same
+fastpca result contract as `FastPCA()`/`NIPALS()`. It validates arguments
+before touching Python, and with a shared start vector it reproduces
+`irlba::irlba()`.
+
+**Correct-orientation measurement.** `data/prepped_gex.rds` used as-is
+(199112 samples x 978 genes), gene-wise centring, `k = 10`, shared start
+vector, best of 2 ([TESTING/irlba_orientation_check.R](TESTING/irlba_orientation_check.R),
+raw output [results/irlba_orientation.txt](TESTING/results/irlba_orientation.txt)):
+
+| implementation | time s | rel. eigenvalue error vs `irlba` | max principal angle |
+|---|---|---|---|
+| `irlba::irlba()` (C fast path) | 8.438 | reference | -- |
+| `torch_irlba()` fp64, CPU | 2.961 | 2.19e-09 | 0.0027 deg |
+| `torch_irlba()` fp32, CPU | **1.897** | 3.46e-05 | 0.238 deg |
+| `torch_irlba()` fp32, GPU (Metal) | **1.718** | 1.66e-06 | 0.037 deg |
+
+On the correctly-oriented data the PyTorch Lanczos solver is **~2.9x faster than
+irlba's C path in float64**, and ~4.5-4.9x faster once precision is lowered,
+while agreeing with `irlba` to 1e-9 in float64.
+
 ## Next steps
 
 - ~~NIPALS is measured and validated here but not yet in the package~~ —
@@ -414,8 +749,10 @@ because its inner loop materialises a full nobs x nvar matrix every iteration.
   `tests/testthat/test-nipals.R`.
 - ~~Enable `backend="tinygrad"`~~ — done for both `FastPCA()` and
   `prep_matrix()`, including the optimized matrix transform.
-- Add a low-precision (float32) option to the R API so users can opt into the
-  ~3–5× PyTorch path.
+- ~~Add a low-precision (float32) option to the R API~~ — partially done:
+  `torch_irlba()` takes `precision = "double" | "single"` and
+  `device = "CPU" | "GPU"`. Still to do: thread the same two arguments through
+  `FastPCA()`/`NIPALS()` and their Python kernels.
 - Optional/future: a custom native SVD kernel for `B`. Investigated and rejected
   for now (see "The final small SVD"): tinygrad's `Tensor.svd` is unusable and it
   exposes no eigh/eig/cholesky/solve, so numpy's Gram+eigh is the fastest route.

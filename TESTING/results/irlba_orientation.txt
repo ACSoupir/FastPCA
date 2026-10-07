@@ -1,0 +1,15 @@
+Warning message:
+package ‘testthat’ was built under R version 4.5.2 
+prepped_gex.rds: 199112 x 978 (samples x features)  1.45 GiB
+k=10 work=17, best of 2
+irlba::irlba (C)        8.438 s
+torch_irlba fp64 CPU    2.961 s
+torch_irlba fp32 CPU    1.897 s
+torch_irlba fp64       rel. eig err 2.190e-09   max angle 0.00270 deg
+torch_irlba fp32       rel. eig err 3.461e-05   max angle 0.23784 deg
+torch_irlba fp32 MPS    1.718 s
+torch_irlba fp32 MPS   rel. eig err 1.663e-06   max angle 0.03741 deg
+
+transpose check (singular values are invariant):
+  max |d(A) - d(t(A))| / d = 2.844e-11
+  (the centred subspaces differ because the centring axis changes)

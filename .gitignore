@@ -23,3 +23,6 @@ tests/testthat/testthat-problems.rds
 
 # local scratch (benchmark logs, generated matrices)
 TESTING/_logs/
+
+# workspace-local R library used for verification (e.g. a missing Import)
+.Rlib/

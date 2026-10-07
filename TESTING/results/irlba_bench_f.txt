@@ -1,0 +1,82 @@
+======== tier=f  978 x 199112  ncomp=10 work=17 cap=20 GB ========
+--- torch_irlba-F199112_na00_c1 ---
+[torch_irlba] loaded 978x199112 dtype=fp64 in 0.64s peakRSS=3.215GB
+[torch_irlba] repeat 1: 1.779s iter=5 mprod=66
+[torch_irlba] repeat 2: 1.800s iter=5 mprod=66
+[torch_irlba] repeat 3: 1.802s iter=5 mprod=66
+[torch_irlba] best=1.779s iter=5 mprod=66 peakRSS=3.215GB sv[:5]=[2247.6791, 1876.7701, 1592.7063, 1352.2678, 1217.7429]
+[torch_irlba] wrote /Users/4471592/Documents/share/lab_soupir/projects/FastPCA/TESTING/_tmp/torch_irlba_F199112_na00_c1.*
+--- fastpca_kernel-F199112_na00_c1 ---
+[fastpca_kernel] repeat 1: 0.711s
+[fastpca_kernel] repeat 2: 0.706s
+[fastpca_kernel] repeat 3: 0.701s
+[fastpca_kernel] best=0.701s peakRSS=3.489GB sv[:5]=[2247.669, 1876.7282, 1592.3688, 1351.4897, 1213.9011]
+--- fastpca_torch-F199112_na00_c1 ---
+[fastpca_torch] repeat 1: 0.785s
+[fastpca_torch] repeat 2: 0.779s
+[fastpca_torch] repeat 3: 0.782s
+[fastpca_torch] best=0.779s (warmup 3.99s) sv[:5]=2247.6703, 1876.6965, 1592.5515, 1350.6024, 1214.4155
+--- torch_irlba-F199112_na00_c2 ---
+[torch_irlba] loaded 978x199112 dtype=fp64 in 0.32s peakRSS=3.311GB
+[torch_irlba] repeat 1: 1.779s iter=5 mprod=66
+[torch_irlba] repeat 2: 1.772s iter=5 mprod=66
+[torch_irlba] repeat 3: 1.765s iter=5 mprod=66
+[torch_irlba] best=1.765s iter=5 mprod=66 peakRSS=3.311GB sv[:5]=[2247.6791, 1876.7701, 1592.7063, 1352.2678, 1217.7429]
+[torch_irlba] wrote /Users/4471592/Documents/share/lab_soupir/projects/FastPCA/TESTING/_tmp/torch_irlba_F199112_na00_c2.*
+--- fastpca_kernel-F199112_na00_c2 ---
+[fastpca_kernel] repeat 1: 0.650s
+[fastpca_kernel] repeat 2: 0.645s
+[fastpca_kernel] repeat 3: 0.651s
+[fastpca_kernel] best=0.645s peakRSS=3.486GB sv[:5]=[2247.6727, 1876.7114, 1592.4903, 1349.6175, 1216.2315]
+--- fastpca_torch-F199112_na00_c2 ---
+[fastpca_torch] repeat 1: 0.783s
+[fastpca_torch] repeat 2: 0.724s
+[fastpca_torch] repeat 3: 0.719s
+[fastpca_torch] best=0.719s (warmup 3.52s) sv[:5]=2247.6665, 1876.7345, 1592.3324, 1351.4844, 1215.3699
+--- torch_irlba-F199112_na00_c4 ---
+[torch_irlba] loaded 978x199112 dtype=fp64 in 0.32s peakRSS=3.311GB
+[torch_irlba] repeat 1: 1.777s iter=5 mprod=66
+[torch_irlba] repeat 2: 1.809s iter=5 mprod=66
+[torch_irlba] repeat 3: 1.882s iter=5 mprod=66
+[torch_irlba] best=1.777s iter=5 mprod=66 peakRSS=3.311GB sv[:5]=[2247.6791, 1876.7701, 1592.7063, 1352.2678, 1217.7429]
+[torch_irlba] wrote /Users/4471592/Documents/share/lab_soupir/projects/FastPCA/TESTING/_tmp/torch_irlba_F199112_na00_c4.*
+--- fastpca_kernel-F199112_na00_c4 ---
+[fastpca_kernel] repeat 1: 0.637s
+[fastpca_kernel] repeat 2: 0.624s
+[fastpca_kernel] repeat 3: 0.626s
+[fastpca_kernel] best=0.624s peakRSS=3.487GB sv[:5]=[2247.6679, 1876.7179, 1592.5958, 1351.481, 1215.5512]
+--- fastpca_torch-F199112_na00_c4 ---
+[fastpca_torch] repeat 1: 0.734s
+[fastpca_torch] repeat 2: 0.734s
+[fastpca_torch] repeat 3: 0.752s
+[fastpca_torch] best=0.734s (warmup 4.03s) sv[:5]=2247.6647, 1876.6957, 1592.5504, 1351.4359, 1215.8909
+--- irlba_fast-F199112_na00 ---
+[R] loaded 978x199112 impl=fast in 0.41s
+[R] fast best=8.640s iter=5 mprod=66 sv[:5]=2247.6791, 1876.7701, 1592.7063, 1352.2678, 1217.7429
+--- irlba_fallback-F199112_na00 ---
+[R] loaded 978x199112 impl=fallback in 0.39s
+[R] fallback best=11.170s iter=5 mprod=66 sv[:5]=2247.6791, 1876.7701, 1592.7063, 1352.2678, 1217.7429
+== validation (singular values + principal angles) ==
+n=10 max_rel_eig_err=5.134e-11 mean=5.137e-12 | max_angle=0.0012 deg mean=0.0001 deg
+VALIDATE_JSON {"n": 10, "max_rel_eig_err": 5.1344987831507533e-11, "mean_rel_eig_err": 5.137153774041893e-12, "max_angle_deg": 0.0012316418005562078, "mean_angle_deg": 0.00012503508162052787}
+n=10 max_rel_eig_err=1.483e-11 mean=1.485e-12 | max_angle=0.0006 deg mean=0.0001 deg
+VALIDATE_JSON {"n": 10, "max_rel_eig_err": 1.4828299693404598e-11, "mean_rel_eig_err": 1.4853296671343457e-12, "max_angle_deg": 0.0005700299528194218, "mean_angle_deg": 5.9407325449323777e-05}
+n=10 max_rel_eig_err=1.596e-01 mean=3.270e-02 | max_angle=54.0839 deg mean=8.8133 deg
+VALIDATE_JSON {"n": 10, "max_rel_eig_err": 0.1596407449748536, "mean_rel_eig_err": 0.03270122685998488, "max_angle_deg": 54.083858346800255, "mean_angle_deg": 8.813271888286447}
+n=10 max_rel_eig_err=1.392e-01 mean=2.606e-02 | max_angle=37.6313 deg mean=6.7236 deg
+VALIDATE_JSON {"n": 10, "max_rel_eig_err": 0.13915622250356374, "mean_rel_eig_err": 0.026060950572942065, "max_angle_deg": 37.6312746613584, "mean_angle_deg": 6.723566410468777}
+== collected results ==
+label                             best_s   RSS_GB   MG_GB  iter/mprod  sv1
+torch_irlba-F199112_na00_c1        1.780    3.215   3.211        5/66  2247.68
+fastpca_kernel-F199112_na00_c1     0.701    3.489   3.489              2247.67
+fastpca_torch-F199112_na00_c1      0.779    5.272   5.272              2247.67
+torch_irlba-F199112_na00_c2        1.764    3.311   2.086        5/66  2247.68
+fastpca_kernel-F199112_na00_c2     0.645    3.486   3.486              2247.67
+fastpca_torch-F199112_na00_c2      0.719    5.281   5.281              2247.67
+torch_irlba-F199112_na00_c4        1.777    3.311   3.199        5/66  2247.68
+fastpca_kernel-F199112_na00_c4     0.624    3.487   3.487              2247.67
+fastpca_torch-F199112_na00_c4      0.734    5.300   5.300              2247.66
+irlba_fast-F199112_na00            8.640    4.968   4.968        5/66  2247.68
+irlba_fallback-F199112_na00       11.170    5.822   5.814        5/66  2247.68
+
+wrote /Users/4471592/Documents/share/lab_soupir/projects/FastPCA/TESTING/results/irlba_bench_f.json
