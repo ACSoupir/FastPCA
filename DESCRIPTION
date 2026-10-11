@@ -1,6 +1,6 @@
 Package: FastPCA
 Title: Fast SVD, Randomized and Exact, with Missing-Value PCA
-Version: 0.9.3
+Version: 0.10.0
 Authors@R:
     person("Alex", "Soupir", , "Alex.Soupir@moffitt.org",
            role = c("aut", "cre"))
@@ -11,8 +11,10 @@ Description: Fast randomized and exact singular value decomposition (SVD)
     PyTorch or tinygrad backends are accessed through the 'reticulate'
     package. Principal component analysis that tolerates missing values is
     provided by NIPALS(), with a reference implementation from the 'nipals'
-    package. Helpers for matrix transformation and UMAP embedding are also
-    provided.
+    package. Principal component analysis of data that does not fit in memory is
+    provided by IncrementalPCA(), which streams a list of chunk files (base R,
+    PyTorch or tinygrad backends). Helpers for matrix transformation and UMAP
+    embedding are also provided.
 URL: https://github.com/ACSoupir/FastPCA, https://acsoupir.github.io/FastPCA/
 BugReports: https://github.com/ACSoupir/FastPCA/issues
 License: MIT + file LICENSE
@@ -35,7 +37,9 @@ Suggests:
     SeuratObject,
     testthat (>= 3.0.0),
     torch
-SystemRequirements: Python (>= 3.9) for the 'pytorch' and 'tinygrad' backends
+SystemRequirements: Python (>= 3.9) for the 'pytorch' and 'tinygrad'
+    backends; the 'zstd' command-line tool to read .zst chunk files in
+    IncrementalPCA()
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 Roxygen: list(markdown = TRUE)

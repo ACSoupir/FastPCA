@@ -41,6 +41,19 @@ get_python_files = function(backend = NULL){
       nipals_tinygrad_func = system.file("python", "nipals_tinygrad_func.py",
                                          package = "FastPCA")
     )
+  } else if(identical(backend, "incremental")){
+    # IncrementalPCA()'s PyTorch kernel is its own module for the same reason:
+    # loading it must not pull torch into a tinygrad-only session.
+    file_list = list(
+      incremental_pca = system.file("python", "incremental_pca_func.py",
+                                    package = "FastPCA")
+    )
+  } else if(identical(backend, "incremental_tinygrad")){
+    file_list = list(
+      incremental_pca_tinygrad = system.file("python",
+                                             "incremental_pca_tinygrad_func.py",
+                                             package = "FastPCA")
+    )
   } else if(identical(backend, "tinygrad")){
     file_list = list(
       tinygrad_random_svd = system.file("python", "tinygrad_svd_func.py", package = "FastPCA"),

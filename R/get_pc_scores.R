@@ -37,26 +37,35 @@ get_pc_scores <- function(fastpca_out, reduction = "pca") {
     }
     return(as.matrix(SeuratObject::Embeddings(fastpca_out[[reduction]])))
   }
-  if (!is.list(fastpca_out) || is.null(fastpca_out$U)) {
-    stop("'fastpca_out' must be a 'fastpca' object (or a list with elements ",
-         "U, S and Vh), or a Seurat object / DimReduc.", call. = FALSE)
-  }
-
   # a fastpca result is validated (and gains derived scores) before use
   if (inherits(fastpca_out, "fastpca")) {
     fastpca_out <- .validate_fastpca(fastpca_out)
   }
 
+  # An IncrementalPCA() fit only keeps scores when store_scores = TRUE, so the
+  # bare-list contract is "U or scores", not "U".
+  if (is.list(fastpca_out) && is.null(fastpca_out$scores) &&
+      identical(attr(fastpca_out, "method"), "incremental")) {
+    stop("This 'fastpca' result does not carry scores: IncrementalPCA() keeps ",
+         "them only when it is called with store_scores = TRUE. Re-run the fit, ",
+         "or project data onto $Vh directly.", call. = FALSE)
+  }
+  if (!is.list(fastpca_out) ||
+      (is.null(fastpca_out$U) && is.null(fastpca_out$scores))) {
+    stop("'fastpca_out' must be a 'fastpca' object (or a list with elements ",
+         "U, S and Vh), or a Seurat object / DimReduc.", call. = FALSE)
+  }
+
   if (!is.null(fastpca_out$scores)) {
     scores <- as.matrix(fastpca_out$scores)
-  } else {
-    if (is.null(fastpca_out$S)) {
-      stop("'fastpca_out' must contain either 'scores', or both 'U' and 'S'.",
-           call. = FALSE)
-    }
+  } else if (!is.null(fastpca_out$U) && !is.null(fastpca_out$S)) {
     singular_values <- as.numeric(fastpca_out$S)
     # multiply the left singular vectors by the singular values
     scores <- fastpca_out$U %*% diag(singular_values, nrow = length(singular_values))
+  } else {
+    stop("This 'fastpca' result does not carry scores: IncrementalPCA() keeps ",
+         "them only when it is called with store_scores = TRUE. Re-run the fit, ",
+         "or project data onto $Vh directly.", call. = FALSE)
   }
   # set back the correct column names
   colnames(scores) <- gsub("^dim", "PC", colnames(scores))

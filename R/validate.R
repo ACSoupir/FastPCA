@@ -8,6 +8,11 @@
 # NIPALS has no sketch, so it gets its own backend vector: irlba is absent (it
 # needs complete data) and "nipals" names the CRAN reference package.
 .nipals_backends <- c("r", "rtorch", "pytorch", "nipals", "tinygrad")
+# IncrementalPCA() streams blocks from files, so it has its own entry point and
+# backend set: the base-R reference kernel plus the two Python kernels. There is
+# no rtorch kernel yet (see ROADMAP.md), and "irlba"/"nipals" need the whole
+# matrix in memory, which is exactly what this function exists to avoid.
+.incremental_pca_backends <- c("r", "pytorch", "tinygrad")
 .fastpca_devices <- c("CPU", "GPU")
 # Numeric precision shared by the PyTorch/tinygrad backends. Only torch_irlba()
 # exposes it so far; "double" is the historical behaviour (reticulate hands R
@@ -153,6 +158,65 @@ resolve_backend_device <- function(backend, device,
   maxit <- .check_scalar_int(maxit, "maxit", 1L)
   list(nv = nv, work = as.integer(work), tol = tol, svtol = svtol,
        maxit = maxit)
+}
+
+# files / ncomp / chunk_rows and the flag arguments for IncrementalPCA(). The
+# paths are checked up front so a typo fails before any backend or Python setup,
+# and the coerced values are returned for the caller to use.
+.check_incremental_args <- function(files, ncomp = 10L, oversample = 0L,
+                                    chunk_rows = NULL,
+                                    center = TRUE, scale = FALSE, log2 = FALSE,
+                                    store_scores = FALSE, store_variance = TRUE,
+                                    header = TRUE, row.names = NULL, sep = ",",
+                                    reader = NULL) {
+  if (!is.character(files) || length(files) < 1L || anyNA(files)) {
+    stop("`files` must be a character vector with at least one chunk file path.",
+         call. = FALSE)
+  }
+  files <- as.character(files)
+  if (any(!nzchar(files))) {
+    stop("`files` contains an empty path.", call. = FALSE)
+  }
+  missing_files <- files[!file.exists(files)]
+  if (length(missing_files) > 0L) {
+    stop("Chunk file(s) not found: ",
+         paste(utils::head(missing_files, 3L), collapse = ", "),
+         if (length(missing_files) > 3L)
+           paste0(" and ", length(missing_files) - 3L, " more") else "",
+         ".", call. = FALSE)
+  }
+
+  ncomp <- .check_scalar_int(ncomp, "ncomp", 1L)
+  oversample <- .check_scalar_int(oversample, "oversample", 0L)
+  chunk_rows <- if (is.null(chunk_rows)) NULL else
+    .check_scalar_int(chunk_rows, "chunk_rows", 1L)
+
+  flags <- list(center = center, scale = scale, log2 = log2,
+                store_scores = store_scores, store_variance = store_variance,
+                header = header)
+  for (nm in names(flags)) {
+    value <- flags[[nm]]
+    if (!is.logical(value) || length(value) != 1L || is.na(value)) {
+      stop("`", nm, "` must be TRUE or FALSE.", call. = FALSE)
+    }
+  }
+
+  if (!is.null(row.names) && !(length(row.names) == 1L &&
+                               (is.character(row.names) || is.numeric(row.names)))) {
+    stop("`row.names` must be NULL, a column name or a single column index.",
+         call. = FALSE)
+  }
+  if (!is.null(reader) && !is.function(reader)) {
+    stop("`reader` must be NULL or a function taking one file path and ",
+         "returning that file as a numeric matrix or data frame (observation ",
+         "identifiers in the row names).", call. = FALSE)
+  }
+  if (!is.character(sep) || length(sep) != 1L || is.na(sep)) {
+    stop("`sep` must be a single character string.", call. = FALSE)
+  }
+
+  list(files = files, ncomp = ncomp, oversample = as.integer(oversample),
+       chunk_rows = chunk_rows)
 }
 
 # Total variance (sum of squared entries) used for percent-variation-explained.

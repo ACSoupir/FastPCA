@@ -55,10 +55,17 @@ new_fastpca <- function(U, S, Vh, scores = NULL,
                         missing_fraction = NA_real_, dropped_features = NULL,
                         precision = NA_character_, work = NULL,
                         n_iter = NULL, mprod = NULL) {
-  method <- match.arg(method, c("svd", "nipals"))
+  method <- match.arg(method, c("svd", "nipals", "incremental"))
   S <- as.numeric(S)
-  if (is.null(scores)) scores <- .fastpca_scores_from_udv(U, S)
-  scores <- .as_scores_matrix(scores, U)
+  # An out-of-core IncrementalPCA() result may carry neither U nor scores: both
+  # are only derivable when the scoring pass was requested, which is what keeps a
+  # constant-memory fit possible.
+  if (is.null(scores) && !is.null(U)) scores <- .fastpca_scores_from_udv(U, S)
+  if (!is.null(scores)) scores <- .as_scores_matrix(scores, U)
+  if (is.null(n_obs)) {
+    n_obs <- if (!is.null(U)) nrow(U) else
+      (if (!is.null(scores)) nrow(scores) else NA_integer_)
+  }
 
   structure(
     list(U = U, S = S, Vh = Vh, scores = scores),
@@ -70,7 +77,7 @@ new_fastpca <- function(U, S, Vh, scores = NULL,
     exact = isTRUE(exact),
     backend = if (length(backend)) as.character(backend)[1] else NA_character_,
     device = if (length(device)) as.character(device)[1] else NA_character_,
-    n_obs = if (is.null(n_obs)) nrow(U) else as.integer(n_obs)[1],
+    n_obs = as.integer(n_obs)[1],
     n_features = if (is.null(n_features)) ncol(Vh) else as.integer(n_features)[1],
     total_variance = if (length(total_variance)) as.numeric(total_variance)[1] else NA_real_,
     center = if (is.null(center)) NULL else as.numeric(center),
@@ -96,10 +103,15 @@ new_fastpca <- function(U, S, Vh, scores = NULL,
 # the object, possibly completed.
 .validate_fastpca <- function(x) {
   if (!inherits(x, "fastpca") || !is.list(x)) {
-    stop("'x' must be a 'fastpca' object (the result of FastPCA() or NIPALS()).",
-         call. = FALSE)
+    stop("'x' must be a 'fastpca' object (the result of FastPCA(), NIPALS() or ",
+         "IncrementalPCA()).", call. = FALSE)
   }
-  if (is.null(x$U) || is.null(x$S) || is.null(x$Vh)) {
+  if (is.null(x$S) || is.null(x$Vh)) {
+    stop("A 'fastpca' object must contain the elements S and Vh.", call. = FALSE)
+  }
+  # U is optional for an IncrementalPCA() result whose scores were not stored;
+  # every other method always carries it
+  if (is.null(x$U) && !identical(attr(x, "method"), "incremental")) {
     stop("A 'fastpca' object must contain the elements U, S and Vh.", call. = FALSE)
   }
   k <- length(x$S)
@@ -112,7 +124,8 @@ new_fastpca <- function(U, S, Vh, scores = NULL,
     stop("Malformed 'fastpca' object: S must be finite.", call. = FALSE)
   }
   n_obs <- attr(x, "n_obs")
-  if (length(n_obs) && is.finite(n_obs) && nrow(x$U) != as.integer(n_obs)) {
+  if (length(n_obs) && is.finite(n_obs) && !is.null(x$U) &&
+      nrow(x$U) != as.integer(n_obs)) {
     stop(sprintf("Malformed 'fastpca' object: nrow(U) is %d but n_obs is %d.",
                  nrow(x$U), as.integer(n_obs)), call. = FALSE)
   }
@@ -120,11 +133,11 @@ new_fastpca <- function(U, S, Vh, scores = NULL,
   if (is.null(method)) {
     # objects created before the method attribute existed are all SVD results
     attr(x, "method") <- "svd"
-  } else if (!method %in% c("svd", "nipals")) {
+  } else if (!method %in% c("svd", "nipals", "incremental")) {
     stop(sprintf("Malformed 'fastpca' object: unknown method '%s'.", method),
          call. = FALSE)
   }
-  if (is.null(x$scores)) {
+  if (is.null(x$scores) && !is.null(x$U)) {
     x$scores <- .as_scores_matrix(.fastpca_scores_from_udv(x$U, x$S), x$U)
   }
   x
@@ -133,6 +146,7 @@ new_fastpca <- function(U, S, Vh, scores = NULL,
 # Human-readable solver label used by print()/summary().
 .fastpca_method_label <- function(x) {
   if (identical(attr(x, "method"), "nipals")) return("NIPALS (missing-value)")
+  if (identical(attr(x, "method"), "incremental")) return("incremental PCA")
   if (identical(attr(x, "backend"), "torch_irlba")) return("Lanczos SVD (IRLBA)")
   if (isTRUE(attr(x, "exact"))) return("exact SVD")
   "randomized SVD"
@@ -157,7 +171,18 @@ print.fastpca <- function(x, ...) {
                 paste0(" | precision: ", precision)
               } else ""))
 
-  if (identical(attr(x, "method"), "nipals")) {
+  if (identical(attr(x, "method"), "incremental")) {
+    count_or_na <- function(value) {
+      if (is.null(value) || length(value) == 0L) NA_integer_ else as.integer(value)[1]
+    }
+    cat(sprintf("  out-of-core: %d file(s), %s block(s) read in %s pass(es)\n",
+                count_or_na(length(attr(x, "files"))),
+                format(count_or_na(attr(x, "n_blocks"))),
+                format(count_or_na(attr(x, "passes")))))
+    if (!isTRUE(attr(x, "scores_stored"))) {
+      cat("  scores: not stored; re-run with store_scores = TRUE to obtain them\n")
+    }
+  } else if (identical(attr(x, "method"), "nipals")) {
     missing_fraction <- attr(x, "missing_fraction")
     if (length(missing_fraction) && is.finite(missing_fraction)) {
       cat(sprintf("  missing: %.1f%% of entries (masked)\n", 100 * missing_fraction))
