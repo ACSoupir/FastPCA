@@ -12,6 +12,7 @@
 ^man/figures$
 ^\.github$
 ^TESTING$
+^\.Rlib$
 __pycache__
 ^inst/test_script\.py$
 
