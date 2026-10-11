@@ -293,6 +293,49 @@ var_explained = (time_res$fast_pca_time_k50_c1$result[[1]]$S[1:5]^2)/total_var
 message(paste0(paste0(paste0("PC", 1:5), ": ", round(var_explained, 3) * 100, "%"), collapse = "\n"))
 ```
 
+## Incremental PCA from chunk files
+
+When a dataset is larger than memory, `IncrementalPCA()` reads it as a list of
+chunk files (one CSV per sample is the intended layout: rows are observations,
+columns are features) and fits the leading components one block at a time. Only
+the largest block plus an `ncomp x n_features` state is ever resident, so the
+top 10-20 PCs are reachable for data that `FastPCA()` cannot load at all.
+
+Here four small chunk files stand in for a large dataset. `scale = TRUE` adds a
+statistics pass so the centring and scaling vectors are exact, which is what makes
+the result match a batch PCA of the same data.
+
+```{r incremental_chunks}
+chunk_dir <- file.path(tempdir(), "fastpca-chunks")
+dir.create(chunk_dir, showWarnings = FALSE)
+set.seed(1)
+chunk_files <- file.path(chunk_dir, sprintf("sample%02d.csv", 1:4))
+for (i in seq_along(chunk_files)) {
+  block <- matrix(rnorm(80 * 15), nrow = 80,
+                  dimnames = list(NULL, paste0("feature_", seq_len(15))))
+  utils::write.csv(block, chunk_files[i], row.names = FALSE)
+}
+
+incremental_fit <- IncrementalPCA(chunk_files, ncomp = 5, scale = TRUE,
+                                  backend = "r")
+incremental_fit
+summary(incremental_fit)
+```
+
+Scores for the fitted observations are returned on request; leaving them out keeps
+the memory footprint constant, which is why they are not stored by default.
+
+```{r incremental_scores}
+scored <- IncrementalPCA(chunk_files, ncomp = 5, scale = TRUE,
+                         store_scores = TRUE)
+dim(get_pc_scores(scored))
+```
+
+The `pytorch` and `tinygrad` backends use the same device API as the rest of
+the package (`device = "GPU"`) and are worth trying on large blocks, where the
+per-block decomposition dominates. They need the Python environment described in
+the next section; base R needs nothing.
+
 ## Setting up FastPCA with Reticulate
 
 In order to use `FastPCA` with certain functionalities (like `pytorch` backend for `prep_matrix()` and `FastPCA()`, and `umap-learn` for `umap()`), an environment needs to best created using `setup_py_env()`. It's recommended to use `method = 'conda'` for the environment as there are some perks, especially if there is a CUDA device available. To create the environment, simply call the function. Here, we already have one on the system so the function call tells us. 

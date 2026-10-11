@@ -75,6 +75,34 @@ decisions are in `TESTING/NIPALS_PLAN.md`. Three items were deliberately left ou
   faster and half the memory at ~3e-5 relative singular-value error). Extending
   the same argument to `FastPCA()`/`NIPALS()` is still open.
 
+## Incremental / out-of-core PCA
+
+**Implemented in 0.10.0.** `IncrementalPCA()` streams a list of chunk files and
+keeps only one block plus an `ncomp x n_features` factorization state, so the
+top components of a dataset larger than RAM can still be extracted. Backends are
+base R, PyTorch and tinygrad; `scale = TRUE` adds a statistics pass so centring
+and scaling are exact, and `oversample` widens the internal rank that is carried
+between blocks (a buffer at least as wide as the rank makes an exact-statistics
+fit reproduce batch PCA exactly). See `NEWS.md`.
+
+Deliberate follow-ups:
+
+* **R-torch kernel.** Only the base R and Python kernels exist. An
+  `.partial_fit_incremental_rtorch()` would let users on a machine without
+  reticulate use the native torch backend, but R `torch` is not installed in
+  this environment so it could not be tested; the entry point currently stops
+  with an explicit message and `ROADMAP.md` pointer instead.
+* **Projecting new data.** Scores are only available for the files that were
+  fitted (`store_scores = TRUE`, which needs a scoring pass). A `transform()`
+  method (or an exported helper) could project *new* chunk files onto a stored
+  result with the same `center`/`scaling` vectors.
+* **Other containers.** parquet/HDF5 currently need a user-supplied `reader`
+  function, which is loaded whole. A reader interface that streams by row group
+  would extend the out-of-core guarantee to those formats.
+* **Warm restarts.** A `fit` object cannot currently be extended with further
+  chunk files without refitting; the Python kernels already keep their state in a
+  reference, so exposing it is mostly API design.
+
 ## Iterative / converging SVD
 
 The randomized backends use a fixed number of power iterations. A future

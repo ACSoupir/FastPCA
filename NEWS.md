@@ -1,3 +1,40 @@
+# FastPCA 0.10.0
+
+## Out-of-core PCA: `IncrementalPCA()`
+
+* Added `IncrementalPCA()`, which fits the leading components of data split
+  across many chunk files (one CSV per sample is the intended layout) without
+  ever holding more than one block in memory. Peak R-side memory is roughly the
+  largest block plus an `ncomp x n_features` factorization state, so datasets
+  far larger than RAM can still yield their top ~10-20 PCs. The result is the
+  usual `"fastpca"` object (`method = "incremental"`), so `print()`,
+  `summary()`, `pve()` and `plot()` work unchanged.
+* Backends are base R (`"r"`, no Python), PyTorch through reticulate
+  (`"pytorch"`) and tinygrad (`"tinygrad"`, float32 on Metal or CUDA), with
+  the same `device`/`cores` arguments as the rest of the package (plus
+  `precision` for PyTorch). Base R and PyTorch take an exact thin SVD of each
+  stacked block; tinygrad uses a randomized sketch per block and is the fastest
+  on Apple Metal but approximate. An R-torch kernel is not shipped yet (see
+  `ROADMAP.md`).
+* Reading: plain text/CSV, `.gz`, `.bz2` and `.xz` are streamed through base
+  R connections, `.zst`/`.zstd` through the external `zstd` binary, and any
+  other container (parquet, HDF5) through `reader =`. `header`, `row.names`
+  and `sep` are passed to the CSV reader, so a leading identifier column works
+  as it does elsewhere. `chunk_rows` splits an individual file that is itself
+  too large to hold.
+* Passes are explicit: `scale = TRUE` adds a statistics pass so the mean and
+  standard deviation are exact rather than incremental, `store_scores = TRUE`
+  adds a scoring pass and returns the observation scores (otherwise nothing
+  `n_obs x ncomp` is ever allocated). With exact statistics the components match
+  batch PCA of the pre-processed data to numerical precision; with a single pass
+  each block is centred by the mean of everything read before it, which matches
+  scikit-learn's `IncrementalPCA` and is the documented approximation.
+* Every block truncates its tail, so `oversample` (default 10) keeps extra
+  components internally and discards them at the end; a buffer at least as wide
+  as the rank makes an exact-statistics fit reproduce batch PCA exactly.
+* Missing values are rejected with a pointer to `NIPALS()`, as for
+  `FastPCA()`.
+
 # FastPCA 0.9.3
 
 ## Iterative Lanczos SVD: `torch_irlba()`
