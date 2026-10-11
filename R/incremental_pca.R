@@ -77,7 +77,11 @@
 #'   sketch per block and is the least accurate of the three; see Details.
 #' @param device Character, \code{"CPU"} (default) or \code{"GPU"}. Passed
 #'   through the same resolution as [FastPCA()]: an unavailable accelerator falls
-#'   back to the CPU with a message.
+#'   back to the CPU with a message. Note that PyTorch has no Metal kernel for
+#'   \code{torch.linalg.svd}, so on Apple silicon a single-precision
+#'   \code{"GPU"} request decomposes each block on the CPU (PyTorch's own
+#'   fallback) and says so; \code{backend = "tinygrad"} is the one that really
+#'   decomposes on Metal.
 #' @param cores Integer. Threads for the backend; clamped to 1 when an OpenMP
 #'   runtime conflict is detected in the session.
 #' @param precision Character, \code{"double"} (default) or \code{"single"},
@@ -129,6 +133,11 @@
 #' it uses a randomized range finder with Newton-Schulz orthonormalisation and a
 #' host-side small SVD, in float32; it is the fastest on Apple Metal but its
 #' components are approximate (exact for well-separated spectra).
+#'
+#' Measured agreement with batch PCA of the same pre-processed data on a
+#' well-separated 4-component fixture: base R and PyTorch agree with the exact
+#' SVD to ~1e-15 (PyTorch single precision on Metal: ~3e-7), tinygrad to ~2e-6
+#' with principal angles below 0.13 degrees.
 #'
 #' Missing values are not supported here: use [NIPALS()] for matrices with
 #' \code{NA}.

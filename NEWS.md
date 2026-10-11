@@ -34,6 +34,10 @@
   as the rank makes an exact-statistics fit reproduce batch PCA exactly.
 * Missing values are rejected with a pointer to `NIPALS()`, as for
   `FastPCA()`.
+* On Apple silicon, PyTorch has no Metal kernel for `torch.linalg.svd`, so a
+  single-precision `device = "GPU"` request decomposes each block on the CPU
+  through PyTorch's own fallback (reported in a message; matrix products still use
+  Metal). `backend = "tinygrad"` is the backend that really decomposes on Metal.
 
 # FastPCA 0.9.3
 

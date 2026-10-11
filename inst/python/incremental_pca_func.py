@@ -14,6 +14,10 @@ centring, scaling), so every backend decomposes identical blocks.
 Device handling mirrors inst/python/torch_irlba_func.py: "GPU" means CUDA when
 it is available, otherwise Apple Metal (MPS) -- and MPS cannot hold float64, so a
 double-precision GPU request runs on the CPU with a message instead of failing.
+MPS also has no kernel for torch.linalg.svd, so a single-precision Metal request
+decomposes each block on the CPU through PyTorch's own fallback (only the matrix
+products stay on Metal); that is reported too, and the tinygrad backend is the one
+with a real accelerator decomposition.
 """
 
 import numpy as np
@@ -49,6 +53,14 @@ class IncrementalPCAState:
         precision = str(precision).lower()
         self.dtype = torch.float32 if precision == "single" else torch.float64
         self.device = _resolve_device(device, precision)
+        if self.device.type == "mps":
+            # torch.linalg.svd raises nothing on Metal: PyTorch prints its own
+            # UserWarning and quietly runs the decomposition on the CPU, so say it
+            # once here rather than let "device = GPU" look like a Metal speedup.
+            print("[incremental_pca] Apple Metal (MPS) has no torch.linalg.svd "
+                  "kernel, so each block is decomposed on the CPU through "
+                  "pytorch's fallback; use backend = 'tinygrad' for a Metal "
+                  "decomposition.", flush=True)
         if self.device.type == "cpu":
             torch.set_num_threads(max(1, int(cores)))
         self.SV = None    # diag(S) @ Vh of everything fitted so far
